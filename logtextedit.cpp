@@ -3,6 +3,7 @@
 #include <QGroupBox>
 #include <QTextBlock>
 #include <QTextLayout>
+#include <QScrollArea>
 #include <QDebug>
 
 GuiControl::GuiControl(QWidget *rootWidget)
@@ -79,6 +80,7 @@ void GuiControl::createNewChildElement(LogItem *item)
     }
 /////////
 
+    ((QScrollArea*)rootWidget)->adjustSize();
     newElement->setFocus();
 
 }
@@ -530,8 +532,8 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
     if (e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) {
         bool processed = true;
         switch (e->key()) {
-        case Qt::Key_N:
-            item->addNewSibling();
+        case Qt::Key_Q:
+            item->addNewChild();
             break;
         case Qt::Key_Tab:
             if (!(e->modifiers() & Qt::ShiftModifier))
@@ -541,7 +543,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             item->shiftLeft();
             break;
         case Qt::Key_A:
-            item->addNewChild();
+            item->addNewSibling();
             break;
         case Qt::Key_R:
             item->remove();

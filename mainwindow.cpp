@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     DB *db = new XmlDB("/home/temp/temp.xml");
-    GuiControl *guiControl = new GuiControl(ui->centralWidget);
+    GuiControl *guiControl = new GuiControl(ui->scrollArea);
     LogControl *control = new LogControl(guiControl, db);
 
     control->createNewChild(nullptr);
