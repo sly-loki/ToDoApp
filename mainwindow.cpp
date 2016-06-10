@@ -13,7 +13,6 @@ MainWindow::MainWindow(QWidget *parent) :
     GuiControl *guiControl = new GuiControl(ui->scrollArea);
     LogControl *control = new LogControl(guiControl, db);
 
-    control->createNewChild(nullptr);
 }
 
 MainWindow::~MainWindow()

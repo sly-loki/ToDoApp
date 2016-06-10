@@ -6,60 +6,16 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include <QTextStream>
-#include <QXmlStreamReader>
-#include <QFile>
+
+#include "guicontrol.h"
+#include "storage.h"
+
 
 class LogControl;
 class LogItem;
 
-class GuiControl
-{
-    QWidget *rootWidget;
-    std::map<LogItem*, QWidget*> guiItemsMap;
-public:
-    GuiControl(QWidget *rootWidget);
-    void createNewSiblingElement(LogItem *item);
-    void createNewChildElement(LogItem *item);
-    void switchFocusTo(LogItem *item);
-    void shiftItemToLevel(LogItem *item, LogItem *target);
-    void unplagItem(LogItem *item);
-};
 
-typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 
-class DB
-{
-public:
-    DB();
-    virtual void saveItem(LogItem *item, const QString &text);
-    virtual void saveTree(LogItem *rootItem) = 0;
-    virtual void loadTree(LogItem *rootItem) = 0;
-    virtual ItemVector getFirstLevelItems();
-    virtual ItemVector getChildsOf(LogItem *item);
-    virtual QString getText(LogItem *item);
-    virtual ~DB() {}
-
-};
-
-class XmlDB: public DB
-{
-    QXmlStreamReader xmlStream;
-    QXmlStreamWriter xmlWriter;
-    QFile dbFile;
-    bool fileIsOk;
-
-    void saveNode(QXmlStreamWriter &stream, LogItem *node);
-public:
-    XmlDB(const QString fileName);
-    virtual void saveItem(LogItem *item, const QString &text) override;
-    virtual void saveTree(LogItem *rootItem);
-    virtual void loadTree(LogItem *rootItem);
-    virtual ItemVector getFirstLevelItems() override;
-    virtual ItemVector getChildsOf(LogItem *item) override;
-    virtual QString getText(LogItem *item) override;
-    virtual ~XmlDB();
-};
 
 enum MoveEvent {
     ME_UP,
@@ -96,7 +52,7 @@ public:
     void switchTo(MoveEvent to);
     void remove();
     void detachFromTree();
-    void addAsChild(LogItem *item);
+    void addAsChild(LogItem *item, LogItem *after = nullptr);
     void addAsLastChild(LogItem *item);
 
     void setGui(QWidget *widget);
@@ -127,6 +83,8 @@ class LogControl
     LogItem *rootItem;
     GuiControl *guiControl;
     DB *db;
+
+    void fillGui(LogItem *item);
 public:
     LogControl(GuiControl *gui, DB* db);
     LogItem *createNewChild(LogItem *parent);

@@ -6,255 +6,6 @@
 #include <QScrollArea>
 #include <QDebug>
 
-GuiControl::GuiControl(QWidget *rootWidget)
-    : rootWidget(rootWidget)
-{
-    QLayout *layout = new QVBoxLayout();
-    rootWidget->setLayout(layout);
-}
-
-void GuiControl::createNewSiblingElement(LogItem *item)
-{
-//    QBoxLayout *parentLayout = nullptr;
-//    if (!item)
-//        return;
-
-//    LogItem *parent = item->getParent();
-//    auto it = guiItemsMap.find(parent);
-//    if (it != guiItemsMap.end())
-//        parentLayout = (*it).second;
-
-//    if (!parentLayout)
-//        parentLayout = (QBoxLayout*)(rootWidget->layout());;
-
-//    QBoxLayout *layout = new QVBoxLayout();
-//    QWidget * newElement = new LogTextEdit(item);
-//    layout->addWidget(newElement);
-//    layout->setContentsMargins(50,0,0,0);
-//    parentLayout->addLayout(layout);
-//    guiItemsMap[item] = layout;
-
-//    newElement->setFocus();
-}
-
-void GuiControl::createNewChildElement(LogItem *item)
-{
-    QBoxLayout *parentLayout = nullptr;
-    if (!item)
-        return;
-
-    LogItem *parent = item->getParent();
-    auto it = guiItemsMap.find(parent);
-    if (it != guiItemsMap.end())
-        parentLayout = (QBoxLayout*)((*it).second->layout());
-
-    if (!parentLayout)
-        parentLayout = (QBoxLayout*)(rootWidget->layout());;
-
-    QBoxLayout *layout = new QVBoxLayout();
-    QWidget * newElement = new LogTextEdit(item);
-    QWidget *holderWidget = new QGroupBox();
-    static int count = 0;
-    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
-    count++;
-    layout->addWidget(newElement);
-    layout->setContentsMargins(50,0,0,0);
-    holderWidget->setLayout(layout);
-
-    guiItemsMap[item] = holderWidget;
-
-/////////////
-    QWidget *prevWidget = nullptr;
-    if (item->getPrev()) {
-        auto it = guiItemsMap.find(item->getPrev());
-        if (it != guiItemsMap.end()) {
-            prevWidget = (*it).second;
-        }
-    }
-    if (prevWidget) {
-        int index = parentLayout->indexOf(prevWidget);
-        parentLayout->insertWidget(index+1, holderWidget);
-    }
-    else {
-        parentLayout->insertWidget(1, holderWidget);
-    }
-/////////
-
-    ((QScrollArea*)rootWidget)->adjustSize();
-    newElement->setFocus();
-
-}
-
-void GuiControl::switchFocusTo(LogItem *item)
-{
-    auto it = guiItemsMap.find(item);
-    if (it != guiItemsMap.end()) {
-        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        layout->itemAt(0)->widget()->setFocus();
-    }
-}
-
-void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
-{
-    QWidget *itemWidget = guiItemsMap[item];
-
-    auto it = guiItemsMap.find(target);
-
-    QBoxLayout *targetLayout = nullptr;
-    if (it != guiItemsMap.end()) {
-        targetLayout = (QBoxLayout*)((*it).second->layout());
-    }
-    else {
-        targetLayout = (QBoxLayout*)(rootWidget->layout());
-    }
-
-
-    QWidget *prevWidget = nullptr;
-    if (item->getPrev()) {
-        auto it = guiItemsMap.find(item->getPrev());
-        if (it != guiItemsMap.end()) {
-            prevWidget = (*it).second;
-        }
-    }
-    if (prevWidget) {
-        int index = targetLayout->indexOf(prevWidget);
-        targetLayout->insertWidget(index+1, itemWidget);
-    }
-    else {
-        if (targetLayout == rootWidget->layout())
-            targetLayout->insertWidget(0, itemWidget);
-        else
-            targetLayout->insertWidget(1, itemWidget);
-    }
-
-    itemWidget->layout()->itemAt(0)->widget()->setFocus();
-}
-
-void GuiControl::unplagItem(LogItem *item)
-{
-//    QBoxLayout *itemLayout = guiItemsMap[item];
-    auto it = guiItemsMap.find(item->getParent());
-
-    QBoxLayout *parentLayout = nullptr;
-    if (it != guiItemsMap.end()) {
-        parentLayout = (QBoxLayout*)((*it).second->layout());
-    }
-    else {
-        parentLayout = (QBoxLayout*)(rootWidget->layout());
-    }
-    parentLayout->removeWidget(guiItemsMap[item]);
-    guiItemsMap[item]->setParent(nullptr);
-}
-
-
-DB::DB()
-{
-
-}
-
-void DB::saveItem(LogItem *item, const QString &text)
-{
-
-}
-
-void DB::saveTree(LogItem *rootItem)
-{
-
-}
-
-ItemVector DB::getFirstLevelItems()
-{
-
-}
-
-ItemVector DB::getChildsOf(LogItem *item)
-{
-
-}
-
-QString DB::getText(LogItem *item)
-{
-
-}
-
-
-void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
-{
-    stream.writeStartElement("item");
-    stream.writeTextElement("id", QString("%1").arg(node->getId()));
-    stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
-    stream.writeTextElement("text", "Qt Project");
-    stream.writeEndElement();
-    LogItem *child = node->getChild();
-    while(child) {
-        saveNode(stream, child);
-        child = child->getNext();
-    }
-}
-
-XmlDB::XmlDB(const QString fileName)
-    : fileIsOk(false)
-{
-    dbFile.setFileName(fileName);
-    if (dbFile.open(QIODevice::ReadOnly)) {
-        xmlStream.setDevice(&dbFile);
-        fileIsOk = true;
-    }
-}
-
-void XmlDB::saveItem(LogItem *item, const QString &text)
-{
-//    item->getId();
-}
-
-void XmlDB::saveTree(LogItem *rootItem)
-{
-//    if (fileIsOk)
-//        return;
-    QFile output("/home/andrei/temp/test.xml");
-    output.open(QIODevice::WriteOnly);
-    xmlWriter.setDevice(&output);
-    xmlWriter.setAutoFormatting(true);
-    xmlWriter.writeStartDocument();
-    LogItem *item = rootItem->getChild();
-    while(item) {
-        saveNode(xmlWriter, item);
-        item = item->getNext();
-    }
-    xmlWriter.writeEndDocument();
-    output.close();
-}
-
-void XmlDB::loadTree(LogItem *rootItem)
-{
-    QFile input("/home/andrei/temp/test.xml");
-    input.open(QIODevice::ReadOnly);
-    xmlStream.setDevice(&input);
-    input.close();
-}
-
-ItemVector XmlDB::getFirstLevelItems()
-{
-    ItemVector result;
-    return result;
-}
-
-ItemVector XmlDB::getChildsOf(LogItem *item)
-{
-    ItemVector result;
-    return result;
-}
-
-QString XmlDB::getText(LogItem *item)
-{
-    return "";
-}
-
-XmlDB::~XmlDB()
-{
-
-}
-
 uint64_t LogItem::nextId = 1;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
@@ -326,13 +77,26 @@ void LogItem::detachFromTree()
     prev = next = nullptr;
 }
 
-void LogItem::addAsChild(LogItem *item)
+void LogItem::addAsChild(LogItem *item, LogItem *after)
 {
-    if (firstChild) {
-        firstChild->prev = item;
+    if (after && after->parent != this) {
+        qDebug() << "Error: after->parent != this";
+        return;
     }
-    item->next = firstChild;
-    firstChild = item;
+
+    if (after) {
+        if (after->next)
+            after->next->prev = item;
+        item->next = after->next;
+        item->prev = after;
+        after->next = item;
+    } else {
+        if (firstChild)
+            firstChild->prev = item;
+        item->next = firstChild;
+        firstChild = item;
+    }
+
     item->parent = this;
 }
 
@@ -368,12 +132,31 @@ void LogItem::setId(const uint64_t &value)
     id = value;
 }
 
+void LogControl::fillGui(LogItem *item)
+{
+    if (item->getParent() != nullptr)
+        guiControl->createNewChildElement(item);
+    LogItem *child = item->getChild();
+    while (child) {
+        child->control = this;
+        fillGui(child);
+        child = child->getNext();
+    }
+}
+
 LogControl::LogControl(GuiControl *gui, DB* db)
     : rootItem(new LogItem(this, nullptr))
     , guiControl(gui)
     , db(db)
 {
     rootItem->setId(0);
+    db->loadTree(rootItem);
+    if (!rootItem->getChild()) {
+        createNewChild(nullptr);
+    }
+    else {
+        fillGui(rootItem);
+    }
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
 }
 
@@ -412,10 +195,11 @@ void LogControl::shiftLeft(LogItem *item)
 {
     if (item->getParent() == rootItem)
         return;
-    LogItem *newParent = item->getParent()->getParent();
+    LogItem *oldParent = item->getParent();
+    LogItem *newParent = oldParent->getParent();
 
     item->detachFromTree();
-    newParent->addAsChild(item);
+    newParent->addAsChild(item, oldParent);
 
     guiControl->unplagItem(item);
     guiControl->shiftItemToLevel(item, item->parent);

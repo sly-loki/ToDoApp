@@ -15,9 +15,13 @@ CONFIG += c++11
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    logtextedit.cpp
+    logtextedit.cpp \
+    guicontrol.cpp \
+    storage.cpp
 
 HEADERS  += mainwindow.h \
-    logtextedit.h
+    logtextedit.h \
+    guicontrol.h \
+    storage.h
 
 FORMS    += mainwindow.ui
