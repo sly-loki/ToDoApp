@@ -39,7 +39,7 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
     stream.writeStartElement("item");
     stream.writeTextElement("id", QString("%1").arg(node->getId()));
     stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
-    stream.writeTextElement("text", "Qt Project");
+    stream.writeTextElement("text", node->getText());
     stream.writeEndElement();
     LogItem *child = node->getChild();
     while(child) {
@@ -68,11 +68,13 @@ void XmlDB::saveItem(LogItem *item, const QString &text)
 //    item->getId();
 }
 
+#define TEST_FILE_NAME "/tmp/test.xml"
+
 void XmlDB::saveTree(LogItem *rootItem)
 {
 //    if (fileIsOk)
 //        return;
-    QFile output("/home/andrei/temp/test.xml");
+    QFile output(TEST_FILE_NAME);
     output.open(QIODevice::WriteOnly);
     xmlWriter.setDevice(&output);
     xmlWriter.setAutoFormatting(true);
@@ -90,7 +92,7 @@ void XmlDB::saveTree(LogItem *rootItem)
 
 void XmlDB::loadTree(LogItem *rootItem)
 {
-    QFile input("/home/andrei/temp/test.xml");
+    QFile input(TEST_FILE_NAME);
     input.open(QIODevice::ReadOnly);
     xmlStream.setDevice(&input);
 
@@ -143,6 +145,8 @@ void XmlDB::loadTree(LogItem *rootItem)
                         LogItem *parent = items[pid];
                         parent->addAsLastChild(currentItem);
                     }
+                } else if (type == "text") {
+                    currentItem->setText(xmlStream.text().toString());
                 }
             }
         }

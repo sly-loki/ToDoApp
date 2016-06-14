@@ -172,8 +172,9 @@ LogItem *LogControl::createNewChild(LogItem *parent)
 
 LogItem *LogControl::createNewSibling(LogItem *item)
 {
-    LogItem *newItem = new LogItem(this, item->getParent());
-    item->getParent()->addAsLastChild(newItem);
+    LogItem *parent = item->getParent();
+    LogItem *newItem = new LogItem(this, parent);
+    parent->addAsChild(newItem, item);
     guiControl->createNewChildElement(newItem);
     return newItem;
 }
@@ -301,11 +302,35 @@ void LogControl::save()
     db->saveTree(rootItem);
 }
 
+unsigned int LogTextEdit::fontHeight = 1;
+
+void LogTextEdit::updateHeight()
+{
+    int newLineCount = document()->size().height();
+    if (newLineCount != lineCount) {
+        if (newLineCount == 0)
+            newLineCount = 1;
+        lineCount = newLineCount;
+        setFixedHeight(lineCount*fontHeight + 10);
+    }
+}
+
 LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
     : QPlainTextEdit(parent)
     , item(item)
+    , lineCount(0)
 {
+    const QFontMetrics fm = fontMetrics();
+    LogTextEdit::fontHeight = fm.height();
+    setPlainText(item->getText());
+    updateHeight();
+    connect(this, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
+}
 
+void LogTextEdit::onTextChanged()
+{
+    item->setText(toPlainText());
+    updateHeight();
 }
 
 void LogTextEdit::keyPressEvent(QKeyEvent *e)

@@ -1,0 +1,12 @@
+        local storage
+DONE        save/load text
+            incremental save
+
+        network
+            read items ower network
+
+        gui
+            add check box for todos
+            scroll to active item
+
+        server

@@ -4,15 +4,17 @@
 #include <QGroupBox>
 #include <QTextBlock>
 #include <QTextLayout>
-#include <QScrollArea>
 #include <QDebug>
 
 
-GuiControl::GuiControl(QWidget *rootWidget)
-    : rootWidget(rootWidget)
+GuiControl::GuiControl(QScrollArea *scroll)
+    : rootWidget(new QWidget())
+    , mainScroll(scroll)
 {
     QLayout *layout = new QVBoxLayout();
-    rootWidget->setLayout(layout);
+    this->rootWidget->setLayout(layout);
+
+    mainScroll->setWidget(this->rootWidget);
 }
 
 void GuiControl::createNewSiblingElement(LogItem *item)
@@ -55,9 +57,10 @@ void GuiControl::createNewChildElement(LogItem *item)
 
     QBoxLayout *layout = new QVBoxLayout();
     QWidget * newElement = new LogTextEdit(item);
-    QWidget *holderWidget = new QGroupBox();
+//    newElement->setMaximumHeight(50);
+    QWidget *holderWidget = new QWidget();
     static int count = 0;
-    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
+//    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
     count++;
     layout->addWidget(newElement);
     layout->setContentsMargins(50,0,0,0);
@@ -82,7 +85,6 @@ void GuiControl::createNewChildElement(LogItem *item)
     }
 /////////
 
-    ((QScrollArea*)rootWidget)->adjustSize();
     newElement->setFocus();
 
 }

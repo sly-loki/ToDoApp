@@ -31,6 +31,7 @@ class LogItem
     LogItem *next;
     LogItem *prev;
     LogItem *firstChild;
+    QString text;
 
     QWidget *guiElement;
     bool modified;
@@ -56,6 +57,8 @@ public:
     void addAsLastChild(LogItem *item);
 
     void setGui(QWidget *widget);
+    const QString &getText() {return text;}
+    void setText(const QString newText) {text = newText;}
     LogItem *getParent() {return parent;}
     LogItem *getChild() {return firstChild;}
     LogItem *getLastChild() {
@@ -102,8 +105,17 @@ class LogTextEdit : public QPlainTextEdit
 {
     Q_OBJECT
     LogItem *item;
+    unsigned int lineCount;
+
+    static unsigned int fontHeight;
+
+    void updateHeight();
+
 public:
     LogTextEdit(LogItem *item, QWidget *parent = nullptr);
+
+public slots:
+    void onTextChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *e);
