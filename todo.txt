@@ -2,11 +2,15 @@
 DONE        save/load text
             incremental save
 
-        network
-            read items ower network
+        server
+            read items over network
+            save items over network
 
         gui
             add check box for todos
             scroll to active item
+            open/close notes(for debug)
+            multidocument interface(?)
+DONE        add spacer
+            drag&drop by mouse
 
-        server

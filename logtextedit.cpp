@@ -14,9 +14,9 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     , next(nullptr)
     , prev(nullptr)
     , firstChild(nullptr)
-    , guiElement(nullptr)
     , modified(false)
     , id(id)
+    , done(false)
 {
     if (id == 0) {
         this->id = nextId;
@@ -112,11 +112,6 @@ void LogItem::addAsLastChild(LogItem *item)
     item->parent = this;
 }
 
-void LogItem::setGui(QWidget *widget)
-{
-    guiElement = widget;
-}
-
 void LogItem::save()
 {
     control->save();
@@ -135,7 +130,7 @@ void LogItem::setId(const uint64_t &value)
 void LogControl::fillGui(LogItem *item)
 {
     if (item->getParent() != nullptr)
-        guiControl->createNewChildElement(item);
+        guiControl->createNewElement(item);
     LogItem *child = item->getChild();
     while (child) {
         child->control = this;
@@ -166,7 +161,7 @@ LogItem *LogControl::createNewChild(LogItem *parent)
         parent = rootItem;
     LogItem *item = new LogItem(this, parent);
     parent->addAsChild(item);
-    guiControl->createNewChildElement(item);
+    guiControl->createNewElement(item);
     return item;
 }
 
@@ -175,7 +170,7 @@ LogItem *LogControl::createNewSibling(LogItem *item)
     LogItem *parent = item->getParent();
     LogItem *newItem = new LogItem(this, parent);
     parent->addAsChild(newItem, item);
-    guiControl->createNewChildElement(newItem);
+    guiControl->createNewElement(newItem);
     return newItem;
 }
 
@@ -336,7 +331,7 @@ void LogTextEdit::onTextChanged()
 void LogTextEdit::keyPressEvent(QKeyEvent *e)
 {
     static std::map<int, MoveEvent> keyToMove =
-                {{Qt::Key_Up, ME_UP}, {Qt::Key_Down, ME_DOWN}, {Qt::Key_Left, ME_LEFT}};
+                {{Qt::Key_Up, ME_UP}, {Qt::Key_Down, ME_DOWN}, {Qt::Key_Left, ME_LEFT}, {Qt::Key_I, ME_UP}, {Qt::Key_K, ME_DOWN}, {Qt::Key_J, ME_LEFT}};
 
     if (e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) {
         bool processed = true;
@@ -363,6 +358,9 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Up:
         case Qt::Key_Down:
         case Qt::Key_Left:
+        case Qt::Key_J:
+        case Qt::Key_I:
+        case Qt::Key_K:
             if ((e->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier)) == (Qt::ShiftModifier | Qt::ControlModifier)) {
                 if (e->key() == Qt::Key_Up)
                     item->shiftUp();

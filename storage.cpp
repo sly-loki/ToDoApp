@@ -40,6 +40,7 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
     stream.writeTextElement("id", QString("%1").arg(node->getId()));
     stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
     stream.writeTextElement("text", node->getText());
+    stream.writeTextElement("done", QString("%1").arg((node->isDone())?1:0));
     stream.writeEndElement();
     LogItem *child = node->getChild();
     while(child) {
@@ -147,6 +148,8 @@ void XmlDB::loadTree(LogItem *rootItem)
                     }
                 } else if (type == "text") {
                     currentItem->setText(xmlStream.text().toString());
+                } else if (type == "done") {
+                    currentItem->setDone(xmlStream.text() == "1");
                 }
             }
         }

@@ -26,17 +26,19 @@ enum MoveEvent {
 class LogItem
 {
     uint64_t id;
+
     LogControl *control;
+    bool modified;
+
     LogItem *parent;
     LogItem *next;
     LogItem *prev;
     LogItem *firstChild;
+
     QString text;
+    bool done;
 
-    QWidget *guiElement;
-    bool modified;
-
-    static uint64_t nextId;
+    static uint64_t nextId; //for debug
 
     friend class LogControl;
     friend class DB;
@@ -56,7 +58,6 @@ public:
     void addAsChild(LogItem *item, LogItem *after = nullptr);
     void addAsLastChild(LogItem *item);
 
-    void setGui(QWidget *widget);
     const QString &getText() {return text;}
     void setText(const QString newText) {text = newText;}
     LogItem *getParent() {return parent;}
@@ -76,6 +77,9 @@ public:
 
     bool isModified() {return modified;}
     void setModified(bool status) {modified = status;}
+
+    bool isDone() {return done;}
+    void setDone(bool state) {this->done = state;}
 
     uint64_t getId() const;
     void setId(const uint64_t &value);
@@ -113,6 +117,7 @@ class LogTextEdit : public QPlainTextEdit
 
 public:
     LogTextEdit(LogItem *item, QWidget *parent = nullptr);
+    LogItem *getItem() {return item;}
 
 public slots:
     void onTextChanged();
