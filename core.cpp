@@ -1,4 +1,5 @@
 #include "core.h"
+#include <functional>
 
 #include <QDebug>
 
@@ -152,6 +153,7 @@ void LogControl::loadData()
     else {
         fillGui(rootItem);
     }
+    printItemTree();
 }
 
 LogItem *LogControl::createNewChild(LogItem *parent)
@@ -297,4 +299,17 @@ void LogControl::switchTo(LogItem *item, MoveEvent to)
 void LogControl::save()
 {
     db->saveTree(rootItem);
+}
+
+void LogControl::printItemTree()
+{
+    std::function<void (LogItem *, QString)> f = [&f](LogItem *item, QString intents) {
+        qDebug()  << intents << item->getId() << " : " << item->getText() << " " << ((item->getParent())?(item->getParent()->getId()):-1);
+        LogItem *child = item->getChild();
+        while (child) {
+            f(child, intents + "    ");
+            child = child->getNext();
+        }
+    };
+    f(rootItem, QString(""));
 }

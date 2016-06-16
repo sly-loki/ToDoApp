@@ -23,7 +23,7 @@ struct NetworkHeader
 
     uint64_t itemId;
     uint64_t parentId;
-};
+} __attribute__((packed));
 
 //struct PT
 

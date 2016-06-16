@@ -21,13 +21,28 @@ public:
 
     void start()
     {
-
+        if (!server.listen(QHostAddress::Any, 12054)) {
+            qDebug() << "server listen error";
+            return;
+        }
     }
 
 public slots:
     void incomingMessage()
     {
-
+        NetworkHeader packet;
+        if (clientConnection->read(&packet, sizeof(packet)) != sizeof(packet)) {
+            qDebug() << "read error";
+            return;
+        }
+        switch (packet.type) {
+        case PT_ITEM_CREATED:
+            qDebug() << "item created message";
+            break;
+        case PT_GET_ALL_ITEMS:
+            qDebug() << "request for all item";
+            break;
+        }
     }
 
     void onNewConnection()
@@ -36,7 +51,7 @@ public slots:
             delete clientConnection;
         clientConnection = server.nextPendingConnection();
         connect(clientConnection, SIGNAL(readyRead()), this, SLOT(incomingMessage()));
-
+        qDebug() << "new connection established";
     }
 };
 

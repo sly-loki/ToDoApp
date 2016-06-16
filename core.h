@@ -99,6 +99,8 @@ public:
     void switchTo(LogItem *item, MoveEvent to);
     void save();
 
+    void printItemTree();
+
 signals:
     void itemAdded(LogItem *);
     void itemModified(LogItem *);

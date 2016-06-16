@@ -63,7 +63,8 @@ void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
             targetLayout->insertWidget(1, itemWidget);
     }
 
-    itemWidget->layout()->itemAt(0)->widget()->setFocus();
+//    itemWidget->layout()->itemAt(0)->widget()->setFocus();
+    focusItem(item);
 }
 
 void GuiControl::unplagItem(LogItem *item)
@@ -183,5 +184,6 @@ void GuiControl::focusItem(LogItem *item)
     if (it != guiItemsMap.end()) {
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
         layout->itemAt(0)->layout()->itemAt(1)->widget()->setFocus();
+        mainScroll->ensureWidgetVisible((*it).second);
     }
 }

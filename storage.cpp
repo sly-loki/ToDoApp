@@ -115,12 +115,12 @@ void XmlDB::loadTree(LogItem *rootItem)
                 if (currentItem) {
 
                     if (currentItem->getId() == TEMPORARY_ID) {
-
                         qDebug() << "Error: item without id!!";
                     } else {
 
                         if (items.find(currentItem->getId()) != items.end()) {
                             qDebug() << "Error: dublicate id!!";
+                            throw "Error: dublicate id!!";
                         } else {
                             items[currentItem->getId()] = currentItem;
                             currentItem = new LogItem(nullptr, nullptr, TEMPORARY_ID);
