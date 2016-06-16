@@ -15,7 +15,7 @@ typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 class DB
 {
 public:
-    DB();
+    DB(const QString fileName);
     virtual void saveItem(LogItem *item, const QString &text);
     virtual void saveTree(LogItem *rootItem) = 0;
     virtual void loadTree(LogItem *rootItem) = 0;
@@ -31,6 +31,7 @@ class XmlDB: public DB
     QXmlStreamReader xmlStream;
     QXmlStreamWriter xmlWriter;
     QFile dbFile;
+    QString fileName;
     bool fileIsOk;
 
     void saveNode(QXmlStreamWriter &stream, LogItem *node);

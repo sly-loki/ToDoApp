@@ -1,3 +1,5 @@
+        refactoring
+
         local storage
 DONE        save/load text
             incremental save
@@ -13,4 +15,5 @@ DONE        save/load text
             multidocument interface(?)
 DONE        add spacer
             drag&drop by mouse
+            search
 

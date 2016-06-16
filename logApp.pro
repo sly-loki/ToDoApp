@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,11 +17,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     logtextedit.cpp \
     guicontrol.cpp \
-    storage.cpp
+    storage.cpp \
+    core.cpp \
+    logappserver.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
     guicontrol.h \
-    storage.h
+    storage.h \
+    core.h \
+    logappserver.h \
+    network_def.h
 
 FORMS    += mainwindow.ui

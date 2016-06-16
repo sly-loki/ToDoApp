@@ -18,13 +18,17 @@ class GuiControl: public QObject
 
 public:
     GuiControl(QScrollArea *scroll);
-    void createNewElement(LogItem *item);
-    void switchFocusTo(LogItem *item);
     void shiftItemToLevel(LogItem *item, LogItem *target);
     void unplagItem(LogItem *item);
 
 public slots:
     void oneOfItemsDoneChange(int state);
+
+    void addItem(LogItem *item);
+    void removeItem(LogItem *item);
+    void updateItem(LogItem *item);
+    void focusItem(LogItem *item);
+
 };
 
 #endif // GUICONTROL_H

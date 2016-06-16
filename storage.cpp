@@ -1,9 +1,9 @@
 #include "storage.h"
-#include "logtextedit.h"
+#include "core.h"
 
 #include <QDebug>
 
-DB::DB()
+DB::DB(QString fileName)
 {
 
 }
@@ -55,7 +55,9 @@ void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
 }
 
 XmlDB::XmlDB(const QString fileName)
-    : fileIsOk(false)
+    : DB(fileName)
+    , fileIsOk(false)
+    , fileName(fileName)
 {
     dbFile.setFileName(fileName);
     if (dbFile.open(QIODevice::ReadOnly)) {
@@ -69,13 +71,11 @@ void XmlDB::saveItem(LogItem *item, const QString &text)
 //    item->getId();
 }
 
-#define TEST_FILE_NAME "/tmp/test.xml"
-
 void XmlDB::saveTree(LogItem *rootItem)
 {
 //    if (fileIsOk)
 //        return;
-    QFile output(TEST_FILE_NAME);
+    QFile output(fileName);
     output.open(QIODevice::WriteOnly);
     xmlWriter.setDevice(&output);
     xmlWriter.setAutoFormatting(true);
@@ -93,7 +93,7 @@ void XmlDB::saveTree(LogItem *rootItem)
 
 void XmlDB::loadTree(LogItem *rootItem)
 {
-    QFile input(TEST_FILE_NAME);
+    QFile input(fileName);
     input.open(QIODevice::ReadOnly);
     xmlStream.setDevice(&input);
 
