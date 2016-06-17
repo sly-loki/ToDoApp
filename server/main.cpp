@@ -21,7 +21,7 @@ public:
 
     void start()
     {
-        if (!server.listen(QHostAddress::Any, 12054)) {
+        if (!server.listen(QHostAddress::Any, DEBUG_PORT)) {
             qDebug() << "server listen error";
             return;
         }

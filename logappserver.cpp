@@ -2,13 +2,24 @@
 #include "core.h"
 #include "network_def.h"
 
-LogAppServer::LogAppServer(QObject *parent)
-    : QObject(parent)
+void LogAppServer::readData()
 {
 
 }
 
-bool LogAppServer::connect()
+LogAppServer::LogAppServer(QObject *parent)
+    : QObject(parent)
+{
+    connect(&socket, SIGNAL(readyRead()), this, SLOT(readData()));
+}
+
+bool LogAppServer::connectToServer()
+{
+    socket.abort();
+    socket.connectToHost("localhost", DEBUG_PORT);
+}
+
+bool LogAppServer::ping()
 {
 
 }

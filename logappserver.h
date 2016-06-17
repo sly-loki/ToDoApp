@@ -2,7 +2,7 @@
 #define LOGAPPSERVER_H
 
 #include <QObject>
-#include <QTcpServer>
+#include <QTcpSocket>
 
 class LogItem;
 
@@ -16,12 +16,17 @@ enum ServerStatus
 class LogAppServer : public QObject
 {
     Q_OBJECT
-    QTcpServer server;
+    QTcpSocket socket;
+
+protected slots:
+    void readData();
+
 public:
     explicit LogAppServer(QObject *parent = 0);
-    bool connect();
+    bool connectToServer();
     ServerStatus getStatus();
 
+    bool ping();
     bool SaveItem(LogItem *item);
     bool SaveTree(LogItem *root);
 

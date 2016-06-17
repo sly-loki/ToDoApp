@@ -25,6 +25,8 @@ struct NetworkHeader
     uint64_t parentId;
 } __attribute__((packed));
 
+#define DEBUG_PORT 12054
+
 //struct PT
 
 #endif // NETWORK_DEF_H

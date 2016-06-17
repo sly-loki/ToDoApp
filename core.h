@@ -21,6 +21,7 @@ class LogItem
 
     LogControl *control;
     bool modified;
+    bool syncedWithServer;
 
     LogItem *parent;
     LogItem *next;
@@ -36,6 +37,8 @@ class LogItem
     friend class DB;
 
 public:
+
+    static void setNextId(uint64_t id) {if (id > nextId) nextId = id;}
 
     LogItem(LogControl *control, LogItem *parent, uint64_t id = 0);
     void addNewChild();
@@ -69,6 +72,9 @@ public:
 
     bool isModified() {return modified;}
     void setModified(bool status) {modified = status;}
+
+    bool isSynced() {return syncedWithServer;}
+    void setSynced(bool status) {syncedWithServer = status;}
 
     bool isDone() {return done;}
     void setDone(bool state) {this->done = state;}

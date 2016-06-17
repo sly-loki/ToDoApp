@@ -41,6 +41,7 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
     stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
     stream.writeTextElement("text", node->getText());
     stream.writeTextElement("done", QString("%1").arg((node->isDone())?1:0));
+    stream.writeTextElement("sync", QString("%1").arg((node->isDone())?1:0));
     stream.writeEndElement();
     LogItem *child = node->getChild();
     while(child) {
@@ -96,6 +97,7 @@ void XmlDB::loadTree(LogItem *rootItem)
     QFile input(fileName);
     input.open(QIODevice::ReadOnly);
     xmlStream.setDevice(&input);
+    uint64_t maxId = 0;
 
     std::map<uint64_t, LogItem*> items;
     items[0] = rootItem;
@@ -122,9 +124,10 @@ void XmlDB::loadTree(LogItem *rootItem)
                             qDebug() << "Error: dublicate id!!";
                             throw "Error: dublicate id!!";
                         } else {
+                            if (currentItem->getId() > maxId)
+                                maxId = currentItem->getId();
                             items[currentItem->getId()] = currentItem;
                             currentItem = new LogItem(nullptr, nullptr, TEMPORARY_ID);
-                            qDebug() << "create new item";
                         }
                     }
                 } else {
@@ -150,12 +153,16 @@ void XmlDB::loadTree(LogItem *rootItem)
                     currentItem->setText(xmlStream.text().toString());
                 } else if (type == "done") {
                     currentItem->setDone(xmlStream.text() == "1");
+                } else if (type == "sync") {
+                    currentItem->setSynced(xmlStream.text() == "1");
                 }
             }
         }
     }
     if (xmlStream.hasError())
         qDebug() << "read error: " << xmlStream.errorString();
+
+    LogItem::setNextId(maxId+1);
 
     input.close();
 }
