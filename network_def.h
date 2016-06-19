@@ -23,6 +23,7 @@ struct NetworkHeader
 
     uint64_t itemId;
     uint64_t parentId;
+    uint32_t dataSize;
 } __attribute__((packed));
 
 #define DEBUG_PORT 12054

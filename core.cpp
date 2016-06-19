@@ -246,9 +246,10 @@ void LogControl::removeItem(LogItem *item)
     if (item->getChild()) {
 
     }
+    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
     item->detachFromTree();
     emit itemDeleted(item);
-    emit itemFocused(item->getParent());
+    emit itemFocused(newFocusedItem);
 }
 
 void LogControl::switchTo(LogItem *item, MoveEvent to)
@@ -313,4 +314,20 @@ void LogControl::printItemTree()
         }
     };
     f(rootItem, QString(""));
+}
+
+void LogControl::setItemDone(LogItem *item, bool state)
+{
+    if (item->isDone() == state)
+        return;
+
+    item->setDone(state);
+    emit itemDoneChanged(item);
+    if (state == true) {
+        LogItem *child = item->getChild();
+        while (child) {
+            setItemDone(child, state);
+            child = child->getNext();
+        }
+    }
 }

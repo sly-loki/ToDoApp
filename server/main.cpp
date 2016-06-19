@@ -27,17 +27,33 @@ public:
         }
     }
 
+    void readPacket()
+    {
+
+    }
+
 public slots:
     void incomingMessage()
     {
         NetworkHeader packet;
-        if (clientConnection->read(&packet, sizeof(packet)) != sizeof(packet)) {
+        if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
             qDebug() << "read error";
             return;
+        }
+        char * data = nullptr;
+        if (packet.dataSize) {
+            data = new char[packet.dataSize+1];
+            size_t readed = clientConnection->read((char *)data, packet.dataSize);
+            if (readed != packet.dataSize) {
+                qDebug() << "data read error";
+                throw "bad data";
+            }
         }
         switch (packet.type) {
         case PT_ITEM_CREATED:
             qDebug() << "item created message";
+            qDebug() << "id : " << packet.itemId;
+            qDebug() << "text: " << data;
             break;
         case PT_GET_ALL_ITEMS:
             qDebug() << "request for all item";

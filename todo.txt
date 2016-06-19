@@ -9,8 +9,8 @@ DONE        save/load text
             save items over network
 
         gui
-            add check box for todos
-            scroll to active item
+DONE        add check box for todos
+DONE        scroll to active item
             open/close notes(for debug)
             multidocument interface(?)
 DONE        add spacer

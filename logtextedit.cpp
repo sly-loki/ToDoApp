@@ -48,7 +48,8 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         bool processed = true;
         switch (e->key()) {
         case Qt::Key_Q:
-            item->addNewChild();
+            if (e->modifiers() == Qt::ControlModifier)
+                item->addNewChild();
             break;
         case Qt::Key_Tab:
             if (!(e->modifiers() & Qt::ShiftModifier))
@@ -58,17 +59,29 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             item->shiftLeft();
             break;
         case Qt::Key_A:
-            item->addNewSibling();
+            if (e->modifiers() == Qt::ControlModifier)
+                item->addNewSibling();
             break;
         case Qt::Key_R:
             item->remove();
             break;
         case Qt::Key_S:
-            item->save();
+            if (e->modifiers() == Qt::ControlModifier) {
+                item->save();
+            } else {
+                processed = false;
+            }
+            break;
+        case Qt::Key_Return:
+            if (e->modifiers() == Qt::ControlModifier) {
+                item->addNewChild();
+            } else if (e->modifiers() == Qt::ShiftModifier) {
+                item->addNewSibling();
+            }
             break;
         case Qt::Key_Up:
         case Qt::Key_Down:
-        case Qt::Key_Left:
+//        case Qt::Key_Left:
         case Qt::Key_J:
         case Qt::Key_I:
         case Qt::Key_K:
@@ -116,6 +129,10 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
                     return;
                 }
             }
+            break;
+        case Qt::Key_Backspace:
+            if (toPlainText() == "" && item->getChild() == nullptr)
+                item->remove();
             break;
         }
     }

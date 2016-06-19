@@ -121,7 +121,7 @@ void XmlDB::loadTree(LogItem *rootItem)
                     } else {
 
                         if (items.find(currentItem->getId()) != items.end()) {
-                            qDebug() << "Error: dublicate id!!";
+                            qDebug() << "Error: dublicate id: " << currentItem->getId();
                             throw "Error: dublicate id!!";
                         } else {
                             if (currentItem->getId() > maxId)
@@ -162,6 +162,8 @@ void XmlDB::loadTree(LogItem *rootItem)
     if (xmlStream.hasError())
         qDebug() << "read error: " << xmlStream.errorString();
 
+    if (currentItem->getId() > maxId)
+        maxId = currentItem->getId();
     LogItem::setNextId(maxId+1);
 
     input.close();

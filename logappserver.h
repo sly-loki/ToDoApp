@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 
 class LogItem;
+struct NetworkHeader;
 
 enum ServerStatus
 {
@@ -18,6 +19,8 @@ class LogAppServer : public QObject
     Q_OBJECT
     QTcpSocket socket;
 
+    void sendPacket(NetworkHeader *header, const void *data);
+
 protected slots:
     void readData();
 
@@ -29,6 +32,10 @@ public:
     bool ping();
     bool SaveItem(LogItem *item);
     bool SaveTree(LogItem *root);
+
+public slots:
+    void addItem(LogItem *item);
+    void removeItem(LogItem *item);
 
 signals:
 

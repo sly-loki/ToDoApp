@@ -8,11 +8,27 @@
 #include <QDebug>
 
 
-void GuiControl::setDoneState(LogTextEdit *edit, bool state)
+void GuiControl::setDoneState(QBoxLayout *itemLayout, bool done)
 {
+    LogTextEdit *edit = getTextEdit(itemLayout);
     QFont font = edit->font();
-    font.setStrikeOut(state);
+    font.setStrikeOut(done);
+
     edit->setFont(font);
+    QColor color = done?Qt::lightGray:Qt::black;
+    QString style = QString("color:%1").arg(color.name());
+    edit->setStyleSheet(style);
+
+//    edit->setDisabled(done);
+
+    QCheckBox *cb = (QCheckBox *)itemLayout->itemAt(0)->layout()->itemAt(0)->widget();
+    cb->setChecked(done);
+
+}
+
+LogTextEdit *GuiControl::getTextEdit(QLayout *itemLayout)
+{
+    return (LogTextEdit *)itemLayout->itemAt(0)->layout()->itemAt(1)->widget();
 }
 
 GuiControl::GuiControl(QScrollArea *scroll)
@@ -83,19 +99,15 @@ void GuiControl::unplagItem(LogItem *item)
     guiItemsMap[item]->setParent(nullptr);
 }
 
-void GuiControl::oneOfItemsDoneChange(int state)
+void GuiControl::oneOfItemsDoneChanged(int state)
 {
     QWidget *parent = (QWidget*)(sender()->parent());
-//    auto it = guiItemsMap.find(parent);
-//    if (it == guiItemsMap.end())
-//        return;
+
     LogTextEdit *edit = (LogTextEdit*)parent->findChild<LogTextEdit*>("itemTextField");
     if (edit) {
         LogItem *item = edit->getItem();
-        item->setDone(state);
-        QFont font = edit->font();
-        font.setStrikeOut(state);
-        edit->setFont(font);
+        emit itemDoneChanged(item, state);
+
     }
 }
 
@@ -119,11 +131,10 @@ void GuiControl::addItem(LogItem *item)
 
     LogTextEdit * newElement = new LogTextEdit(item);
     newElement->setObjectName("itemTextField");
-    setDoneState(newElement, item->isDone());
 
     QCheckBox *box = new QCheckBox;
-    box->setChecked(item->isDone());
-    connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChange(int)));
+    connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChanged(int)));
+
     hLayout->setContentsMargins(0,0,0,0);
     hLayout->addWidget(box);
     hLayout->addWidget(newElement);
@@ -152,19 +163,21 @@ void GuiControl::addItem(LogItem *item)
             prevWidget = (*it).second;
         }
     }
+
+    int index = 0;
     if (prevWidget) {
-        int index = parentLayout->indexOf(prevWidget);
-        parentLayout->insertWidget(index+1, holderWidget);
+        index = parentLayout->indexOf(prevWidget) + 1;
     }
     else {
-        if (parentLayout == rootWidget->layout())
-            parentLayout->insertWidget(0, holderWidget);
-        else
-            parentLayout->insertWidget(1, holderWidget);
+        index = (parentLayout == rootWidget->layout())? 0 : 1;
     }
+    parentLayout->insertWidget(index, holderWidget);
 /////////
 
-    newElement->setFocus();
+    if (item->isDone())
+        setItemDone(item);
+    else
+        focusItem(item);
 }
 
 void GuiControl::removeItem(LogItem *item)
@@ -183,7 +196,17 @@ void GuiControl::focusItem(LogItem *item)
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        layout->itemAt(0)->layout()->itemAt(1)->widget()->setFocus();
-        mainScroll->ensureWidgetVisible((*it).second);
+        getTextEdit(layout)->setFocus();
+        mainScroll->ensureWidgetVisible(getTextEdit(layout));
+    }
+}
+
+void GuiControl::setItemDone(LogItem *item)
+{
+    bool done = item->isDone();
+    auto it = guiItemsMap.find(item);
+    if (it != guiItemsMap.end()) {
+        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
+        setDoneState(layout, item->isDone());
     }
 }

@@ -107,11 +107,15 @@ public:
 
     void printItemTree();
 
+public slots:
+    void setItemDone(LogItem *item, bool state);
+
 signals:
     void itemAdded(LogItem *);
     void itemModified(LogItem *);
     void itemDeleted(LogItem *);
     void itemFocused(LogItem *);
+    void itemDoneChanged(LogItem *);
 };
 
 #endif // CORE_H

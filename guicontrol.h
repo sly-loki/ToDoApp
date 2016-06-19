@@ -14,20 +14,25 @@ class GuiControl: public QObject
     QWidget *rootWidget;
     QScrollArea *mainScroll;
     std::map<LogItem*, QWidget*> guiItemsMap;
-    void setDoneState(LogTextEdit *edit, bool state);
+    void setDoneState(QBoxLayout *itemLayout, bool done);
+    static LogTextEdit *getTextEdit(QLayout *itemLayout);
 
 public:
     GuiControl(QScrollArea *scroll);
     void shiftItemToLevel(LogItem *item, LogItem *target);
     void unplagItem(LogItem *item);
 
+signals:
+    void itemDoneChanged(LogItem *item, bool state);
+
 public slots:
-    void oneOfItemsDoneChange(int state);
+    void oneOfItemsDoneChanged(int state);
 
     void addItem(LogItem *item);
     void removeItem(LogItem *item);
     void updateItem(LogItem *item);
     void focusItem(LogItem *item);
+    void setItemDone(LogItem *item);
 
 };
 
