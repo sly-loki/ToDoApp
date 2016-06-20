@@ -91,9 +91,12 @@ class LogControl: public QObject
     DB *db;
 
     void fillGui(LogItem *item);
+    LogItem *findItem(LogItem *parent, uint64_t id);
 public:
     LogControl(DB* db);
     void loadData();
+
+    LogItem *findItemById(uint64_t id);
 
     LogItem *createNewChild(LogItem *parent);
     LogItem *createNewSibling(LogItem *item);

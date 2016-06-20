@@ -5,16 +5,19 @@
 
 #include <memory>
 #include "../network_def.h"
+#include "../core.h"
 
 class TodoServer: public QObject
 {
     Q_OBJECT
     QTcpServer server;
     QTcpSocket *clientConnection;
+    LogControl *control;
 
 public:
     TodoServer()
         : clientConnection(nullptr)
+        , control(nullptr)
     {
         connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
     }
@@ -27,6 +30,11 @@ public:
         }
     }
 
+    void setControl(LogControl *control)
+    {
+        this->control = control;
+    }
+
     void readPacket()
     {
 
@@ -35,6 +43,10 @@ public:
 public slots:
     void incomingMessage()
     {
+        if (!control) {
+            qDebug() << "LogControl not set";
+            return;
+        }
         NetworkHeader packet;
         if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
             qDebug() << "read error";
@@ -51,9 +63,18 @@ public slots:
         }
         switch (packet.type) {
         case PT_ITEM_CREATED:
+        {
             qDebug() << "item created message";
             qDebug() << "id : " << packet.itemId;
             qDebug() << "text: " << data;
+            LogItem *parent = control->findItemById(packet.parentId);
+            if (parent) {
+                LogItem *newItem = new LogItem(parent, packet.itemId);
+                newItem->setText(data);
+                parent->addAsChild(newItem);
+                control->save();
+            }
+        }
             break;
         case PT_GET_ALL_ITEMS:
             qDebug() << "request for all item";
@@ -75,7 +96,11 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     TodoServer todoServer;
+    XmlDB db("/tmp/temp.xml");
+    LogControl control(&db);
 
+    todoServer.setControl(&control);
+    control.loadData();
     todoServer.start();
 
     return a.exec();

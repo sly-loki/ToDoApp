@@ -162,7 +162,7 @@ void XmlDB::loadTree(LogItem *rootItem)
     if (xmlStream.hasError())
         qDebug() << "read error: " << xmlStream.errorString();
 
-    if (currentItem->getId() > maxId)
+    if (currentItem && currentItem->getId() > maxId)
         maxId = currentItem->getId();
     LogItem::setNextId(maxId+1);
 

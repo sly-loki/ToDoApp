@@ -137,6 +137,20 @@ void LogControl::fillGui(LogItem *item)
     }
 }
 
+LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
+{
+    if (parent->getId() == id)
+        return parent;
+    LogItem *child = parent->getChild();
+    while(child) {
+        LogItem *temp = findItem(child, id);
+        if (temp)
+            return temp;
+        child = child->getNext();
+    }
+    return nullptr;
+}
+
 LogControl::LogControl(DB* db)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
@@ -155,6 +169,11 @@ void LogControl::loadData()
         fillGui(rootItem);
     }
     printItemTree();
+}
+
+LogItem *LogControl::findItemById(uint64_t id)
+{
+    return findItem(rootItem, id);
 }
 
 LogItem *LogControl::createNewChild(LogItem *parent)
