@@ -20,6 +20,8 @@ class LogTextEdit : public QPlainTextEdit
     static unsigned int fontHeight;
 
     void updateHeight();
+protected:
+    void resizeEvent(QResizeEvent *e);
 
 public:
     LogTextEdit(LogItem *item, QWidget *parent = nullptr);

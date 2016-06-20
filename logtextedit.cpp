@@ -17,8 +17,14 @@ void LogTextEdit::updateHeight()
         if (newLineCount == 0)
             newLineCount = 1;
         lineCount = newLineCount;
-        setFixedHeight(lineCount*fontHeight + 10);
+        setFixedHeight(lineCount*fontHeight + 12);
     }
+}
+
+void LogTextEdit::resizeEvent(QResizeEvent *e)
+{
+    updateHeight();
+    QPlainTextEdit::resizeEvent(e);
 }
 
 LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
@@ -30,6 +36,7 @@ LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
     LogTextEdit::fontHeight = fm.height();
     setPlainText(item->getText());
     updateHeight();
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     connect(this, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
 }
 
