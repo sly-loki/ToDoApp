@@ -146,3 +146,97 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
     item->setModified(true);
     QPlainTextEdit::keyPressEvent(e);
 }
+
+ApplicationTask::ApplicationTask(uint64_t id)
+    : id(id)
+{
+
+}
+
+ApplicationTask::~ApplicationTask()
+{
+
+}
+
+uint64_t ApplicationTask::getId()
+{
+    return id;
+}
+
+ReadServerItems::ReadServerItems(uint64_t id, LogControl *control, uint64_t *itemIds, uint count)
+    : ApplicationTask(id)
+    , remainintCount(count)
+    , control(control)
+{
+    for (int i = 0; i < count; i++)
+    {
+        items[itemIds[i]] = nullptr;
+    }
+}
+
+bool ReadServerItems::process(void *data)
+{
+    ServerItemData *serverItemData = (ServerItemData *)data;
+    LogItem *item = new LogItem(control, nullptr, serverItemData->itemId);
+
+    qDebug() << "id: " << serverItemData->itemId << " parent: " << serverItemData->parentId;
+
+    item->setText(serverItemData->text);
+    if (items[serverItemData->itemId] != nullptr) {
+        qDebug() << "dublicate item !!!";
+    }
+    items[serverItemData->itemId] = item;
+    remainintCount--;
+    if (remainintCount <= 0) {
+        auto it = items.begin();
+        while (it != items.end) {
+            if ((*it.second)->getId != 0) {
+
+            }
+        }
+    }
+    return remainintCount <= 0;
+}
+
+LogItem *ReadServerItems::getRootItem()
+{
+    return items[0];
+}
+
+ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server)
+    : control(control)
+    , server(server)
+    , readAllItemsTask(nullptr)
+{
+    connect(server, SIGNAL(itemListReceived(uint64_t*,uint)), this, SLOT(onItemListReceived(uint64_t*,uint)));
+    connect(server, SIGNAL(itemReceived(ServerItemData)), this, SLOT(onItemReceived(ServerItemData)));
+}
+
+void ApplicationControl::start()
+{
+    state = AS_RECEIVING_ITEMS;
+    server->getItemList();
+}
+
+void ApplicationControl::onItemListReceived(uint64_t *ids, uint count)
+{
+    qDebug() << "onItemListReceived";
+    readAllItemsTask = new ReadServerItems(1, control, ids, count);
+    for (int i = 0; i < count; i++)
+        server->getItemData(ids[i]);
+}
+
+void ApplicationControl::onItemReceived(ServerItemData data)
+{
+    qDebug() << "onItemReceived";
+    if (state == AS_RECEIVING_ITEMS) {
+        if (!readAllItemsTask) {
+            qDebug() << "error: receiving items, but task is null";
+            return;
+        }
+        if (readAllItemsTask->process(&data)) {
+            LogItem *root = readAllItemsTask->getRootItem();
+            control->setRootItem(root);
+        }
+    }
+}

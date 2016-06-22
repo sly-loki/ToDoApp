@@ -171,9 +171,26 @@ void LogControl::loadData()
     printItemTree();
 }
 
+void LogControl::setRootItem(LogItem *root)
+{
+    delete rootItem;
+    rootItem = root;
+    if (!rootItem->getChild()) {
+        createNewChild(nullptr);
+    }
+    else {
+        fillGui(rootItem);
+    }
+}
+
 LogItem *LogControl::findItemById(uint64_t id)
 {
     return findItem(rootItem, id);
+}
+
+LogItem *LogControl::getRootItem()
+{
+    return rootItem;
 }
 
 LogItem *LogControl::createNewChild(LogItem *parent)

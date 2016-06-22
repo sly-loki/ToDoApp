@@ -4,6 +4,8 @@
 #include <QDebug>
 
 #include <memory>
+#include <functional>
+#include <cassert>
 #include "../network_def.h"
 #include "../core.h"
 
@@ -35,6 +37,19 @@ public:
         this->control = control;
     }
 
+    void sendPacket(NetworkHeader *header, const void *data)
+    {
+        assert(header);
+        if (header->dataSize)
+            assert(data != nullptr);
+
+        qDebug() << "send package";
+
+        clientConnection->write((char *)header, sizeof(NetworkHeader));
+        if (header->dataSize)
+            clientConnection->write((char *)data, header->dataSize);
+    }
+
     void readPacket()
     {
 
@@ -48,6 +63,7 @@ public slots:
             return;
         }
         NetworkHeader packet;
+        while (true) {
         if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
             qDebug() << "read error";
             return;
@@ -69,16 +85,48 @@ public slots:
             qDebug() << "text: " << data;
             LogItem *parent = control->findItemById(packet.parentId);
             if (parent) {
-                LogItem *newItem = new LogItem(parent, packet.itemId);
+                LogItem *newItem = new LogItem(control, parent, packet.itemId);
                 newItem->setText(data);
                 parent->addAsChild(newItem);
                 control->save();
             }
         }
             break;
-        case PT_GET_ALL_ITEMS:
-            qDebug() << "request for all item";
+        case PT_GET_ITEM:
+        {
+            qDebug() << "get item: " << packet.itemId;
+            LogItem *item = control->findItemById(packet.itemId);
+            if (item) {
+                packet.dataSize = item->getText().size();
+                packet.parentId = (item->getParent())?item->getParent()->getId():0;
+                sendPacket(&packet, item->getText().toStdString().c_str());
+            } else {
+                // error processing here
+            }
+        }
             break;
+        case PT_GET_ALL_ITEMS:
+        {
+            qDebug() << "request for all item";
+            std::vector<uint64_t> ids;
+            LogItem *root = control->getRootItem();
+            std::function<void (LogItem *, std::vector<uint64_t> &)> f = [&f](LogItem *item, std::vector<uint64_t> &ids){
+                ids.push_back(item->getId());
+                LogItem *child = item->getChild();
+                while (child) {
+                    f(child, ids);
+                    child = child->getNext();
+                }
+            };
+            f(root, ids);
+            packet.dataSize = ids.size() * sizeof(uint64_t);
+            sendPacket(&packet, (const void *)ids.data());
+            break;
+        }
+        default:
+            qDebug() << "error here";
+            break;
+        }
         }
     }
 
@@ -96,7 +144,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     TodoServer todoServer;
-    XmlDB db("/tmp/temp.xml");
+    XmlDB db("/tmp/test.xml");
     LogControl control(&db);
 
     todoServer.setControl(&control);

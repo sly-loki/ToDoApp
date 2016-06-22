@@ -9,7 +9,57 @@
 
 #include "guicontrol.h"
 #include "storage.h"
+#include "logappserver.h"
 #include "core.h"
+
+enum ApplicationState
+{
+    AS_START = 0,
+    AS_RECEIVING_ITEMS,
+    AS_NORMAL
+};
+
+class ApplicationTask
+{
+    uint64_t id;
+public:
+    ApplicationTask(uint64_t id);
+    virtual ~ApplicationTask();
+
+    uint64_t getId();
+    virtual bool process(void *data) = 0;
+};
+
+class ReadServerItems: public ApplicationTask
+{
+    std::map<uint64_t, LogItem *> items;
+    uint remainintCount;
+    LogControl *control;
+
+public:
+    ReadServerItems(uint64_t id, LogControl *control, uint64_t *itemIds, uint count);
+
+    virtual bool process(void *data);
+    LogItem *getRootItem();
+};
+
+class ApplicationControl : public QObject
+{
+    Q_OBJECT
+    LogControl *control;
+    LogAppServer *server;
+    ApplicationState state;
+    std::vector<ApplicationTask *> asyncTasks;
+    ReadServerItems *readAllItemsTask;
+
+public:
+    ApplicationControl(LogControl *control, LogAppServer *server);
+    void start();
+
+public slots:
+    void onItemListReceived(uint64_t *ids, uint count);
+    void onItemReceived(ServerItemData data);
+};
 
 class LogTextEdit : public QPlainTextEdit
 {
