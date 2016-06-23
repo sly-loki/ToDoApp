@@ -52,22 +52,48 @@ void LogAppServer::readData()
         break;
     case PT_GET_ITEM: {
         ServerItemData itemData;
-
-        char *text = new char[header.dataSize];
-        size_t readed = socket.read(text, header.dataSize);
-        if (readed != header.dataSize) {
-            qDebug() << "ERROR: ";
-            delete[] text;  //fix
-            return;
+        qDebug() << "get item response: " << header.itemId;
+        qDebug() << "text: " << header.dataSize;
+        if (header.dataSize) {
+            char *text = new char[header.dataSize+1];
+            size_t readed = socket.read(text, header.dataSize);
+            if (readed != header.dataSize) {
+                qDebug() << "ERROR: ";
+                delete[] text;  //fix
+                return;
+            }
+            text[header.dataSize] = 0;
+            itemData.text = QString(text);
+            delete[] text;
         }
 
         itemData.itemId = header.itemId;
         itemData.parentId = header.parentId;
-        itemData.text = QString(text);
+
         emit itemReceived(itemData);
 
-        delete[] text;
+    }
+        break;
+    case PT_GET_CHILDREN: {
+        qDebug() << "get children items response";
+        size_t itemCount = header.dataSize/sizeof(uint64_t);
+        if (itemCount == 0) {
+            emit itemChildrenReceived(header.itemId, nullptr, 0);
+        }
+        uint64_t *ids = new uint64_t[itemCount];
+        size_t readed = socket.read((char *)ids, header.dataSize);
+        if (readed != header.dataSize) {
+            qDebug() << "ERROR: ";
+            delete[] ids;  //fix
+            return;
+        }
+        qDebug() << "readed " << itemCount << " items";
+        for (int i = 0; i < itemCount; i++) {
+            qDebug() << ids[i];
+        }
+        emit itemChildrenReceived(header.itemId, ids, itemCount);
 
+        delete[] ids;
     }
         break;
     default:
@@ -118,6 +144,16 @@ void LogAppServer::getItemData(uint64_t id)
     header.itemId = id;
     header.dataSize = 0;
     header.type = PT_GET_ITEM;
+
+    sendPacket(&header, nullptr);
+}
+
+void LogAppServer::getItemChildern(uint64_t id)
+{
+    NetworkHeader header;
+    header.itemId = id;
+    header.dataSize = 0;
+    header.type = PT_GET_CHILDREN;
 
     sendPacket(&header, nullptr);
 }

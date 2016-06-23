@@ -83,6 +83,11 @@ public slots:
             qDebug() << "item created message";
             qDebug() << "id : " << packet.itemId;
             qDebug() << "text: " << data;
+            LogItem *item = control->findItemById(packet.itemId);
+            if (item) {
+                qDebug() << "item with id already exists";
+                break;
+            }
             LogItem *parent = control->findItemById(packet.parentId);
             if (parent) {
                 LogItem *newItem = new LogItem(control, parent, packet.itemId);
@@ -121,8 +126,28 @@ public slots:
             f(root, ids);
             packet.dataSize = ids.size() * sizeof(uint64_t);
             sendPacket(&packet, (const void *)ids.data());
-            break;
         }
+            break;
+        case PT_GET_CHILDREN:
+        {
+            qDebug() << "request for children: " << packet.itemId;
+            std::vector<uint64_t> ids;
+            LogItem *parent = control->findItemById(packet.itemId);
+            if (!parent) {
+                qDebug() << "error: no such item";
+                packet.dataSize = 0;
+                sendPacket(&packet, nullptr);
+                break;
+            }
+            LogItem *child = parent->getChild();
+            while(child) {
+                ids.push_back(child->getId());
+                child = child->getNext();
+            }
+            packet.dataSize = ids.size() * sizeof(uint64_t);
+            sendPacket(&packet, (const void *)ids.data());
+        }
+            break;
         default:
             qDebug() << "error here";
             break;

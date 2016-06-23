@@ -6,7 +6,7 @@
 #include <QScrollArea>
 #include <QDebug>
 
-
+#include <cassert>
 
 unsigned int LogTextEdit::fontHeight = 1;
 
@@ -163,39 +163,42 @@ uint64_t ApplicationTask::getId()
     return id;
 }
 
-ReadServerItems::ReadServerItems(uint64_t id, LogControl *control, uint64_t *itemIds, uint count)
+ReadServerItems::ReadServerItems(uint64_t id, LogControl *control, uint count)
     : ApplicationTask(id)
-    , remainintCount(count)
+    , remainintCount(count-1)
     , control(control)
 {
-    for (int i = 0; i < count; i++)
-    {
-        items[itemIds[i]] = nullptr;
-    }
+//    for (int i = 0; i < count; i++)
+//    {
+//        items[itemIds[i]] = nullptr;
+//    }
+    items[0] = new LogItem(control, nullptr, 0);
+    items[0]->setId(0);
 }
 
 bool ReadServerItems::process(void *data)
 {
     ServerItemData *serverItemData = (ServerItemData *)data;
-    LogItem *item = new LogItem(control, nullptr, serverItemData->itemId);
+    LogItem *item = items[serverItemData->itemId];
+    assert(item);
 
     qDebug() << "id: " << serverItemData->itemId << " parent: " << serverItemData->parentId;
 
     item->setText(serverItemData->text);
-    if (items[serverItemData->itemId] != nullptr) {
-        qDebug() << "dublicate item !!!";
-    }
-    items[serverItemData->itemId] = item;
     remainintCount--;
-    if (remainintCount <= 0) {
-        auto it = items.begin();
-        while (it != items.end) {
-            if ((*it.second)->getId != 0) {
+    qDebug() << "count: " << remainintCount;
+    return remainintCount == 0;
+}
 
-            }
-        }
+void ReadServerItems::processChildren(uint64_t parentId, uint64_t *ids, uint count)
+{
+    LogItem *parent = items[parentId];
+    assert(parent);
+    for (int i = 0; i < count; i++) {
+        LogItem *item = new LogItem(control, parent, ids[i]);
+        parent->addAsChild(item);
+        items[ids[i]] = item;
     }
-    return remainintCount <= 0;
 }
 
 LogItem *ReadServerItems::getRootItem()
@@ -210,6 +213,7 @@ ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server
 {
     connect(server, SIGNAL(itemListReceived(uint64_t*,uint)), this, SLOT(onItemListReceived(uint64_t*,uint)));
     connect(server, SIGNAL(itemReceived(ServerItemData)), this, SLOT(onItemReceived(ServerItemData)));
+    connect(server, SIGNAL(itemChildrenReceived(uint64_t,uint64_t*,uint)), this, SLOT(onItemChildrenReceived(uint64_t,uint64_t*,uint)));
 }
 
 void ApplicationControl::start()
@@ -220,10 +224,8 @@ void ApplicationControl::start()
 
 void ApplicationControl::onItemListReceived(uint64_t *ids, uint count)
 {
-    qDebug() << "onItemListReceived";
-    readAllItemsTask = new ReadServerItems(1, control, ids, count);
-    for (int i = 0; i < count; i++)
-        server->getItemData(ids[i]);
+    readAllItemsTask = new ReadServerItems(1, control, count);
+    server->getItemChildern(0);
 }
 
 void ApplicationControl::onItemReceived(ServerItemData data)
@@ -237,6 +239,21 @@ void ApplicationControl::onItemReceived(ServerItemData data)
         if (readAllItemsTask->process(&data)) {
             LogItem *root = readAllItemsTask->getRootItem();
             control->setRootItem(root);
+        }
+    }
+}
+
+void ApplicationControl::onItemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count)
+{
+    if (state == AS_RECEIVING_ITEMS) {
+        if (!readAllItemsTask) {
+            qDebug() << "error: receiving items, but task is null";
+            return;
+        }
+        readAllItemsTask->processChildren(parentId, ids, count);
+        for (int i = 0; i < count; i++) {
+            server->getItemChildern(ids[i]);
+            server->getItemData(ids[i]);
         }
     }
 }

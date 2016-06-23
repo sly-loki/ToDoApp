@@ -37,9 +37,10 @@ class ReadServerItems: public ApplicationTask
     LogControl *control;
 
 public:
-    ReadServerItems(uint64_t id, LogControl *control, uint64_t *itemIds, uint count);
+    ReadServerItems(uint64_t id, LogControl *control, uint count);
 
     virtual bool process(void *data);
+    void processChildren(uint64_t parentId, uint64_t *ids, uint count);
     LogItem *getRootItem();
 };
 
@@ -59,6 +60,7 @@ public:
 public slots:
     void onItemListReceived(uint64_t *ids, uint count);
     void onItemReceived(ServerItemData data);
+    void onItemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
 };
 
 class LogTextEdit : public QPlainTextEdit

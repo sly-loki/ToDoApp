@@ -65,6 +65,7 @@ public:
 
     void getItemList();
     void getItemData(uint64_t id);
+    void getItemChildern(uint64_t id);
 
 public slots:
     void addItem(LogItem *item);
@@ -75,6 +76,7 @@ signals:
     void receivedRequest();
     void itemListReceived(uint64_t *ids, uint count);
     void itemReceived(ServerItemData data);
+    void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
 
 public slots:
 };
