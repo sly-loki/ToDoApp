@@ -370,17 +370,11 @@ void LogControl::setItemDone(LogItem *item, bool state)
 
 void LogControl::createItem(CreateItemData data)
 {
-    LogItem *item = control->findItemById(packet.itemId);
-    if (item) {
-        qDebug() << "item with id already exists";
-        break;
-    }
-    LogItem *parent = control->findItemById(packet.parentId);
+    LogItem *parent = findItemById(data.parentId);
     if (parent) {
-        LogItem *newItem = new LogItem(control, parent, packet.itemId);
-        newItem->setText(data);
+        LogItem *newItem = new LogItem(this, parent, 0);
+        newItem->setText(data.text);
         parent->addAsChild(newItem);
-        control->save();
     }
 }
 

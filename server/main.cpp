@@ -6,6 +6,8 @@
 #include <iostream>
 
 #include "server.h"
+#include "../storage.h"
+#include "core.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,7 +24,10 @@ int main(int argc, char *argv[])
     XmlDB db("/tmp/test.xml");
     LogControl control(&db);
 
-    todoServer.setControl(&control);
+    QObject::connect(&todoServer, SIGNAL(createItem(CreateItemData)), &control, SLOT(createItem(CreateItemData)));
+    QObject::connect(&todoServer, SIGNAL(changeItemText(ChangeItemData)), &control, SLOT(changeItem(ChangeItemData)));
+    QObject::connect(&todoServer, SIGNAL(removeItem(RemoveItemData)), &control, SLOT(removeItem(RemoveItemData)));
+
     control.loadData();
     todoServer.start();
 
