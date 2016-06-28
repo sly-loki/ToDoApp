@@ -141,6 +141,15 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             if (toPlainText() == "" && item->getChild() == nullptr)
                 item->remove();
             break;
+        case Qt::Key_Tab: {
+            QTextCursor cursor = textCursor();
+            if (cursor.position() == 0) {
+                item->shiftRight();
+                e->accept();
+                return;
+            }
+        }
+            break;
         }
     }
     item->setModified(true);
