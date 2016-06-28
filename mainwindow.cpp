@@ -33,10 +33,10 @@ MainWindow::MainWindow(QWidget *parent) :
     LogAppServer *server = new LogAppServer();
     ApplicationControl *appControl = new ApplicationControl(control, server);
     connect(control, SIGNAL(itemAdded(LogItem*)), server, SLOT(addItem(LogItem*)));
-    control->loadData();
-//    server->connectToServer();
+//    control->loadData();
+    server->connectToServer();
 //    server->getItemList();
-//    appControl->start();
+    appControl->start();
 }
 
 MainWindow::~MainWindow()

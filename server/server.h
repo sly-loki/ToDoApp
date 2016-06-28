@@ -6,7 +6,8 @@
 #include <QTcpSocket>
 
 #include "../network_def.h"
-//#include "core.h"
+
+class LogItem;
 
 struct CreateItemData {
     uint64_t parentId;
@@ -35,12 +36,17 @@ public:
     void start();
     void sendPacket(NetworkHeader *header, const void *data);
     void readPacket();
+    void sendItem(LogItem *item);
+    void sendChildrenIds(uint64_t itemId, std::vector<uint64_t> &ids);
+    void sendAction();
 
 signals:
     void createItem(CreateItemData data);
     void moveItem();
     void changeItemText(ChangeItemData data);
     void removeItem(RemoveItemData data);
+    void itemRequested(uint64_t id);
+    void childrenIdsRequested(uint64_t parentId);
 
 protected slots:
     void incomingMessage();

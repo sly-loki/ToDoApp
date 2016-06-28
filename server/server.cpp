@@ -4,9 +4,10 @@
 #include <functional>
 #include <cassert>
 
+#include "core.h"
+
 TodoServer::TodoServer()
     : clientConnection(nullptr)
-    , control(nullptr)
 {
     connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
@@ -37,12 +38,29 @@ void TodoServer::readPacket()
 
 }
 
+void TodoServer::sendItem(LogItem *item)
+{
+    NetworkHeader packet;
+    qDebug() << "send item";
+    packet.type = PT_GET_ITEM;
+    packet.itemId = item->getId();
+    packet.dataSize = item->getText().size();
+    packet.parentId = (item->getParent())?item->getParent()->getId():0;
+    sendPacket(&packet, item->getText().toStdString().c_str());
+}
+
+void TodoServer::sendChildrenIds(uint64_t itemId, std::vector<uint64_t> &ids)
+{
+    NetworkHeader packet;
+    qDebug() << "send ids" << ids.size();
+    packet.type = PT_GET_CHILDREN;
+    packet.itemId = itemId;
+    packet.dataSize = ids.size() * sizeof(uint64_t);
+    sendPacket(&packet, (const void *)ids.data());
+}
+
 void TodoServer::incomingMessage()
 {
-    if (!control) {
-        qDebug() << "LogControl not set";
-        return;
-    }
     NetworkHeader packet;
     while (true) {
     if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
@@ -76,52 +94,31 @@ void TodoServer::incomingMessage()
     case PT_GET_ITEM:
     {
         qDebug() << "get item: " << packet.itemId;
-        LogItem *item = control->findItemById(packet.itemId);
-        if (item) {
-            packet.dataSize = item->getText().size();
-            packet.parentId = (item->getParent())?item->getParent()->getId():0;
-            sendPacket(&packet, item->getText().toStdString().c_str());
-        } else {
-            // error processing here
-        }
+        emit itemRequested(packet.itemId);
     }
         break;
     case PT_GET_ALL_ITEMS:
     {
-        qDebug() << "request for all item";
-        std::vector<uint64_t> ids;
-        LogItem *root = control->getRootItem();
-        std::function<void (LogItem *, std::vector<uint64_t> &)> f = [&f](LogItem *item, std::vector<uint64_t> &ids){
-            ids.push_back(item->getId());
-            LogItem *child = item->getChild();
-            while (child) {
-                f(child, ids);
-                child = child->getNext();
-            }
-        };
-        f(root, ids);
-        packet.dataSize = ids.size() * sizeof(uint64_t);
-        sendPacket(&packet, (const void *)ids.data());
+//        qDebug() << "request for all item";
+//        std::vector<uint64_t> ids;
+//        LogItem *root = control->getRootItem();
+//        std::function<void (LogItem *, std::vector<uint64_t> &)> f = [&f](LogItem *item, std::vector<uint64_t> &ids){
+//            ids.push_back(item->getId());
+//            LogItem *child = item->getChild();
+//            while (child) {
+//                f(child, ids);
+//                child = child->getNext();
+//            }
+//        };
+//        f(root, ids);
+//        packet.dataSize = ids.size() * sizeof(uint64_t);
+//        sendPacket(&packet, (const void *)ids.data());
     }
         break;
     case PT_GET_CHILDREN:
     {
         qDebug() << "request for children: " << packet.itemId;
-        std::vector<uint64_t> ids;
-        LogItem *parent = control->findItemById(packet.itemId);
-        if (!parent) {
-            qDebug() << "error: no such item";
-            packet.dataSize = 0;
-            sendPacket(&packet, nullptr);
-            break;
-        }
-        LogItem *child = parent->getChild();
-        while(child) {
-            ids.push_back(child->getId());
-            child = child->getNext();
-        }
-        packet.dataSize = ids.size() * sizeof(uint64_t);
-        sendPacket(&packet, (const void *)ids.data());
+        emit childrenIdsRequested(packet.itemId);
     }
         break;
     default:

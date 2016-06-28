@@ -151,9 +151,10 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
-LogControl::LogControl(DB* db)
+LogControl::LogControl(DB* db, TodoServer *server)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
+    , server(server)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
@@ -386,4 +387,30 @@ void LogControl::changeItem(ChangeItemData data)
 void LogControl::removeItem(RemoveItemData data)
 {
 
+}
+
+void LogControl::sendItem(uint64_t id)
+{
+    LogItem *item = findItemById(id);
+    if (item) {
+        server->sendItem(item);
+    } else {
+        // error processing here
+    }
+}
+
+void LogControl::sendChildrenIds(uint64_t id)
+{
+    std::vector<uint64_t> ids;
+    LogItem *parent = findItemById(id);
+    if (!parent) {
+        qDebug() << "error: no such item";
+    } else {
+        LogItem *child = parent->getChild();
+        while(child) {
+            ids.push_back(child->getId());
+            child = child->getNext();
+        }
+    }
+    server->sendChildrenIds(id, ids);
 }

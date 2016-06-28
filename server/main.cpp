@@ -22,11 +22,13 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     TodoServer todoServer;
     XmlDB db("/tmp/test.xml");
-    LogControl control(&db);
+    LogControl control(&db, &todoServer);
 
     QObject::connect(&todoServer, SIGNAL(createItem(CreateItemData)), &control, SLOT(createItem(CreateItemData)));
     QObject::connect(&todoServer, SIGNAL(changeItemText(ChangeItemData)), &control, SLOT(changeItem(ChangeItemData)));
     QObject::connect(&todoServer, SIGNAL(removeItem(RemoveItemData)), &control, SLOT(removeItem(RemoveItemData)));
+    QObject::connect(&todoServer, SIGNAL(childrenIdsRequested(uint64_t)), &control, SLOT(sendChildrenIds(uint64_t)));
+    QObject::connect(&todoServer, SIGNAL(itemRequested(uint64_t)), &control, SLOT(sendItem(uint64_t)));
 
     control.loadData();
     todoServer.start();

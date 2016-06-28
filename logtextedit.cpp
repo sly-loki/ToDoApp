@@ -165,7 +165,7 @@ uint64_t ApplicationTask::getId()
 
 ReadServerItems::ReadServerItems(uint64_t id, LogControl *control, uint count)
     : ApplicationTask(id)
-    , remainintCount(count-1)
+    , remainintCount(0)
     , control(control)
 {
 //    for (int i = 0; i < count; i++)
@@ -194,6 +194,7 @@ void ReadServerItems::processChildren(uint64_t parentId, uint64_t *ids, uint cou
 {
     LogItem *parent = items[parentId];
     assert(parent);
+    remainintCount += count;
     for (int i = 0; i < count; i++) {
         LogItem *item = new LogItem(control, parent, ids[i]);
         parent->addAsChild(item);
@@ -219,13 +220,13 @@ ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server
 void ApplicationControl::start()
 {
     state = AS_RECEIVING_ITEMS;
-    server->getItemList();
+    readAllItemsTask = new ReadServerItems(1, control, 0);
+    server->getItemChildern(0);
 }
 
 void ApplicationControl::onItemListReceived(uint64_t *ids, uint count)
 {
-    readAllItemsTask = new ReadServerItems(1, control, count);
-    server->getItemChildern(0);
+
 }
 
 void ApplicationControl::onItemReceived(ServerItemData data)
