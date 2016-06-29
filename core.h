@@ -123,4 +123,12 @@ signals:
     void itemDoneChanged(LogItem *);
 };
 
+class LogDocument
+{
+public:
+    LogDocument();
+
+    LogItem *getRootItem();
+};
+
 #endif // CORE_H

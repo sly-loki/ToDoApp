@@ -31,10 +31,9 @@ LogTextEdit *GuiControl::getTextEdit(QLayout *itemLayout)
     return (LogTextEdit *)itemLayout->itemAt(0)->layout()->itemAt(1)->widget();
 }
 
-GuiControl::GuiControl(QScrollArea *scroll)
-    : rootWidget(new QWidget())
-    , mainScroll(scroll)
+void GuiControl::initRootWidget()
 {
+    rootWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout();
 //    layout->setContentsMargins(0,0,0,0);
     QSpacerItem *spacer = new QSpacerItem(1,1000, QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -44,6 +43,24 @@ GuiControl::GuiControl(QScrollArea *scroll)
 //    rootWidget->setStyleSheet("background-color:red;");
 
     mainScroll->setWidget(this->rootWidget);
+}
+
+void GuiControl::addChildern(LogItem *item)
+{
+    addItem(item);
+    LogItem *child = item->getChild();
+    while (child) {
+        addChildern(child);
+        child = child->getNext();
+    }
+}
+
+GuiControl::GuiControl(QScrollArea *scroll)
+    : rootWidget(nullptr)
+    , mainScroll(scroll)
+    , currentDocument(nullptr)
+{
+//    initRootWidget();
 }
 
 void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
@@ -97,6 +114,44 @@ void GuiControl::unplagItem(LogItem *item)
     }
     parentLayout->removeWidget(guiItemsMap[item]);
     guiItemsMap[item]->setParent(nullptr);
+}
+
+void GuiControl::onDocumentOpen(LogControl *doc)
+{
+
+}
+
+void GuiControl::onDocumentClose(LogControl *doc)
+{
+
+}
+
+void GuiControl::setCurrentDocument(LogControl *doc)
+{
+    if (currentDocument) {
+        disconnect(this, SLOT(addItem(LogItem*)));
+        disconnect(this, SLOT(removeItem(LogItem*)));
+        disconnect(this, SLOT(updateItemPosition(LogItem*)));
+        disconnect(this, SLOT(focusItem(LogItem*)));
+        disconnect(this, SLOT(setItemDone(LogItem*)));
+        disconnect(currentDocument, SLOT(setItemDone(LogItem*,bool)));
+    }
+
+    initRootWidget();
+    LogItem *root = doc->getRootItem();
+
+    LogItem *item = root->getChild();
+    while(item) {
+        addChildern(item);
+        item = item->getNext();
+    }
+
+    connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
+    connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));
+    connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
+    connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
+    connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+    connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
 }
 
 void GuiControl::oneOfItemsDoneChanged(int state)
@@ -185,7 +240,7 @@ void GuiControl::removeItem(LogItem *item)
     unplagItem(item);
 }
 
-void GuiControl::updateItem(LogItem *item)
+void GuiControl::updateItemPosition(LogItem *item)
 {
     unplagItem(item);
     shiftItemToLevel(item, item->getParent());

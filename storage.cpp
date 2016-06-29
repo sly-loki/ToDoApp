@@ -92,7 +92,7 @@ void XmlDB::saveTree(LogItem *rootItem)
     output.close();
 }
 
-void XmlDB::loadTree(LogItem *rootItem)
+void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
 {
     QFile input(fileName);
     input.open(QIODevice::ReadOnly);
@@ -111,23 +111,23 @@ void XmlDB::loadTree(LogItem *rootItem)
             continue;
         if (token == QXmlStreamReader::StartElement)
         {
-            qDebug() << "token readed: " << xmlStream.name() << xmlStream.text();
+//            qDebug() << "token readed: " << xmlStream.name() << xmlStream.text();
             if (xmlStream.name() == "item") {
 
                 if (currentItem) {
 
                     if (currentItem->getId() == TEMPORARY_ID) {
-                        qDebug() << "Error: item without id!!";
+//                        qDebug() << "Error: item without id!!";
                     } else {
 
                         if (items.find(currentItem->getId()) != items.end()) {
-                            qDebug() << "Error: dublicate id: " << currentItem->getId();
+//                            qDebug() << "Error: dublicate id: " << currentItem->getId();
                             throw "Error: dublicate id!!";
                         } else {
                             if (currentItem->getId() > maxId)
                                 maxId = currentItem->getId();
                             items[currentItem->getId()] = currentItem;
-                            currentItem = new LogItem(nullptr, nullptr, TEMPORARY_ID);
+                            currentItem = new LogItem(control, nullptr, TEMPORARY_ID);
                         }
                     }
                 } else {
@@ -137,11 +137,11 @@ void XmlDB::loadTree(LogItem *rootItem)
                 if (!currentItem)
                     continue;
                 QString type = xmlStream.name().toString();
-                qDebug() << "type: " << type;
+//                qDebug() << "type: " << type;
                 xmlStream.readNext();
                 if (type == "id") {
                     uint64_t id = xmlStream.text().toUInt();
-                    qDebug() << "setId: " << id;
+//                    qDebug() << "setId: " << id;
                     currentItem->setId(id);
                 } else if (type == "parent") {
                     uint64_t pid = xmlStream.text().toUInt();
@@ -160,7 +160,7 @@ void XmlDB::loadTree(LogItem *rootItem)
         }
     }
     if (xmlStream.hasError())
-        qDebug() << "read error: " << xmlStream.errorString();
+//        qDebug() << "read error: " << xmlStream.errorString();
 
     if (currentItem && currentItem->getId() > maxId)
         maxId = currentItem->getId();

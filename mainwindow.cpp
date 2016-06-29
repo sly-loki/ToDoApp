@@ -3,12 +3,13 @@
 #include <memory>
 
 #include <QSplitter>
-#include <QListWidget>
+#include <QDir>
 
 #include "logtextedit.h"
 #include "logappserver.h"
 
-#define TEST_FILE_NAME "/home/loki/.todo/test.xml"
+#define TEST_FILE_NAME "/home/loki/.todo/midterm.xml"
+#define DEFAULT_APP_FOLDER_NAME ".todo"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -19,26 +20,43 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->splitter->setStretchFactor(0, 1);
     ui->splitter->setStretchFactor(1, 4);
 
-    DB *db = new XmlDB(TEST_FILE_NAME);
-    GuiControl *guiControl = new GuiControl(ui->scrollArea);
-    LogControl *control = new LogControl(db);
-    connect(control, SIGNAL(itemAdded(LogItem*)), guiControl, SLOT(addItem(LogItem*)));
-    connect(control, SIGNAL(itemDeleted(LogItem*)), guiControl, SLOT(removeItem(LogItem*)));
-    connect(control, SIGNAL(itemModified(LogItem*)), guiControl, SLOT(updateItem(LogItem*)));
-    connect(control, SIGNAL(itemFocused(LogItem*)), guiControl, SLOT(focusItem(LogItem*)));
-    connect(control, SIGNAL(itemDoneChanged(LogItem*)), guiControl, SLOT(setItemDone(LogItem*)));
+    QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;
+    qDebug() << appDirectoryName;
+    QDir appDir(appDirectoryName);
+    if (!appDir.exists()) {
+        appDir.mkpath(appDirectoryName);
+    }
 
-    connect(guiControl, SIGNAL(itemDoneChanged(LogItem*,bool)), control, SLOT(setItemDone(LogItem*,bool)));
+    QStringList filters;
+    filters.append("*.xml");
+    QStringList fileList = appDir.entryList(filters);
+    qDebug() << fileList;
+
+    for (auto s: fileList) {
+        QString fileName = appDir.path() + QDir::separator() + s;
+
+        DB *db = new XmlDB(fileName);
+        LogControl *control = new LogControl(db);
+        control->loadData();
+
+        filesToDocs[s] = control;
+
+        ui->listWidget->addItem(s);
+    }
+
+    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
+
+    DB *db = new XmlDB(TEST_FILE_NAME);
+    guiControl = new GuiControl(ui->scrollArea);
+    LogControl *control = new LogControl(db);
 
     LogAppServer *server = new LogAppServer();
     ApplicationControl *appControl = new ApplicationControl(control, server);
     connect(control, SIGNAL(itemAdded(LogItem*)), server, SLOT(addItem(LogItem*)));
 #define LOCALMOD
 #ifdef LOCALMOD
-    control->loadData();
-//    server->connectToServer();
-//    server->getItemList();
-//    appControl->start();
+
+//    guiControl->setCurrentDocument(control);
 #else
         server->connectToServer();
         appControl->start();
@@ -48,4 +66,16 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onDocumentSelected(QListWidgetItem* item)
+{
+    QString name = item->text();
+    auto it = filesToDocs.find(name);
+    qDebug() << "here";
+    if (it != filesToDocs.end()) {
+        guiControl->setCurrentDocument((*it).second);
+    } else {
+        qDebug() << name << " not found";
+    }
 }

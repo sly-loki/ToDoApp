@@ -161,12 +161,12 @@ LogControl::LogControl(DB* db)
 
 void LogControl::loadData()
 {
-    db->loadTree(rootItem);
+    db->loadTree(this, rootItem);
     if (!rootItem->getChild()) {
-        createNewChild(nullptr);
+        createNewChild(rootItem);
     }
     else {
-        fillGui(rootItem);
+//        fillGui(rootItem);
     }
     printItemTree();
 }
@@ -366,4 +366,9 @@ void LogControl::setItemDone(LogItem *item, bool state)
             child = child->getNext();
         }
     }
+}
+
+LogDocument::LogDocument()
+{
+
 }

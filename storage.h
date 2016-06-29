@@ -9,6 +9,7 @@
 #include <QFile>
 
 class LogItem;
+class LogControl;
 
 typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 
@@ -18,7 +19,7 @@ public:
     DB(const QString fileName);
     virtual void saveItem(LogItem *item, const QString &text);
     virtual void saveTree(LogItem *rootItem) = 0;
-    virtual void loadTree(LogItem *rootItem) = 0;
+    virtual void loadTree(LogControl *control, LogItem *rootItem) = 0;
     virtual ItemVector getFirstLevelItems();
     virtual ItemVector getChildsOf(LogItem *item);
     virtual QString getText(LogItem *item);
@@ -39,8 +40,8 @@ class XmlDB: public DB
 public:
     XmlDB(const QString fileName);
     virtual void saveItem(LogItem *item, const QString &text) override;
-    virtual void saveTree(LogItem *rootItem);
-    virtual void loadTree(LogItem *rootItem);
+    virtual void saveTree(LogItem *rootItem) override;
+    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
     virtual ItemVector getFirstLevelItems() override;
     virtual ItemVector getChildsOf(LogItem *item) override;
     virtual QString getText(LogItem *item) override;
