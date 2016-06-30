@@ -131,7 +131,7 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
                         }
                     }
                 } else {
-                    currentItem = new LogItem(nullptr, nullptr, TEMPORARY_ID);
+                    currentItem = new LogItem(control, nullptr, TEMPORARY_ID);
                 }
             } else {
                 if (!currentItem)

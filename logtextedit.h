@@ -47,7 +47,7 @@ public:
 class ApplicationControl : public QObject
 {
     Q_OBJECT
-    LogControl *control;
+//    LogControl *control;
     LogAppServer *server;
     ApplicationState state;
     std::vector<ApplicationTask *> asyncTasks;
@@ -55,7 +55,11 @@ class ApplicationControl : public QObject
 
 public:
     ApplicationControl(LogControl *control, LogAppServer *server);
+    bool createNewDocument(QString name, QString fullFileName);
     void start();
+
+signals:
+    void createdNewDocument(LogControl *doc);
 
 public slots:
     void onItemListReceived(uint64_t *ids, uint count);

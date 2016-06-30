@@ -129,12 +129,12 @@ void GuiControl::onDocumentClose(LogControl *doc)
 void GuiControl::setCurrentDocument(LogControl *doc)
 {
     if (currentDocument) {
-        disconnect(this, SLOT(addItem(LogItem*)));
-        disconnect(this, SLOT(removeItem(LogItem*)));
-        disconnect(this, SLOT(updateItemPosition(LogItem*)));
-        disconnect(this, SLOT(focusItem(LogItem*)));
-        disconnect(this, SLOT(setItemDone(LogItem*)));
-        disconnect(currentDocument, SLOT(setItemDone(LogItem*,bool)));
+        disconnect(currentDocument, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
+        disconnect(currentDocument, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));
+        disconnect(currentDocument, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
+        disconnect(currentDocument, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
+        disconnect(currentDocument, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+        disconnect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), currentDocument, SLOT(setItemDone(LogItem*,bool)));
     }
 
     initRootWidget();
@@ -152,6 +152,7 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
     connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
     connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
+    currentDocument = doc;
 }
 
 void GuiControl::oneOfItemsDoneChanged(int state)

@@ -20,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->splitter->setStretchFactor(0, 1);
     ui->splitter->setStretchFactor(1, 4);
 
+    QAction *newAct = new QAction(tr("&New"), this);
+    ui->mainToolBar->addAction(newAct);
+
     QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;
     qDebug() << appDirectoryName;
     QDir appDir(appDirectoryName);
@@ -44,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->listWidget->addItem(s);
     }
 
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
+    connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
 
     DB *db = new XmlDB(TEST_FILE_NAME);
     guiControl = new GuiControl(ui->scrollArea);
@@ -57,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef LOCALMOD
 
 //    guiControl->setCurrentDocument(control);
+    ui->listWidget->setCurrentItem(ui->listWidget->item(0));
 #else
         server->connectToServer();
         appControl->start();
@@ -72,7 +76,6 @@ void MainWindow::onDocumentSelected(QListWidgetItem* item)
 {
     QString name = item->text();
     auto it = filesToDocs.find(name);
-    qDebug() << "here";
     if (it != filesToDocs.end()) {
         guiControl->setCurrentDocument((*it).second);
     } else {

@@ -217,8 +217,8 @@ LogItem *ReadServerItems::getRootItem()
 }
 
 ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server)
-    : control(control)
-    , server(server)
+//    : control(control)
+    : server(server)
     , readAllItemsTask(nullptr)
 {
     connect(server, SIGNAL(itemListReceived(uint64_t*,uint)), this, SLOT(onItemListReceived(uint64_t*,uint)));
@@ -226,11 +226,19 @@ ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server
     connect(server, SIGNAL(itemChildrenReceived(uint64_t,uint64_t*,uint)), this, SLOT(onItemChildrenReceived(uint64_t,uint64_t*,uint)));
 }
 
+bool ApplicationControl::createNewDocument(QString name, QString fullFileName)
+{
+    XmlDB *newDB = new XmlDB(fullFileName);
+    LogControl *newDoc = new LogControl(newDB);
+    newDoc->loadData();
+    emit createdNewDocument(newDoc);
+}
+
 void ApplicationControl::start()
 {
     state = AS_RECEIVING_ITEMS;
-    readAllItemsTask = new ReadServerItems(1, control, 0);
-    server->getItemChildern(0);
+//    readAllItemsTask = new ReadServerItems(1, control, 0);
+//    server->getItemChildern(0);
 }
 
 void ApplicationControl::onItemListReceived(uint64_t *ids, uint count)
@@ -248,7 +256,7 @@ void ApplicationControl::onItemReceived(ServerItemData data)
         }
         if (readAllItemsTask->process(&data)) {
             LogItem *root = readAllItemsTask->getRootItem();
-            control->setRootItem(root);
+//            control->setRootItem(root);
         }
     }
 }
