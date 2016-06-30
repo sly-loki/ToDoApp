@@ -216,9 +216,9 @@ LogItem *ReadServerItems::getRootItem()
     return items[0];
 }
 
-ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server)
-//    : control(control)
+ApplicationControl::ApplicationControl(LogAppServer *server)
     : server(server)
+    , state(AS_START)
     , readAllItemsTask(nullptr)
 {
     connect(server, SIGNAL(itemListReceived(uint64_t*,uint)), this, SLOT(onItemListReceived(uint64_t*,uint)));
@@ -229,7 +229,7 @@ ApplicationControl::ApplicationControl(LogControl *control, LogAppServer *server
 bool ApplicationControl::createNewDocument(QString name, QString fullFileName)
 {
     XmlDB *newDB = new XmlDB(fullFileName);
-    LogControl *newDoc = new LogControl(newDB);
+    LogControl *newDoc = new LogControl(newDB, name);
     newDoc->loadData();
     emit createdNewDocument(newDoc);
 }

@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <QSplitter>
-#include <QDir>
 
 #include "logtextedit.h"
 #include "logappserver.h"
@@ -22,10 +21,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QAction *newAct = new QAction(tr("&New"), this);
     ui->mainToolBar->addAction(newAct);
+    ui->newDocWidget->setVisible(false);
+    connect(ui->docOkButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
+    connect(ui->docCancelButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
+    connect(newAct, SIGNAL(triggered(bool)), this, SLOT(createDocument()));
 
     QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;
     qDebug() << appDirectoryName;
-    QDir appDir(appDirectoryName);
+    appDir = QDir(appDirectoryName);
     if (!appDir.exists()) {
         appDir.mkpath(appDirectoryName);
     }
@@ -39,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QString fileName = appDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db);
+        LogControl *control = new LogControl(db, s);
         control->loadData();
 
         filesToDocs[s] = control;
@@ -51,11 +54,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     DB *db = new XmlDB(TEST_FILE_NAME);
     guiControl = new GuiControl(ui->scrollArea);
-    LogControl *control = new LogControl(db);
 
     LogAppServer *server = new LogAppServer();
-    ApplicationControl *appControl = new ApplicationControl(control, server);
-    connect(control, SIGNAL(itemAdded(LogItem*)), server, SLOT(addItem(LogItem*)));
+    appControl = new ApplicationControl(server);
+//    connect(control, SIGNAL(itemAdded(LogItem*)), server, SLOT(addItem(LogItem*)));
+    connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
 #define LOCALMOD
 #ifdef LOCALMOD
 
@@ -81,4 +84,28 @@ void MainWindow::onDocumentSelected(QListWidgetItem* item)
     } else {
         qDebug() << name << " not found";
     }
+}
+
+void MainWindow::createDocument()
+{
+    ui->newDocWidget->setVisible(true);
+}
+
+void MainWindow::newDocButtonClicked()
+{
+    if (sender() == ui->docOkButton) {
+        QString name = ui->docNameLine->text();
+        QString fileName = appDir.path() + QDir::separator() + name + ".xml";
+        if (!QFile(fileName).exists()) {
+            appControl->createNewDocument(name, fileName);
+        }
+    }
+    ui->newDocWidget->setVisible(false);
+}
+
+void MainWindow::onNewDocument(LogControl *doc)
+{
+    filesToDocs[doc->getName()] = doc;
+
+    ui->listWidget->addItem(doc->getName());
 }

@@ -47,14 +47,13 @@ public:
 class ApplicationControl : public QObject
 {
     Q_OBJECT
-//    LogControl *control;
     LogAppServer *server;
     ApplicationState state;
     std::vector<ApplicationTask *> asyncTasks;
     ReadServerItems *readAllItemsTask;
 
 public:
-    ApplicationControl(LogControl *control, LogAppServer *server);
+    ApplicationControl(LogAppServer *server);
     bool createNewDocument(QString name, QString fullFileName);
     void start();
 

@@ -128,6 +128,9 @@ void GuiControl::onDocumentClose(LogControl *doc)
 
 void GuiControl::setCurrentDocument(LogControl *doc)
 {
+    if (doc == currentDocument)
+        return;
+
     if (currentDocument) {
         disconnect(currentDocument, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
         disconnect(currentDocument, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));

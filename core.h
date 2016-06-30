@@ -89,11 +89,14 @@ class LogControl: public QObject
 
     LogItem *rootItem;
     DB *db;
+    QString name;
 
     void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
-    LogControl(DB* db);
+    LogControl(DB* db, QString name);
+
+    QString getName();
     void loadData();
     void setRootItem(LogItem *root);
 
