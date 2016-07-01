@@ -31,6 +31,8 @@ class LogItem
     QString text;
     bool done;
 
+    bool childrenHided;
+
     static uint64_t nextId; //for debug
 
     friend class LogControl;
@@ -81,6 +83,9 @@ public:
 
     uint64_t getId() const;
     void setId(const uint64_t &value);
+
+    void setChildrenHided(bool hide) {childrenHided = hide;}
+    bool isChildrenHided() {return childrenHided;}
 };
 
 class LogControl: public QObject

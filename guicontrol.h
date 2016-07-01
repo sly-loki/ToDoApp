@@ -3,11 +3,15 @@
 
 #include <QLayout>
 #include <QScrollArea>
+#include <QCheckBox>
+#include <QPushButton>
 
 class LogItem;
 class LogTextEdit;
 class LogDocument;
 class LogControl;
+
+class ItemWidget;
 
 class GuiControl: public QObject
 {
@@ -19,6 +23,8 @@ class GuiControl: public QObject
     LogControl *currentDocument;
 
     static LogTextEdit *getTextEdit(QLayout *itemLayout);
+    static QCheckBox *getDoneBox(QLayout *itemLayout);
+    static QPushButton *getFoldButton(QLayout *itemLayout);
 
     void setDoneState(QBoxLayout *itemLayout, bool done);
     void initRootWidget();
@@ -43,6 +49,7 @@ public slots:
     void setCurrentDocument(LogControl *doc);
 
     void oneOfItemsDoneChanged(int state);
+    void oneOfItemsFoldChanged(bool folded);
 
     void addItem(LogItem *item);
     void removeItem(LogItem *item);
@@ -50,6 +57,19 @@ public slots:
     void focusItem(LogItem *item);
     void setItemDone(LogItem *item);
 
+};
+
+class ItemWidget: public QWidget
+{
+    Q_OBJECT
+public:
+    ItemWidget();
+    void setText(QString text);
+    QString getText();
+
+signals:
+    void foldChanged(bool folded);
+    void doneChanged(bool done);
 };
 
 #endif // GUICONTROL_H

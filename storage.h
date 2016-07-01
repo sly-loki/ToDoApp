@@ -16,7 +16,7 @@ typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 class DB
 {
 public:
-    DB(const QString fileName);
+    DB();
     virtual void saveItem(LogItem *item, const QString &text);
     virtual void saveTree(LogItem *rootItem) = 0;
     virtual void loadTree(LogControl *control, LogItem *rootItem) = 0;

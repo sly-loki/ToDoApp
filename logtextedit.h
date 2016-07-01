@@ -77,6 +77,7 @@ class LogTextEdit : public QPlainTextEdit
     void updateHeight();
 protected:
     void resizeEvent(QResizeEvent *e);
+    void keyPressEvent(QKeyEvent *e);
 
 public:
     LogTextEdit(LogItem *item, QWidget *parent = nullptr);
@@ -85,8 +86,8 @@ public:
 public slots:
     void onTextChanged();
 
-protected:
-    void keyPressEvent(QKeyEvent *e);
+signals:
+    void foldCombinationPressed(bool);
 };
 
 #endif // LOGTEXTEDIT_H

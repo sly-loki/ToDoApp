@@ -66,8 +66,11 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             item->shiftLeft();
             break;
         case Qt::Key_A:
-            if (e->modifiers() == Qt::ControlModifier)
+            if (e->modifiers() == Qt::ControlModifier) {
                 item->addNewSibling();
+            } else {
+                processed = false;
+            }
             break;
         case Qt::Key_R:
             item->remove();
@@ -75,6 +78,13 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_S:
             if (e->modifiers() == Qt::ControlModifier) {
                 item->save();
+            } else {
+                processed = false;
+            }
+            break;
+        case Qt::Key_U:
+            if (e->modifiers() == Qt::ControlModifier) {
+                emit foldCombinationPressed(!item->isChildrenHided());
             } else {
                 processed = false;
             }

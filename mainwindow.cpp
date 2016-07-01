@@ -22,8 +22,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction *newAct = new QAction(tr("&New"), this);
     ui->mainToolBar->addAction(newAct);
     ui->newDocWidget->setVisible(false);
+
     connect(ui->docOkButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
     connect(ui->docCancelButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
+//    connect(ui->docNameLine, SIGNAL())
     connect(newAct, SIGNAL(triggered(bool)), this, SLOT(createDocument()));
 
     QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;

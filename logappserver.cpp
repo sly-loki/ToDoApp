@@ -179,3 +179,20 @@ void LogAppServer::sendAction(ServerAction action)
 
 }
 
+
+RemoteDB::RemoteDB(LogAppServer *server, QString docName)
+    : server(server)
+    , docName(docName)
+{
+
+}
+
+void RemoteDB::saveTree(LogItem *rootItem)
+{
+
+}
+
+void RemoteDB::loadTree(LogControl *control, LogItem *rootItem)
+{
+
+}

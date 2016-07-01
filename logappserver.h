@@ -7,6 +7,8 @@
 
 #include <map>
 
+#include "storage.h"
+
 class LogItem;
 struct NetworkHeader;
 
@@ -79,6 +81,18 @@ signals:
     void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
 
 public slots:
+};
+
+class RemoteDB: public DB
+{
+
+    LogAppServer *server;
+    QString docName;
+
+public:
+    RemoteDB(LogAppServer *server, QString docName);
+    virtual void saveTree(LogItem *rootItem) override;
+    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
 };
 
 #endif // LOGAPPSERVER_H

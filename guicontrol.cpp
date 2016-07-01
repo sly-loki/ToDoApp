@@ -5,6 +5,7 @@
 #include <QTextBlock>
 #include <QTextLayout>
 #include <QCheckBox>
+#include <QPushButton>
 #include <QDebug>
 
 
@@ -21,14 +22,24 @@ void GuiControl::setDoneState(QBoxLayout *itemLayout, bool done)
 
 //    edit->setDisabled(done);
 
-    QCheckBox *cb = (QCheckBox *)itemLayout->itemAt(0)->layout()->itemAt(0)->widget();
+    QCheckBox *cb = getDoneBox(itemLayout);
     cb->setChecked(done);
 
 }
 
 LogTextEdit *GuiControl::getTextEdit(QLayout *itemLayout)
 {
-    return (LogTextEdit *)itemLayout->itemAt(0)->layout()->itemAt(1)->widget();
+    return (LogTextEdit *)itemLayout->itemAt(0)->layout()->itemAt(2)->widget();
+}
+
+QCheckBox *GuiControl::getDoneBox(QLayout *itemLayout)
+{
+    return (QCheckBox *)itemLayout->itemAt(0)->layout()->itemAt(1)->widget();
+}
+
+QPushButton *GuiControl::getFoldButton(QLayout *itemLayout)
+{
+    return (QPushButton *)itemLayout->itemAt(0)->layout()->itemAt(0)->widget();
 }
 
 void GuiControl::initRootWidget()
@@ -170,6 +181,24 @@ void GuiControl::oneOfItemsDoneChanged(int state)
     }
 }
 
+void GuiControl::oneOfItemsFoldChanged(bool folded)
+{
+    QWidget *parent = (QWidget*)(sender()->parent());
+
+    LogTextEdit *edit = (LogTextEdit*)parent->findChild<LogTextEdit*>("itemTextField");
+    if (edit) {
+        LogItem *item = edit->getItem();
+        item->setChildrenHided(folded);
+        LogItem *child = item->getChild();
+        getFoldButton(guiItemsMap[item]->layout())->setChecked(folded);
+        while(child) {
+            QWidget *cWidget = guiItemsMap[child];
+            cWidget->setVisible(!folded);
+            child = child->getNext();
+        }
+    }
+}
+
 void GuiControl::addItem(LogItem *item)
 {
     static int color = 100;
@@ -183,13 +212,31 @@ void GuiControl::addItem(LogItem *item)
         parentLayout = (QBoxLayout*)((*it).second->layout());
 
     if (!parentLayout)
-        parentLayout = (QBoxLayout*)(rootWidget->layout());;
+        parentLayout = (QBoxLayout*)(rootWidget->layout());
+
+    if (parent->getId() != 0) {
+        getFoldButton(parentLayout)->setEnabled(true);
+        getFoldButton(parentLayout)->setStyleSheet("background:red");
+    }
 
     QBoxLayout *layout = new QVBoxLayout();
     QBoxLayout *hLayout = new QHBoxLayout();
 
     LogTextEdit * newElement = new LogTextEdit(item);
     newElement->setObjectName("itemTextField");
+    connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+
+    QPushButton *foldWidget = new QPushButton();
+    foldWidget->setFixedSize(15,15);
+    foldWidget->setStyleSheet("background:red");
+    foldWidget->setCheckable(true);
+    foldWidget->setChecked(!item->isChildrenHided());
+    hLayout->addWidget(foldWidget);
+    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+    if (!item->getChild()) {
+        foldWidget->setEnabled(false);
+        foldWidget->setStyleSheet("background: grey");
+    }
 
     QCheckBox *box = new QCheckBox;
     connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChanged(int)));
@@ -231,6 +278,8 @@ void GuiControl::addItem(LogItem *item)
         index = (parentLayout == rootWidget->layout())? 0 : 1;
     }
     parentLayout->insertWidget(index, holderWidget);
+    if (parent->isChildrenHided())
+        holderWidget->setVisible(false);
 /////////
 
     if (item->isDone())
@@ -268,4 +317,19 @@ void GuiControl::setItemDone(LogItem *item)
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
         setDoneState(layout, item->isDone());
     }
+}
+
+ItemWidget::ItemWidget()
+{
+
+}
+
+void ItemWidget::setText(QString text)
+{
+
+}
+
+QString ItemWidget::getText()
+{
+
 }

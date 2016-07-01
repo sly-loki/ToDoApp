@@ -15,6 +15,7 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     , prev(nullptr)
     , firstChild(nullptr)
     , done(false)
+    , childrenHided(false)
 {
     if (id == 0) {
         this->id = nextId;
@@ -304,7 +305,7 @@ void LogControl::switchTo(LogItem *item, MoveEvent to)
             return;
         if (item->prev) {
             LogItem *temp = item->prev->getLastChild();
-            if (temp) {
+            if (temp && !item->prev->isChildrenHided()) {
                 while (temp->getChild())
                     temp = temp->getLastChild();
                 emit itemFocused(temp);
@@ -318,7 +319,7 @@ void LogControl::switchTo(LogItem *item, MoveEvent to)
         }
         break;
     case ME_DOWN:
-        if (item->getChild())
+        if (item->getChild() && !item->isChildrenHided())
             emit itemFocused(item->getChild());
         else if (item->getNext())
             emit itemFocused(item->getNext());
