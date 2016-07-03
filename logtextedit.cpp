@@ -54,6 +54,11 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
     if (e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) {
         bool processed = true;
         switch (e->key()) {
+//        case Qt::Key_Z:
+//            if (e->modifiers() == Qt::ControlModifier) {
+//                emit CtrlZPressed();
+//            }
+//            break;
         case Qt::Key_Q:
             if (e->modifiers() == Qt::ControlModifier)
                 item->addNewChild();
@@ -72,9 +77,13 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
                 processed = false;
             }
             break;
-        case Qt::Key_R:
-            item->remove();
-            break;
+//        case Qt::Key_R:
+//            if (e->modifiers() == Qt::ControlModifier) {
+//                item->remove();
+//            } else {
+//                processed = false;
+//            }
+//            break;
         case Qt::Key_S:
             if (e->modifiers() == Qt::ControlModifier) {
                 item->save();
@@ -159,6 +168,10 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
                 return;
             }
         }
+            break;
+        case Qt::Key_PageUp:
+            break;
+        case Qt::Key_PageDown:
             break;
         }
     }

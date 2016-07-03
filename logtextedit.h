@@ -75,6 +75,7 @@ class LogTextEdit : public QPlainTextEdit
     static unsigned int fontHeight;
 
     void updateHeight();
+
 protected:
     void resizeEvent(QResizeEvent *e);
     void keyPressEvent(QKeyEvent *e);
@@ -88,6 +89,7 @@ public slots:
 
 signals:
     void foldCombinationPressed(bool);
+    void CtrlZPressed();
 };
 
 #endif // LOGTEXTEDIT_H

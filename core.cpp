@@ -8,6 +8,7 @@ uint64_t LogItem::nextId = 1;
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     : control(control)
     , id(id)
+    , type(IT_TODO)
     , modified(false)
     , syncedWithServer(false)
     , parent(parent)
@@ -126,6 +127,25 @@ void LogItem::setId(const uint64_t &value)
     id = value;
 }
 
+//++++++++++++++++++++++++++++++++++++++++++++
+
+DeleteAction::DeleteAction(LogItem *item)
+{
+
+}
+
+void DeleteAction::make()
+{
+
+}
+
+void DeleteAction::revert()
+{
+
+}
+
+//######################################
+
 void LogControl::fillGui(LogItem *item)
 {
     if (item->getParent() != nullptr)
@@ -193,6 +213,45 @@ void LogControl::setRootItem(LogItem *root)
 LogItem *LogControl::findItemById(uint64_t id)
 {
     return findItem(rootItem, id);
+}
+
+LogItem *LogControl::getNextItemInTree(LogItem *item)
+{
+    if (item->getChild() && !item->isChildrenHided())
+        return item->getChild();
+    else if (item->getNext())
+        return item->getNext();
+    else {
+        LogItem *temp = item->getParent();
+        while (temp) {
+            if (temp->getNext()) {
+                return temp->getNext();
+            }
+            temp = temp->getParent();
+        }
+    }
+    return item;
+}
+
+LogItem *LogControl::getPrevItemInTree(LogItem *item)
+{
+    if (item == rootItem)
+        return rootItem;
+    if (item->prev) {
+        LogItem *temp = item->prev->getLastChild();
+        if (temp && !item->prev->isChildrenHided()) {
+            while (temp->getChild())
+                temp = temp->getLastChild();
+            return temp;
+        }
+        else {
+            return item->getPrev();
+        }
+    }
+    else {
+        LogItem *parent = item->getParent();
+        return (parent != rootItem)?parent:item;
+    }
 }
 
 LogItem *LogControl::getRootItem()
@@ -297,42 +356,12 @@ void LogControl::removeItem(LogItem *item)
 
 void LogControl::switchTo(LogItem *item, MoveEvent to)
 {
-    LogItem *targetItem = nullptr;
-
     switch (to) {
     case ME_UP:
-        if (item == rootItem)
-            return;
-        if (item->prev) {
-            LogItem *temp = item->prev->getLastChild();
-            if (temp && !item->prev->isChildrenHided()) {
-                while (temp->getChild())
-                    temp = temp->getLastChild();
-                emit itemFocused(temp);
-            }
-            else {
-                emit itemFocused(item->prev);
-            }
-        }
-        else {
-            emit itemFocused(item->parent);
-        }
+        emit itemFocused(getPrevItemInTree(item));
         break;
     case ME_DOWN:
-        if (item->getChild() && !item->isChildrenHided())
-            emit itemFocused(item->getChild());
-        else if (item->getNext())
-            emit itemFocused(item->getNext());
-        else {
-            LogItem *temp = item->getParent();
-            while (temp) {
-                if (temp->getNext()) {
-                    emit itemFocused(temp->getNext());
-                    break;
-                }
-                temp = temp->getParent();
-            }
-        }
+        emit itemFocused(getNextItemInTree(item));
         break;
     case ME_LEFT:
         if (item->getParent() && item->getParent() != rootItem)
@@ -375,7 +404,13 @@ void LogControl::setItemDone(LogItem *item, bool state)
     }
 }
 
+void LogControl::cancelLastAction()
+{
+
+}
+
 LogDocument::LogDocument()
 {
 
 }
+

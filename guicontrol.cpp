@@ -230,7 +230,7 @@ void GuiControl::addItem(LogItem *item)
     foldWidget->setFixedSize(15,15);
     foldWidget->setStyleSheet("background:red");
     foldWidget->setCheckable(true);
-    foldWidget->setChecked(!item->isChildrenHided());
+    foldWidget->setChecked(item->isChildrenHided());
     hLayout->addWidget(foldWidget);
     connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
     if (!item->getChild()) {

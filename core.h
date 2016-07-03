@@ -15,9 +15,16 @@ enum MoveEvent {
     ME_LEFT
 };
 
+enum ItemType
+{
+    IT_TODO = 0,
+    IT_LOG
+};
+
 class LogItem
 {
     uint64_t id;
+    ItemType type;
 
     LogControl *control;
     bool modified;
@@ -88,6 +95,64 @@ public:
     bool isChildrenHided() {return childrenHided;}
 };
 
+enum DocumentType
+{
+    DT_LOCAL = 0,
+    DT_REMOTE,
+    DT_CACHED
+};
+
+class ClientAction
+{
+public:
+    virtual void make() = 0;
+    virtual void revert() = 0;
+//    virtual void finalise() = 0;
+
+    virtual ~ClientAction() {}
+};
+
+class DeleteAction : public ClientAction
+{
+    LogItem *item;
+    LogItem *parent;
+    LogItem *prev;
+public:
+    DeleteAction(LogItem *item);
+
+    void make();
+    void revert();
+};
+
+class CreateAction: public ClientAction
+{
+    LogItem *item;
+    LogItem *parent;
+    LogItem *prev;
+public:
+    CreateAction(LogItem *item);
+};
+
+class EditAction: public ClientAction
+{
+    LogItem *item;
+    QString textBeforeEdit;
+    QString textAfterEdit;
+public:
+    EditAction(LogItem *item);
+};
+
+class MoveAction: public ClientAction
+{
+    LogItem *item;
+    LogItem *prevParent;
+    LogItem *prevPrev;
+    LogItem *newParent;
+    LogItem *newPrev;
+public:
+    MoveAction(LogItem *item);
+};
+
 class LogControl: public QObject
 {
     Q_OBJECT
@@ -95,9 +160,12 @@ class LogControl: public QObject
     LogItem *rootItem;
     DB *db;
     QString name;
+    DocumentType docType;
 
     void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
+
+    std::vector<ClientAction *> actionList;
 public:
     LogControl(DB* db, QString name);
 
@@ -106,6 +174,8 @@ public:
     void setRootItem(LogItem *root);
 
     LogItem *findItemById(uint64_t id);
+    LogItem *getNextItemInTree(LogItem *item);
+    LogItem *getPrevItemInTree(LogItem *item);
 
     LogItem *getRootItem();
     LogItem *createNewChild(LogItem *parent);
@@ -122,6 +192,7 @@ public:
 
 public slots:
     void setItemDone(LogItem *item, bool state);
+    void cancelLastAction();
 
 signals:
     void itemAdded(LogItem *);
