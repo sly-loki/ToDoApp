@@ -129,19 +129,22 @@ void LogItem::setId(const uint64_t &value)
 
 //++++++++++++++++++++++++++++++++++++++++++++
 
-DeleteAction::DeleteAction(LogItem *item)
+DeleteAction::DeleteAction(LogControl *doc, LogItem *item)
+    : doc(doc)
+    , item(item)
+    , parent(item->getParent())
+    , prev(item->getPrev())
 {
-
 }
 
 void DeleteAction::make()
 {
-
+    doc->removeItem(item);
 }
 
 void DeleteAction::revert()
 {
-
+    parent->addAsChild(item, prev);
 }
 
 //######################################
@@ -278,6 +281,12 @@ LogItem *LogControl::createNewSibling(LogItem *item)
     return newItem;
 }
 
+void LogControl::addItem(LogItem *item, LogItem *parent, LogItem *prev)
+{
+    parent->addAsChild(item, prev);
+    emit itemAdded(newItem);
+}
+
 void LogControl::shiftRight(LogItem *item)
 {
     if (!item->prev)
@@ -349,7 +358,13 @@ void LogControl::removeItem(LogItem *item)
 
     }
     LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
+
+//    DeleteAction *action = new DeleteAction(item);
+//    action->make();
+//    actionList.push_back(action);
+
     item->detachFromTree();
+
     emit itemDeleted(item);
     emit itemFocused(newFocusedItem);
 }

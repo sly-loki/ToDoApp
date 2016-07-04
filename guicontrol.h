@@ -64,12 +64,21 @@ class ItemWidget: public QWidget
     Q_OBJECT
 public:
     ItemWidget();
-    void setText(QString text);
     QString getText();
+
+public slots:
+    void addChild(ItemWidget *child, ItemWidget after);
+    void setText(QString text);
 
 signals:
     void foldChanged(bool folded);
     void doneChanged(bool done);
+    void textChanged(QString text);
+    void newSiblingPressed();
+    void newChildPressed();
+    void removePressed();
+    void moved();
+    void focusSwitched();
 };
 
 #endif // GUICONTROL_H

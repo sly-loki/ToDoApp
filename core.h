@@ -114,11 +114,12 @@ public:
 
 class DeleteAction : public ClientAction
 {
+    LogControl *doc;
     LogItem *item;
     LogItem *parent;
     LogItem *prev;
 public:
-    DeleteAction(LogItem *item);
+    DeleteAction(LogControl *doc, LogItem *item);
 
     void make();
     void revert();
@@ -166,6 +167,8 @@ class LogControl: public QObject
     LogItem *findItem(LogItem *parent, uint64_t id);
 
     std::vector<ClientAction *> actionList;
+    std::vector<ClientAction *> redoActionList;
+
 public:
     LogControl(DB* db, QString name);
 
@@ -180,6 +183,7 @@ public:
     LogItem *getRootItem();
     LogItem *createNewChild(LogItem *parent);
     LogItem *createNewSibling(LogItem *item);
+    void addItem(LogItem *item, LogItem *parent, LogItem *prev = nullptr);
     void shiftRight(LogItem *item);
     void shiftLeft(LogItem *item);
     void shiftUp(LogItem *item);

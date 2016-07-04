@@ -51,77 +51,69 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
     static std::map<int, MoveEvent> keyToMove =
                 {{Qt::Key_Up, ME_UP}, {Qt::Key_Down, ME_DOWN}, {Qt::Key_Left, ME_LEFT}, {Qt::Key_I, ME_UP}, {Qt::Key_K, ME_DOWN}, {Qt::Key_J, ME_LEFT}};
 
-    if (e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) {
+    if (e->modifiers() == Qt::ShiftModifier) {
         bool processed = true;
         switch (e->key()) {
-//        case Qt::Key_Z:
-//            if (e->modifiers() == Qt::ControlModifier) {
-//                emit CtrlZPressed();
-//            }
-//            break;
-        case Qt::Key_Q:
-            if (e->modifiers() == Qt::ControlModifier)
-                item->addNewChild();
-            break;
-        case Qt::Key_Tab:
-            if (!(e->modifiers() & Qt::ShiftModifier))
-                item->shiftRight();
+        case Qt::Key_Return:
+            emit newSiblingPressed();
+            //item->addNewSibling();
             break;
         case Qt::Key_Backtab:
-            item->shiftLeft();
+            emit movePressed(1); //fix
+//            item->shiftLeft();
             break;
-        case Qt::Key_A:
-            if (e->modifiers() == Qt::ControlModifier) {
-                item->addNewSibling();
-            } else {
-                processed = false;
-            }
+        }
+        if (processed) {
+            e->accept();
+            return;
+        }
+    }
+    if (e->modifiers() == Qt::ControlModifier) {
+        bool processed = true;
+        switch (e->key()) {
+        case Qt::Key_Z:
+            emit CtrlZPressed();
             break;
-//        case Qt::Key_R:
+//        case Qt::Key_Q:
+//            emit newChildPressed();
+////                item->addNewChild();
+//            break;
+        case Qt::Key_Tab:
+            emit movePressed(0); //fix
+//                item->shiftRight();
+            break;
+//        case Qt::Key_A:
 //            if (e->modifiers() == Qt::ControlModifier) {
-//                item->remove();
+//                item->addNewSibling();
 //            } else {
 //                processed = false;
 //            }
 //            break;
-        case Qt::Key_S:
-            if (e->modifiers() == Qt::ControlModifier) {
-                item->save();
-            } else {
-                processed = false;
-            }
+        case Qt::Key_R:
+            emit removePressed();
+//          item->remove();
             break;
+//        case Qt::Key_S:
+//            if (e->modifiers() == Qt::ControlModifier) {
+//                item->save();
+//            } else {
+//                processed = false;
+//            }
+//            break;
         case Qt::Key_U:
-            if (e->modifiers() == Qt::ControlModifier) {
-                emit foldCombinationPressed(!item->isChildrenHided());
-            } else {
-                processed = false;
-            }
+            emit foldCombinationPressed(!item->isChildrenHided());
             break;
         case Qt::Key_Return:
-            if (e->modifiers() == Qt::ControlModifier) {
-                item->addNewChild();
-            } else if (e->modifiers() == Qt::ShiftModifier) {
-                item->addNewSibling();
-            }
+            emit newChildPressed();
+//            item->addNewChild();
             break;
         case Qt::Key_Up:
         case Qt::Key_Down:
-//        case Qt::Key_Left:
         case Qt::Key_J:
         case Qt::Key_I:
         case Qt::Key_K:
-            if ((e->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier)) == (Qt::ShiftModifier | Qt::ControlModifier)) {
-                if (e->key() == Qt::Key_Up)
-                    item->shiftUp();
-                else if (e->key() == Qt::Key_Down)
-                    item->shiftDown();
-            }
-            else if (e->modifiers() & Qt::ControlModifier){
-                item->switchTo(keyToMove[e->key()]);
-            } else {
-                processed = false;
-            }
+            emit switchFocusPressed(keyToMove[e->key()]);
+//                item->switchTo(keyToMove[e->key()]);
             break;
         default:
             processed = false;
@@ -131,41 +123,66 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             e->accept();
             return;
         }
-    } else {
+    }
+
+    if ((e->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier)) == (Qt::ShiftModifier | Qt::ControlModifier)) {
+
+        switch (e->key()) {
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_I:
+        case Qt::Key_K:
+            if (e->key() == Qt::Key_Up || e->key() == Qt::Key_I)
+                emit movePressed(2); //fix
+//                item->shiftUp();
+            else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_K)
+                emit movePressed(3);
+//                item->shiftDown();
+            break;
+        }
+
+        if (processed) {
+            e->accept();
+            return;
+        }
+    }
+
+    if (e->modifiers() == Qt::NoModifier) {
+        bool processed = true;
+
         switch (e->key()) {
         case Qt::Key_Up:
         case Qt::Key_Down:
             if (document()->lineCount() == 1) {
-                item->switchTo(keyToMove[e->key()]);
-                e->accept();
-                return;
+                emit switchFocusPressed(keyToMove[e->key()]);
+//                item->switchTo(keyToMove[e->key()]);
             } else {
                 QTextCursor cursor = textCursor();
                 int position = cursor.positionInBlock();
                 const QTextBlock &block = cursor.block();
                 QTextLayout *layout = block.layout();
                 int lineNumber = layout->lineForTextPosition(position).lineNumber();
+
                 if (lineNumber == 0 && !block.previous().isValid() && e->key() == Qt::Key_Up) {
-                    item->switchTo(keyToMove[e->key()]);
-                    e->accept();
-                    return;
+                    emit switchFocusPressed(keyToMove[e->key()]);
+//                    item->switchTo(keyToMove[e->key()]);
                 } else if (lineNumber == layout->lineCount()-1 && !block.next().isValid() && e->key() == Qt::Key_Down) {
-                    item->switchTo(keyToMove[e->key()]);
-                    e->accept();
-                    return;
+                    emit switchFocusPressed(keyToMove[e->key()]);
+//                    item->switchTo(keyToMove[e->key()]);
+                } else {
+                    processed = false;
                 }
             }
             break;
         case Qt::Key_Backspace:
             if (toPlainText() == "" && item->getChild() == nullptr)
-                item->remove();
+                emit removePressed();
+//                item->remove();
             break;
         case Qt::Key_Tab: {
             QTextCursor cursor = textCursor();
             if (cursor.position() == 0) {
                 item->shiftRight();
-                e->accept();
-                return;
             }
         }
             break;
@@ -173,6 +190,11 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             break;
         case Qt::Key_PageDown:
             break;
+        }
+
+        if (processed) {
+            e->accept();
+            return;
         }
     }
     item->setModified(true);

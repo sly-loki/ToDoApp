@@ -90,6 +90,11 @@ public slots:
 signals:
     void foldCombinationPressed(bool);
     void CtrlZPressed();
+    void newSiblingPressed();
+    void newChildPressed();
+    void removePressed();
+    void movePressed(int);
+    void switchFocusPressed(int);
 };
 
 #endif // LOGTEXTEDIT_H
