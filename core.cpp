@@ -284,7 +284,7 @@ LogItem *LogControl::createNewSibling(LogItem *item)
 void LogControl::addItem(LogItem *item, LogItem *parent, LogItem *prev)
 {
     parent->addAsChild(item, prev);
-    emit itemAdded(newItem);
+    emit itemAdded(item);
 }
 
 void LogControl::shiftRight(LogItem *item)

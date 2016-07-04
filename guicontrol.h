@@ -39,17 +39,21 @@ signals:
     void itemDoneChanged(LogItem *item, bool state);
     void newItemRequest(LogItem *parent, LogItem *prev);
     void removeItemRequest(LogItem *item);
-    void itemTextChanged(LogItem *item);
+    void itemTextChanged(LogItem *item, QString newText);
     void itemPositionChanged(LogItem *item, LogItem *newParent, LogItem *newPrev);
+
+protected slots:
+    void onNewChildPressed();
+    void onNewSiblingPressed();
+    void onItemTextChanged();
+    void oneOfItemsDoneChanged(int state);
+    void oneOfItemsFoldChanged(bool folded);
 
 public slots:
 
     void onDocumentOpen(LogControl *doc);
     void onDocumentClose(LogControl *doc);
     void setCurrentDocument(LogControl *doc);
-
-    void oneOfItemsDoneChanged(int state);
-    void oneOfItemsFoldChanged(bool folded);
 
     void addItem(LogItem *item);
     void removeItem(LogItem *item);
@@ -67,7 +71,7 @@ public:
     QString getText();
 
 public slots:
-    void addChild(ItemWidget *child, ItemWidget after);
+    void addChild(ItemWidget *child, ItemWidget *after);
     void setText(QString text);
 
 signals:

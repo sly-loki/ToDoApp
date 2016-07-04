@@ -42,7 +42,7 @@ LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
 
 void LogTextEdit::onTextChanged()
 {
-    item->setText(toPlainText());
+//    item->setText(toPlainText());
     updateHeight();
 }
 
@@ -72,7 +72,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         bool processed = true;
         switch (e->key()) {
         case Qt::Key_Z:
-            emit CtrlZPressed();
+            emit undoPressed();
             break;
 //        case Qt::Key_Q:
 //            emit newChildPressed();
@@ -126,6 +126,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
     }
 
     if ((e->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier)) == (Qt::ShiftModifier | Qt::ControlModifier)) {
+        bool processed = true;
 
         switch (e->key()) {
         case Qt::Key_Up:

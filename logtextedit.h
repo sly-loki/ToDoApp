@@ -84,12 +84,12 @@ public:
     LogTextEdit(LogItem *item, QWidget *parent = nullptr);
     LogItem *getItem() {return item;}
 
-public slots:
+protected slots:
     void onTextChanged();
 
 signals:
     void foldCombinationPressed(bool);
-    void CtrlZPressed();
+    void undoPressed();
     void newSiblingPressed();
     void newChildPressed();
     void removePressed();

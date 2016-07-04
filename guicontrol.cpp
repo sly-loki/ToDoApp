@@ -127,6 +127,27 @@ void GuiControl::unplagItem(LogItem *item)
     guiItemsMap[item]->setParent(nullptr);
 }
 
+void GuiControl::onNewChildPressed()
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    emit newItemRequest(textEdit->getItem(), nullptr);
+}
+
+void GuiControl::onNewSiblingPressed()
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    LogItem *item = textEdit->getItem();
+    emit newItemRequest(item->getParent(), item);
+}
+
+void GuiControl::onItemTextChanged()
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    QString text = textEdit->toPlainText();
+    LogItem *item = textEdit->getItem();
+    emit itemTextChanged(item, text);
+}
+
 void GuiControl::onDocumentOpen(LogControl *doc)
 {
 
@@ -225,6 +246,10 @@ void GuiControl::addItem(LogItem *item)
     LogTextEdit * newElement = new LogTextEdit(item);
     newElement->setObjectName("itemTextField");
     connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+    connect(newElement, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
+    connect(newElement, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
+    connect(newElement, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+//    connect(newElement, SIGNAL(movePressed(int)), this, SLOT()
 
     QPushButton *foldWidget = new QPushButton();
     foldWidget->setFixedSize(15,15);
@@ -330,6 +355,11 @@ void ItemWidget::setText(QString text)
 }
 
 QString ItemWidget::getText()
+{
+
+}
+
+void ItemWidget::addChild(ItemWidget *child, ItemWidget *after)
 {
 
 }
