@@ -94,6 +94,7 @@ signals:
     void newChildPressed();
     void removePressed();
     void movePressed(int);
+    void savePressed();
     void switchFocusPressed(int);
 };
 

@@ -10,9 +10,10 @@
 class LogControl;
 
 enum MoveEvent {
-    ME_UP,
+    ME_UP = 0,
     ME_DOWN,
-    ME_LEFT
+    ME_LEFT,
+    ME_RIGHT
 };
 
 enum ItemType
@@ -50,12 +51,6 @@ public:
     static void setNextId(uint64_t id) {if (id > nextId) nextId = id;}
 
     LogItem(LogControl *control, LogItem *parent, uint64_t id = 0);
-    void addNewChild();
-    void addNewSibling();
-    void shiftRight();
-    void shiftLeft();
-    void shiftUp();
-    void shiftDown();
     void switchTo(MoveEvent to);
     void remove();
     void detachFromTree();
@@ -104,7 +99,10 @@ enum DocumentType
 
 class ClientAction
 {
+protected:
+    LogControl *doc;
 public:
+    ClientAction(LogControl *doc);
     virtual void make() = 0;
     virtual void revert() = 0;
 //    virtual void finalise() = 0;
@@ -114,7 +112,6 @@ public:
 
 class DeleteAction : public ClientAction
 {
-    LogControl *doc;
     LogItem *item;
     LogItem *parent;
     LogItem *prev;
@@ -131,7 +128,10 @@ class CreateAction: public ClientAction
     LogItem *parent;
     LogItem *prev;
 public:
-    CreateAction(LogItem *item);
+    CreateAction(LogControl *doc, LogItem *parent, LogItem *prev);
+
+    void make();
+    void revert();
 };
 
 class EditAction: public ClientAction
@@ -140,18 +140,24 @@ class EditAction: public ClientAction
     QString textBeforeEdit;
     QString textAfterEdit;
 public:
-    EditAction(LogItem *item);
+    EditAction(LogControl *doc, LogItem *item, QString newText);
+
+    void make();
+    void revert();
 };
 
 class MoveAction: public ClientAction
 {
     LogItem *item;
-    LogItem *prevParent;
-    LogItem *prevPrev;
+    LogItem *oldParent;
+    LogItem *oldPrev;
     LogItem *newParent;
     LogItem *newPrev;
 public:
-    MoveAction(LogItem *item);
+    MoveAction(LogControl *doc, LogItem *item, LogItem *newParent, LogItem *newPrev);
+
+    void make();
+    void revert();
 };
 
 class LogControl: public QObject
@@ -169,6 +175,8 @@ class LogControl: public QObject
     std::vector<ClientAction *> actionList;
     std::vector<ClientAction *> redoActionList;
 
+    void doAction(ClientAction *action);
+
 public:
     LogControl(DB* db, QString name);
 
@@ -181,37 +189,29 @@ public:
     LogItem *getPrevItemInTree(LogItem *item);
 
     LogItem *getRootItem();
-    LogItem *createNewChild(LogItem *parent);
-    LogItem *createNewSibling(LogItem *item);
+
     void addItem(LogItem *item, LogItem *parent, LogItem *prev = nullptr);
-    void shiftRight(LogItem *item);
-    void shiftLeft(LogItem *item);
-    void shiftUp(LogItem *item);
-    void shiftDown(LogItem *item);
-    void removeItem(LogItem *item);
-    void switchTo(LogItem *item, MoveEvent to);
-    void save();
 
     void printItemTree();
 
 public slots:
     void setItemDone(LogItem *item, bool state);
-    void cancelLastAction();
+    void setItemText(LogItem *item, QString text);
+    void undoLastAction();
+    void redoAction();
+    void switchFocusTo(LogItem *item, int to);
+    void createNewItem(LogItem *parent, LogItem *prev);
+    void moveItem(LogItem *item, int direction);
+    void removeItem(LogItem *item);
+    void save();
 
 signals:
     void itemAdded(LogItem *);
+    void itemTextChanged(LogItem *);
     void itemModified(LogItem *);
     void itemDeleted(LogItem *);
     void itemFocused(LogItem *);
     void itemDoneChanged(LogItem *);
-};
-
-class LogDocument
-{
-public:
-    LogDocument();
-
-    LogItem *getRootItem();
 };
 
 #endif // CORE_H

@@ -26,39 +26,9 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
 //        parent->addAsChild(this);
 }
 
-void LogItem::addNewChild()
-{
-    control->createNewChild(this);
-}
-
-void LogItem::addNewSibling()
-{
-    control->createNewSibling(this);
-}
-
-void LogItem::shiftRight()
-{
-    control->shiftRight(this);
-}
-
-void LogItem::shiftLeft()
-{
-    control->shiftLeft(this);
-}
-
-void LogItem::shiftUp()
-{
-    control->shiftUp(this);
-}
-
-void LogItem::shiftDown()
-{
-    control->shiftDown(this);
-}
-
 void LogItem::switchTo(MoveEvent to)
 {
-    control->switchTo(this, to);
+    control->switchFocusTo(this, to);
 }
 
 void LogItem::remove()
@@ -130,7 +100,7 @@ void LogItem::setId(const uint64_t &value)
 //++++++++++++++++++++++++++++++++++++++++++++
 
 DeleteAction::DeleteAction(LogControl *doc, LogItem *item)
-    : doc(doc)
+    : ClientAction(doc)
     , item(item)
     , parent(item->getParent())
     , prev(item->getPrev())
@@ -139,13 +109,101 @@ DeleteAction::DeleteAction(LogControl *doc, LogItem *item)
 
 void DeleteAction::make()
 {
-    doc->removeItem(item);
+    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
+
+    item->detachFromTree();
+
+    emit doc->itemDeleted(item);
+    emit doc->itemFocused(newFocusedItem);
 }
 
 void DeleteAction::revert()
 {
-    parent->addAsChild(item, prev);
+    doc->addItem(item, parent, prev);
 }
+
+ClientAction::ClientAction(LogControl *doc)
+    : doc(doc)
+{
+
+}
+
+CreateAction::CreateAction(LogControl *doc, LogItem *parent, LogItem *prev)
+    : ClientAction(doc)
+    , parent(parent)
+    , prev(prev)
+{
+
+}
+
+void CreateAction::make()
+{
+    if (!parent)
+        parent = doc->getRootItem();
+    LogItem *item = new LogItem(doc, parent);
+    parent->addAsChild(item, prev);
+    emit doc->itemAdded(item);
+    this->item = item;
+}
+
+void CreateAction::revert()
+{
+    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
+
+    item->detachFromTree();
+
+    emit doc->itemDeleted(item);
+    emit doc->itemFocused(newFocusedItem);
+}
+
+EditAction::EditAction(LogControl *doc, LogItem *item, QString newText)
+    : ClientAction(doc)
+    , item(item)
+    , textBeforeEdit(item->getText())
+    , textAfterEdit(newText)
+{
+
+}
+
+void EditAction::make()
+{
+    item->setText(textAfterEdit);
+}
+
+void EditAction::revert()
+{
+    item->setText(textBeforeEdit);
+    emit doc->itemTextChanged(item);
+    emit doc->itemFocused(item);
+}
+
+MoveAction::MoveAction(LogControl *doc, LogItem *item, LogItem *newParent, LogItem *newPrev)
+    : ClientAction(doc)
+    , item(item)
+    , oldParent(item->getParent())
+    , oldPrev(item->getPrev())
+    , newParent(newParent)
+    , newPrev(newPrev)
+{
+
+}
+
+void MoveAction::make()
+{
+    item->detachFromTree();
+    newParent->addAsChild(item, newPrev);
+
+    emit doc->itemModified(item);
+}
+
+void MoveAction::revert()
+{
+    item->detachFromTree();
+    oldParent->addAsChild(item, oldPrev);
+
+    emit doc->itemModified(item);
+}
+
 
 //######################################
 
@@ -175,6 +233,12 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
+void LogControl::doAction(ClientAction *action)
+{
+    action->make();
+    actionList.push_back(action);
+}
+
 LogControl::LogControl(DB* db, QString name)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
@@ -193,7 +257,7 @@ void LogControl::loadData()
 {
     db->loadTree(this, rootItem);
     if (!rootItem->getChild()) {
-        createNewChild(rootItem);
+        createNewItem(rootItem, nullptr);
     }
     else {
 //        fillGui(rootItem);
@@ -206,7 +270,7 @@ void LogControl::setRootItem(LogItem *root)
     delete rootItem;
     rootItem = root;
     if (!rootItem->getChild()) {
-        createNewChild(nullptr);
+        createNewItem(rootItem, nullptr);
     }
     else {
         fillGui(rootItem);
@@ -262,94 +326,10 @@ LogItem *LogControl::getRootItem()
     return rootItem;
 }
 
-LogItem *LogControl::createNewChild(LogItem *parent)
-{
-    if (!parent)
-        parent = rootItem;
-    LogItem *item = new LogItem(this, parent);
-    parent->addAsChild(item);
-    emit itemAdded(item);
-    return item;
-}
-
-LogItem *LogControl::createNewSibling(LogItem *item)
-{
-    LogItem *parent = item->getParent();
-    LogItem *newItem = new LogItem(this, parent);
-    parent->addAsChild(newItem, item);
-    emit itemAdded(newItem);
-    return newItem;
-}
-
 void LogControl::addItem(LogItem *item, LogItem *parent, LogItem *prev)
 {
     parent->addAsChild(item, prev);
     emit itemAdded(item);
-}
-
-void LogControl::shiftRight(LogItem *item)
-{
-    if (!item->prev)
-        return;
-
-    LogItem *newParent = item->prev;
-    item->detachFromTree();
-    newParent->addAsLastChild(item);
-
-//    guiControl->unplagItem(item);
-//    guiControl->shiftItemToLevel(item, item->parent);
-    emit itemModified(item);
-}
-
-void LogControl::shiftLeft(LogItem *item)
-{
-    if (item->getParent() == rootItem)
-        return;
-    LogItem *oldParent = item->getParent();
-    LogItem *newParent = oldParent->getParent();
-
-    item->detachFromTree();
-    newParent->addAsChild(item, oldParent);
-
-//    guiControl->unplagItem(item);
-//    guiControl->shiftItemToLevel(item, item->parent);
-    emit itemModified(item);
-}
-
-void LogControl::shiftUp(LogItem *item)
-{
-    if (!item->prev)
-        return;
-
-    LogItem *prev = item->prev;
-    LogItem *temp = item->next;
-
-    if (item->next)
-        item->next->prev = prev;
-    item->next = prev;
-    item->prev = prev->prev;
-
-    prev->next = temp;
-    if (prev->prev)
-        prev->prev->next = item;
-    prev->prev = item;
-
-    if (item->parent->firstChild == prev)
-        item->parent->firstChild = item;
-
-    emit itemModified(item);
-//    guiControl->unplagItem(item);
-//    guiControl->shiftItemToLevel(item, item->parent);
-
-}
-
-void LogControl::shiftDown(LogItem *item)
-{
-    if (item->next) {
-        item->next->shiftUp();
-        emit itemFocused(item);
-//        guiControl->switchFocusTo(item);
-    }
 }
 
 void LogControl::removeItem(LogItem *item)
@@ -357,19 +337,11 @@ void LogControl::removeItem(LogItem *item)
     if (item->getChild()) {
 
     }
-    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
-
-//    DeleteAction *action = new DeleteAction(item);
-//    action->make();
-//    actionList.push_back(action);
-
-    item->detachFromTree();
-
-    emit itemDeleted(item);
-    emit itemFocused(newFocusedItem);
+    DeleteAction *action = new DeleteAction(this, item);
+    doAction(action);
 }
 
-void LogControl::switchTo(LogItem *item, MoveEvent to)
+void LogControl::switchFocusTo(LogItem *item, int to)
 {
     switch (to) {
     case ME_UP:
@@ -383,6 +355,50 @@ void LogControl::switchTo(LogItem *item, MoveEvent to)
             emit itemFocused(item->getParent());
         break;
     }
+}
+
+void LogControl::createNewItem(LogItem *parent, LogItem *prev)
+{
+    CreateAction *action = new CreateAction(this, parent, prev);
+    doAction(action);
+}
+
+void LogControl::moveItem(LogItem *item, int direction)
+{
+    LogItem *newParent;
+    LogItem *newPrev = nullptr;
+
+    switch(direction) {
+    case ME_UP:
+        if (!item->getPrev())
+            return;
+        newPrev = item->getPrev()->getPrev();
+        newParent = item->getParent();
+        break;
+    case ME_DOWN:
+        if (!item->getNext())
+            return;
+        newPrev = item->getNext();
+        newParent = item->getParent();
+        break;
+    case ME_LEFT:
+        if(item->getParent() == rootItem)
+            return;
+        newParent = item->getParent()->getParent();
+        newPrev = item->getParent();
+        break;
+    case ME_RIGHT:
+        if (!item->getPrev())
+            return;
+        newParent = item->getPrev();
+        newPrev = item->getPrev()->getLastChild();
+        break;
+    default:
+        break;
+    }
+
+    MoveAction *action = new MoveAction(this, item, newParent, newPrev);
+    doAction(action);
 }
 
 void LogControl::save()
@@ -419,12 +435,24 @@ void LogControl::setItemDone(LogItem *item, bool state)
     }
 }
 
-void LogControl::cancelLastAction()
+void LogControl::setItemText(LogItem *item, QString text)
 {
-
+    EditAction *action = new EditAction(this, item, text);
+    doAction(action);
 }
 
-LogDocument::LogDocument()
+void LogControl::undoLastAction()
+{
+    if (actionList.size() == 0)
+        return;
+
+    ClientAction *action = actionList.back();
+    actionList.pop_back();
+    action->revert();
+    redoActionList.push_back(action);
+}
+
+void LogControl::redoAction()
 {
 
 }

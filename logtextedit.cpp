@@ -56,11 +56,12 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         switch (e->key()) {
         case Qt::Key_Return:
             emit newSiblingPressed();
-            //item->addNewSibling();
             break;
         case Qt::Key_Backtab:
-            emit movePressed(1); //fix
-//            item->shiftLeft();
+            emit movePressed(ME_LEFT);
+            break;
+        default:
+            processed = false;
             break;
         }
         if (processed) {
@@ -74,38 +75,20 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Z:
             emit undoPressed();
             break;
-//        case Qt::Key_Q:
-//            emit newChildPressed();
-////                item->addNewChild();
-//            break;
         case Qt::Key_Tab:
-            emit movePressed(0); //fix
-//                item->shiftRight();
+            emit movePressed(ME_RIGHT);
             break;
-//        case Qt::Key_A:
-//            if (e->modifiers() == Qt::ControlModifier) {
-//                item->addNewSibling();
-//            } else {
-//                processed = false;
-//            }
-//            break;
         case Qt::Key_R:
             emit removePressed();
-//          item->remove();
             break;
-//        case Qt::Key_S:
-//            if (e->modifiers() == Qt::ControlModifier) {
-//                item->save();
-//            } else {
-//                processed = false;
-//            }
-//            break;
+        case Qt::Key_S:
+            emit savePressed();
+            break;
         case Qt::Key_U:
             emit foldCombinationPressed(!item->isChildrenHided());
             break;
         case Qt::Key_Return:
             emit newChildPressed();
-//            item->addNewChild();
             break;
         case Qt::Key_Up:
         case Qt::Key_Down:
@@ -113,7 +96,6 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_I:
         case Qt::Key_K:
             emit switchFocusPressed(keyToMove[e->key()]);
-//                item->switchTo(keyToMove[e->key()]);
             break;
         default:
             processed = false;
@@ -134,11 +116,12 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_I:
         case Qt::Key_K:
             if (e->key() == Qt::Key_Up || e->key() == Qt::Key_I)
-                emit movePressed(2); //fix
-//                item->shiftUp();
+                emit movePressed(ME_UP);
             else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_K)
-                emit movePressed(3);
-//                item->shiftDown();
+                emit movePressed(ME_DOWN);
+            break;
+        default:
+            processed = false;
             break;
         }
 
@@ -156,7 +139,6 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Down:
             if (document()->lineCount() == 1) {
                 emit switchFocusPressed(keyToMove[e->key()]);
-//                item->switchTo(keyToMove[e->key()]);
             } else {
                 QTextCursor cursor = textCursor();
                 int position = cursor.positionInBlock();
@@ -166,10 +148,8 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
 
                 if (lineNumber == 0 && !block.previous().isValid() && e->key() == Qt::Key_Up) {
                     emit switchFocusPressed(keyToMove[e->key()]);
-//                    item->switchTo(keyToMove[e->key()]);
                 } else if (lineNumber == layout->lineCount()-1 && !block.next().isValid() && e->key() == Qt::Key_Down) {
                     emit switchFocusPressed(keyToMove[e->key()]);
-//                    item->switchTo(keyToMove[e->key()]);
                 } else {
                     processed = false;
                 }
@@ -178,18 +158,22 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Backspace:
             if (toPlainText() == "" && item->getChild() == nullptr)
                 emit removePressed();
-//                item->remove();
             break;
         case Qt::Key_Tab: {
             QTextCursor cursor = textCursor();
             if (cursor.position() == 0) {
-                item->shiftRight();
+                emit movePressed(ME_RIGHT);
+            } else {
+                processed = false;
             }
         }
             break;
         case Qt::Key_PageUp:
             break;
         case Qt::Key_PageDown:
+            break;
+        default:
+            processed = false;
             break;
         }
 
@@ -223,10 +207,6 @@ ReadServerItems::ReadServerItems(uint64_t id, LogControl *control, uint count)
     , remainintCount(0)
     , control(control)
 {
-//    for (int i = 0; i < count; i++)
-//    {
-//        items[itemIds[i]] = nullptr;
-//    }
     items[0] = new LogItem(control, nullptr, 0);
     items[0]->setId(0);
 }

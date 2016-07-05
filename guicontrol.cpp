@@ -66,6 +66,60 @@ void GuiControl::addChildern(LogItem *item)
     }
 }
 
+QWidget *GuiControl::createItemWidget(LogItem *item)
+{
+    QBoxLayout *layout = new QVBoxLayout();
+    QBoxLayout *hLayout = new QHBoxLayout();
+
+    LogTextEdit * newElement = new LogTextEdit(item);
+    newElement->setObjectName("itemTextField");
+    connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+    connect(newElement, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
+    connect(newElement, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
+    connect(newElement, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+    connect(newElement, SIGNAL(switchFocusPressed(int)), this, SLOT(onItemFocusChanged(int)));
+    connect(newElement, SIGNAL(movePressed(int)), this, SLOT(onItemMovePressed(int)));
+    connect(newElement, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
+    connect(newElement, SIGNAL(removePressed()), this, SLOT(onItemRemovePressed()));
+    connect(newElement, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
+
+    QPushButton *foldWidget = new QPushButton();
+    foldWidget->setFixedSize(15,15);
+    foldWidget->setStyleSheet("background:red");
+    foldWidget->setCheckable(true);
+    foldWidget->setChecked(item->isChildrenHided());
+    hLayout->addWidget(foldWidget);
+    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+    if (!item->getChild()) {
+        foldWidget->setEnabled(false);
+        foldWidget->setStyleSheet("background: grey");
+    }
+
+    QCheckBox *box = new QCheckBox;
+    connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChanged(int)));
+
+    hLayout->setContentsMargins(0,0,0,0);
+    hLayout->addWidget(box);
+    hLayout->addWidget(newElement);
+
+    QWidget *holderWidget = new QWidget();
+//    QColor qcolor = QColor(color, color, color);
+//    QString style = QString("background-color:%1%2;").arg("#").arg(qcolor.value());
+//    color+=10;
+//    holderWidget->setStyleSheet(style);
+    holderWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
+    static int count = 0;
+//    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
+    count++;
+//    layout->addWidget(newElement);
+    layout->addLayout(hLayout);
+    layout->setContentsMargins(50,0,0,0);
+    holderWidget->setLayout(layout);
+
+    return holderWidget;
+
+}
+
 GuiControl::GuiControl(QScrollArea *scroll)
     : rootWidget(nullptr)
     , mainScroll(scroll)
@@ -148,6 +202,13 @@ void GuiControl::onItemTextChanged()
     emit itemTextChanged(item, text);
 }
 
+void GuiControl::onItemFocusChanged(int direction)
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    LogItem *item = textEdit->getItem();
+    emit itemFocusChanged(item, direction);
+}
+
 void GuiControl::onDocumentOpen(LogControl *doc)
 {
 
@@ -169,7 +230,15 @@ void GuiControl::setCurrentDocument(LogControl *doc)
         disconnect(currentDocument, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
         disconnect(currentDocument, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
         disconnect(currentDocument, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+        disconnect(currentDocument, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
         disconnect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), currentDocument, SLOT(setItemDone(LogItem*,bool)));
+        disconnect(this, SIGNAL(itemFocusChanged(LogItem*,int)), currentDocument, SLOT(switchFocusTo(LogItem*,int)));
+        disconnect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), currentDocument, SLOT(createNewItem(LogItem*,LogItem*)));
+        disconnect(this, SIGNAL(itemMoveRequested(LogItem*,int)), currentDocument, SLOT(moveItem(LogItem*,int)));
+        disconnect(this, SIGNAL(undoPressed()), currentDocument, SLOT(undoLastAction()));
+        disconnect(this, SIGNAL(removeItemRequest(LogItem*)), currentDocument, SLOT(removeItem(LogItem*)));
+        disconnect(this, SIGNAL(savePressed()), currentDocument, SLOT(save()));
+        disconnect(this, SIGNAL(itemTextChanged(LogItem*,QString)), currentDocument, SLOT(setItemText(LogItem*,QString)));
     }
 
     initRootWidget();
@@ -186,7 +255,15 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
     connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
     connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+    connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
     connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
+    connect(this, SIGNAL(itemFocusChanged(LogItem*,int)), doc, SLOT(switchFocusTo(LogItem*,int)));
+    connect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), doc, SLOT(createNewItem(LogItem*,LogItem*)));
+    connect(this, SIGNAL(itemMoveRequested(LogItem*,int)), doc, SLOT(moveItem(LogItem*,int)));
+    connect(this, SIGNAL(undoPressed()), doc, SLOT(undoLastAction()));
+    connect(this, SIGNAL(removeItemRequest(LogItem*)), doc, SLOT(removeItem(LogItem*)));
+    connect(this, SIGNAL(savePressed()), doc, SLOT(save()));
+    connect(this, SIGNAL(itemTextChanged(LogItem*,QString)), doc, SLOT(setItemText(LogItem*,QString)));
     currentDocument = doc;
 }
 
@@ -220,6 +297,20 @@ void GuiControl::oneOfItemsFoldChanged(bool folded)
     }
 }
 
+void GuiControl::onItemMovePressed(int direction)
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    LogItem *item = textEdit->getItem();
+    emit itemMoveRequested(item, direction);
+}
+
+void GuiControl::onItemRemovePressed()
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    LogItem *item = textEdit->getItem();
+    emit removeItemRequest(item);
+}
+
 void GuiControl::addItem(LogItem *item)
 {
     static int color = 100;
@@ -240,51 +331,11 @@ void GuiControl::addItem(LogItem *item)
         getFoldButton(parentLayout)->setStyleSheet("background:red");
     }
 
-    QBoxLayout *layout = new QVBoxLayout();
-    QBoxLayout *hLayout = new QHBoxLayout();
-
-    LogTextEdit * newElement = new LogTextEdit(item);
-    newElement->setObjectName("itemTextField");
-    connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
-    connect(newElement, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
-    connect(newElement, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
-    connect(newElement, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
-//    connect(newElement, SIGNAL(movePressed(int)), this, SLOT()
-
-    QPushButton *foldWidget = new QPushButton();
-    foldWidget->setFixedSize(15,15);
-    foldWidget->setStyleSheet("background:red");
-    foldWidget->setCheckable(true);
-    foldWidget->setChecked(item->isChildrenHided());
-    hLayout->addWidget(foldWidget);
-    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
-    if (!item->getChild()) {
-        foldWidget->setEnabled(false);
-        foldWidget->setStyleSheet("background: grey");
+    QWidget *holderWidget = guiItemsMap[item];
+    if (holderWidget == nullptr) {
+        holderWidget = createItemWidget(item);
+        guiItemsMap[item] = holderWidget;
     }
-
-    QCheckBox *box = new QCheckBox;
-    connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChanged(int)));
-
-    hLayout->setContentsMargins(0,0,0,0);
-    hLayout->addWidget(box);
-    hLayout->addWidget(newElement);
-
-    QWidget *holderWidget = new QWidget();
-//    QColor qcolor = QColor(color, color, color);
-//    QString style = QString("background-color:%1%2;").arg("#").arg(qcolor.value());
-//    color+=10;
-//    holderWidget->setStyleSheet(style);
-    holderWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
-    static int count = 0;
-//    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
-    count++;
-//    layout->addWidget(newElement);
-    layout->addLayout(hLayout);
-    layout->setContentsMargins(50,0,0,0);
-    holderWidget->setLayout(layout);
-
-    guiItemsMap[item] = holderWidget;
 
 /////////////
     QWidget *prevWidget = nullptr;
@@ -341,6 +392,20 @@ void GuiControl::setItemDone(LogItem *item)
     if (it != guiItemsMap.end()) {
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
         setDoneState(layout, item->isDone());
+    }
+}
+
+void GuiControl::setItemText(LogItem *item)
+{
+    auto it = guiItemsMap.find(item);
+    if (it != guiItemsMap.end()) {
+        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
+        LogTextEdit *edit = getTextEdit(layout);
+        //disconnect(edit, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+        edit->blockSignals(true);
+        edit->setPlainText(item->getText());
+        edit->blockSignals(false);
+//        connect(edit, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
     }
 }
 

@@ -29,25 +29,22 @@ class GuiControl: public QObject
     void setDoneState(QBoxLayout *itemLayout, bool done);
     void initRootWidget();
     void addChildern(LogItem *item);
-
-public:
-    GuiControl(QScrollArea *scroll);
-    void shiftItemToLevel(LogItem *item, LogItem *target);
-    void unplagItem(LogItem *item);
-
-signals:
-    void itemDoneChanged(LogItem *item, bool state);
-    void newItemRequest(LogItem *parent, LogItem *prev);
-    void removeItemRequest(LogItem *item);
-    void itemTextChanged(LogItem *item, QString newText);
-    void itemPositionChanged(LogItem *item, LogItem *newParent, LogItem *newPrev);
+    QWidget *createItemWidget(LogItem *item);
 
 protected slots:
     void onNewChildPressed();
     void onNewSiblingPressed();
     void onItemTextChanged();
+    void onItemFocusChanged(int direction);
     void oneOfItemsDoneChanged(int state);
     void oneOfItemsFoldChanged(bool folded);
+    void onItemMovePressed(int direction);
+    void onItemRemovePressed();
+
+public:
+    GuiControl(QScrollArea *scroll);
+    void shiftItemToLevel(LogItem *item, LogItem *target);
+    void unplagItem(LogItem *item);
 
 public slots:
 
@@ -60,6 +57,18 @@ public slots:
     void updateItemPosition(LogItem *item);
     void focusItem(LogItem *item);
     void setItemDone(LogItem *item);
+    void setItemText(LogItem *item);
+
+signals:
+    void itemDoneChanged(LogItem *item, bool state);
+    void newItemRequest(LogItem *parent, LogItem *prev);
+    void removeItemRequest(LogItem *item);
+    void itemTextChanged(LogItem *item, QString newText);
+    void itemPositionChanged(LogItem *item, LogItem *newParent, LogItem *newPrev);
+    void itemMoveRequested(LogItem *item, int direction);
+    void itemFocusChanged(LogItem *item, int direction);
+    void undoPressed();
+    void savePressed();
 
 };
 
