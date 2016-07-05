@@ -40,6 +40,7 @@ protected slots:
     void oneOfItemsFoldChanged(bool folded);
     void onItemMovePressed(int direction);
     void onItemRemovePressed();
+    void onItemDonePressed();
 
 public:
     GuiControl(QScrollArea *scroll);

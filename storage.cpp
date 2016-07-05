@@ -122,7 +122,7 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
                     } else {
 
                         if (items.find(currentItem->getId()) != items.end()) {
-//                            qDebug() << "Error: dublicate id: " << currentItem->getId();
+                            qDebug() << "Error: dublicate id: " << currentItem->getId();
                             throw "Error: dublicate id!!";
                         } else {
                             if (currentItem->getId() > maxId)

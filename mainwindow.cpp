@@ -8,7 +8,7 @@
 #include "logappserver.h"
 
 #define TEST_FILE_NAME "/home/loki/.todo/midterm.xml"
-#define DEFAULT_APP_FOLDER_NAME ".todo"
+#define DEFAULT_APP_FOLDER_NAME ".todo/test"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

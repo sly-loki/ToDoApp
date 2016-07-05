@@ -144,6 +144,7 @@ void CreateAction::make()
     parent->addAsChild(item, prev);
     emit doc->itemAdded(item);
     this->item = item;
+    emit doc->itemFocused(item);
 }
 
 void CreateAction::revert()
@@ -343,18 +344,39 @@ void LogControl::removeItem(LogItem *item)
 
 void LogControl::switchFocusTo(LogItem *item, int to)
 {
+    static const int PAGESTEP = 5;
+    LogItem *nextItem = item;
     switch (to) {
     case ME_UP:
-        emit itemFocused(getPrevItemInTree(item));
+        nextItem = getPrevItemInTree(item);
         break;
     case ME_DOWN:
-        emit itemFocused(getNextItemInTree(item));
+        nextItem = getNextItemInTree(item);
         break;
     case ME_LEFT:
         if (item->getParent() && item->getParent() != rootItem)
-            emit itemFocused(item->getParent());
+            nextItem = item->getParent();
+        break;
+    case ME_PAGE_UP:
+        for (int i = 0; i < PAGESTEP; i++)
+            nextItem = getPrevItemInTree(nextItem);
+        break;
+    case ME_PAGE_DOWN:
+        for (int i = 0; i < PAGESTEP; i++)
+            nextItem = getNextItemInTree(nextItem);
+        break;
+    case ME_TO_BEGIN:
+        nextItem = rootItem->getChild();
+        break;
+    case ME_TO_END:
+        nextItem = rootItem->getLastChild();
+        while(nextItem->getLastChild())
+            nextItem = nextItem->getLastChild();
+        break;
+    default:
         break;
     }
+    emit itemFocused(nextItem);
 }
 
 void LogControl::createNewItem(LogItem *parent, LogItem *prev)

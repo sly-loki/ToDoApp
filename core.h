@@ -13,7 +13,11 @@ enum MoveEvent {
     ME_UP = 0,
     ME_DOWN,
     ME_LEFT,
-    ME_RIGHT
+    ME_RIGHT,
+    ME_PAGE_UP,
+    ME_PAGE_DOWN,
+    ME_TO_BEGIN,
+    ME_TO_END
 };
 
 enum ItemType

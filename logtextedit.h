@@ -90,12 +90,14 @@ protected slots:
 signals:
     void foldCombinationPressed(bool);
     void undoPressed();
+    void redoPressed();
     void newSiblingPressed();
     void newChildPressed();
     void removePressed();
     void movePressed(int);
     void savePressed();
     void switchFocusPressed(int);
+    void donePressed();
 };
 
 #endif // LOGTEXTEDIT_H

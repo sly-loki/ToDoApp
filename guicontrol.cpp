@@ -82,6 +82,7 @@ QWidget *GuiControl::createItemWidget(LogItem *item)
     connect(newElement, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
     connect(newElement, SIGNAL(removePressed()), this, SLOT(onItemRemovePressed()));
     connect(newElement, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
+    connect(newElement, SIGNAL(donePressed()), this, SLOT(onItemDonePressed()));
 
     QPushButton *foldWidget = new QPushButton();
     foldWidget->setFixedSize(15,15);
@@ -253,7 +254,7 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
     connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));
     connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
-    connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
+    connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)), Qt::QueuedConnection);
     connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
     connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
     connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
@@ -311,9 +312,15 @@ void GuiControl::onItemRemovePressed()
     emit removeItemRequest(item);
 }
 
+void GuiControl::onItemDonePressed()
+{
+    LogTextEdit *textEdit = (LogTextEdit *)sender();
+    LogItem *item = textEdit->getItem();
+    emit itemDoneChanged(item, !item->isDone());
+}
+
 void GuiControl::addItem(LogItem *item)
 {
-    static int color = 100;
     QBoxLayout *parentLayout = nullptr;
     if (!item)
         return;
@@ -331,7 +338,7 @@ void GuiControl::addItem(LogItem *item)
         getFoldButton(parentLayout)->setStyleSheet("background:red");
     }
 
-    QWidget *holderWidget = guiItemsMap[item];
+    QWidget *holderWidget = nullptr;//guiItemsMap[item];
     if (holderWidget == nullptr) {
         holderWidget = createItemWidget(item);
         guiItemsMap[item] = holderWidget;
@@ -360,8 +367,8 @@ void GuiControl::addItem(LogItem *item)
 
     if (item->isDone())
         setItemDone(item);
-    else
-        focusItem(item);
+//    else
+//        focusItem(item);
 }
 
 void GuiControl::removeItem(LogItem *item)
@@ -380,8 +387,9 @@ void GuiControl::focusItem(LogItem *item)
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        getTextEdit(layout)->setFocus();
-        mainScroll->ensureWidgetVisible(getTextEdit(layout));
+        LogTextEdit *textEdit = getTextEdit(layout);
+        textEdit->setFocus();
+        mainScroll->ensureWidgetVisible(textEdit, 50, 200);
     }
 }
 

@@ -87,8 +87,17 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_U:
             emit foldCombinationPressed(!item->isChildrenHided());
             break;
+        case Qt::Key_D:
+            emit donePressed();
+            break;
         case Qt::Key_Return:
             emit newChildPressed();
+            break;
+        case Qt::Key_Home:
+            emit switchFocusPressed(ME_TO_BEGIN);
+            break;
+        case Qt::Key_End:
+            emit switchFocusPressed(ME_TO_END);
             break;
         case Qt::Key_Up:
         case Qt::Key_Down:
@@ -119,6 +128,9 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
                 emit movePressed(ME_UP);
             else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_K)
                 emit movePressed(ME_DOWN);
+            break;
+        case Qt::Key_Z:
+            emit redoPressed();
             break;
         default:
             processed = false;
@@ -156,8 +168,11 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             }
             break;
         case Qt::Key_Backspace:
-            if (toPlainText() == "" && item->getChild() == nullptr)
+            if (toPlainText() == "" && item->getChild() == nullptr) {
                 emit removePressed();
+            } else {
+                processed = false;
+            }
             break;
         case Qt::Key_Tab: {
             QTextCursor cursor = textCursor();
@@ -169,8 +184,10 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         }
             break;
         case Qt::Key_PageUp:
+            emit switchFocusPressed(ME_PAGE_UP);
             break;
         case Qt::Key_PageDown:
+            emit switchFocusPressed(ME_PAGE_DOWN);
             break;
         default:
             processed = false;
