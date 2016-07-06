@@ -69,6 +69,7 @@ signals:
     void itemMoveRequested(LogItem *item, int direction);
     void itemFocusChanged(LogItem *item, int direction);
     void undoPressed();
+    void redoPressed();
     void savePressed();
 
 };

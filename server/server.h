@@ -6,6 +6,8 @@
 #include <QTcpSocket>
 
 #include "../network_def.h"
+#include "core.h"
+#include <vector>
 
 class LogItem;
 
@@ -29,9 +31,13 @@ class TodoServer: public QObject
     Q_OBJECT
     QTcpServer server;
     QTcpSocket *clientConnection;
+    std::vector<LogControl *>docs;
+
+protected:
+    void sendDocumentList(NetworkHeader *header, QTcpSocket *connection);
 
 public:
-    TodoServer();
+    TodoServer(const std::vector<LogControl*> docs);
 
     void start();
     void sendPacket(NetworkHeader *header, const void *data);

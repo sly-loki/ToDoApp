@@ -6,8 +6,26 @@
 
 #include "core.h"
 
-TodoServer::TodoServer()
+void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
+{
+    std::vector<DocumentDescriptor> docDescs;
+
+    for (int i = 0; i < docs.size(); i++) {
+        DocumentDescriptor desc;
+        desc.id = i;
+        memset(desc.name, 0, DOCUMENT_NAME_MAX_LENGHT);
+        memcpy(desc.name, "one", sizeof("one"));
+        docDescs.push_back(desc);
+    }
+
+    NetworkHeader response(*header);
+    response.dataSize = docDescs.size()*sizeof(DocumentDescriptor);
+    sendPacket(&response, docDescs.data());
+}
+
+TodoServer::TodoServer(const std::vector<LogControl *> docs)
     : clientConnection(nullptr)
+    , docs(docs)
 {
     connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
@@ -89,6 +107,12 @@ void TodoServer::incomingMessage()
         data.prevItemId = 0;
 
         emit createItem(data);
+    }
+        break;
+    case PT_GET_DOC_LIST:
+    {
+        qDebug() << "get doc list";
+        sendDocumentList(&packet, clientConnection);
     }
         break;
     case PT_GET_ITEM:

@@ -15,6 +15,7 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     , next(nullptr)
     , prev(nullptr)
     , firstChild(nullptr)
+    , text("")
     , done(false)
     , childrenHided(false)
 {
@@ -238,6 +239,7 @@ void LogControl::doAction(ClientAction *action)
 {
     action->make();
     actionList.push_back(action);
+    redoActionList.clear();
 }
 
 LogControl::LogControl(DB* db, QString name)
@@ -336,7 +338,7 @@ void LogControl::addItem(LogItem *item, LogItem *parent, LogItem *prev)
 void LogControl::removeItem(LogItem *item)
 {
     if (item->getChild()) {
-
+        return;
     }
     DeleteAction *action = new DeleteAction(this, item);
     doAction(action);
@@ -476,6 +478,12 @@ void LogControl::undoLastAction()
 
 void LogControl::redoAction()
 {
+    if (redoActionList.empty())
+        return;
 
+    ClientAction *action = redoActionList.back();
+    redoActionList.pop_back();
+    action->make();
+    actionList.push_back(action);
 }
 

@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../storage.h"
-#include "server.h"
 
 class LogControl;
 
@@ -90,12 +89,11 @@ class LogControl: public QObject
 
     LogItem *rootItem;
     DB *db;
-    TodoServer *server;
 
-    void fillGui(LogItem *item);
+//    void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
-    LogControl(DB* db, TodoServer *server);
+    LogControl(DB* db);
     void loadData();
     void setRootItem(LogItem *root);
 
@@ -117,11 +115,11 @@ public:
 public slots:
     void setItemDone(LogItem *item, bool state);
 
-    void createItem(CreateItemData data);
-    void changeItem(ChangeItemData data);
-    void removeItem(RemoveItemData data);
-    void sendItem(uint64_t id);
-    void sendChildrenIds(uint64_t id);
+//    void createItem(CreateItemData data);
+//    void changeItem(ChangeItemData data);
+//    void removeItem(RemoveItemData data);
+//    void sendItem(uint64_t id);
+//    void sendChildrenIds(uint64_t id);
 
 signals:
     void itemAdded(LogItem *);

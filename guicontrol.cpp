@@ -80,6 +80,7 @@ QWidget *GuiControl::createItemWidget(LogItem *item)
     connect(newElement, SIGNAL(switchFocusPressed(int)), this, SLOT(onItemFocusChanged(int)));
     connect(newElement, SIGNAL(movePressed(int)), this, SLOT(onItemMovePressed(int)));
     connect(newElement, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
+    connect(newElement, SIGNAL(redoPressed()), this, SIGNAL(redoPressed()));
     connect(newElement, SIGNAL(removePressed()), this, SLOT(onItemRemovePressed()));
     connect(newElement, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
     connect(newElement, SIGNAL(donePressed()), this, SLOT(onItemDonePressed()));
@@ -237,6 +238,7 @@ void GuiControl::setCurrentDocument(LogControl *doc)
         disconnect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), currentDocument, SLOT(createNewItem(LogItem*,LogItem*)));
         disconnect(this, SIGNAL(itemMoveRequested(LogItem*,int)), currentDocument, SLOT(moveItem(LogItem*,int)));
         disconnect(this, SIGNAL(undoPressed()), currentDocument, SLOT(undoLastAction()));
+        disconnect(this, SIGNAL(redoPressed()), currentDocument, SLOT(redoAction()));
         disconnect(this, SIGNAL(removeItemRequest(LogItem*)), currentDocument, SLOT(removeItem(LogItem*)));
         disconnect(this, SIGNAL(savePressed()), currentDocument, SLOT(save()));
         disconnect(this, SIGNAL(itemTextChanged(LogItem*,QString)), currentDocument, SLOT(setItemText(LogItem*,QString)));
@@ -262,6 +264,7 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     connect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), doc, SLOT(createNewItem(LogItem*,LogItem*)));
     connect(this, SIGNAL(itemMoveRequested(LogItem*,int)), doc, SLOT(moveItem(LogItem*,int)));
     connect(this, SIGNAL(undoPressed()), doc, SLOT(undoLastAction()));
+    connect(this, SIGNAL(redoPressed()), doc, SLOT(redoAction()));
     connect(this, SIGNAL(removeItemRequest(LogItem*)), doc, SLOT(removeItem(LogItem*)));
     connect(this, SIGNAL(savePressed()), doc, SLOT(save()));
     connect(this, SIGNAL(itemTextChanged(LogItem*,QString)), doc, SLOT(setItemText(LogItem*,QString)));

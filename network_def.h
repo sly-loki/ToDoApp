@@ -3,6 +3,8 @@
 
 #include "inttypes.h"
 
+#define DOCUMENT_NAME_MAX_LENGHT 100
+
 enum PACKET_TYPE
 {
     PT_ITEM_CREATED = 0,
@@ -10,6 +12,7 @@ enum PACKET_TYPE
     PT_ITEM_CHANGED,
 
     PT_GET_ALL_ITEMS,
+    PT_GET_DOC_LIST,
     PT_GET_ITEM,
     PT_GET_CHILDREN,
 
@@ -24,6 +27,12 @@ struct NetworkHeader
     uint64_t itemId;
     uint64_t parentId;
     uint32_t dataSize;
+} __attribute__((packed));
+
+struct DocumentDescriptor
+{
+    uint64_t id;
+    uint8_t name[DOCUMENT_NAME_MAX_LENGHT];
 } __attribute__((packed));
 
 #define DEBUG_PORT 12054

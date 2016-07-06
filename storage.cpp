@@ -118,7 +118,8 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
                 if (currentItem) {
 
                     if (currentItem->getId() == TEMPORARY_ID) {
-//                        qDebug() << "Error: item without id!!";
+                        qDebug() << "Error: item without id!!";
+                        throw "ha";
                     } else {
 
                         if (items.find(currentItem->getId()) != items.end()) {
@@ -163,7 +164,7 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
         }
     }
     if (xmlStream.hasError())
-//        qDebug() << "read error: " << xmlStream.errorString();
+        qDebug() << "read error: " << xmlStream.errorString();
 
     if (currentItem && currentItem->getId() > maxId)
         maxId = currentItem->getId();
