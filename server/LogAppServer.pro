@@ -10,11 +10,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     core.cpp \
-    ../storage.cpp \
+    storage.cpp \
     server.cpp
 
 HEADERS += ../network_def.h \
     core.h \
-    ../storage.h \
+    storage.h \
     server.h
 
