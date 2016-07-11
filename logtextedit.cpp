@@ -313,7 +313,7 @@ void ApplicationControl::onItemChildrenReceived(uint64_t parentId, uint64_t *ids
         }
         readAllItemsTask->processChildren(parentId, ids, count);
         for (int i = 0; i < count; i++) {
-            server->getItemChildern(ids[i]);
+//            server->getItemChildern(ids[i]);
             server->getItemData(ids[i]);
         }
     }

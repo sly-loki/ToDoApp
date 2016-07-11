@@ -45,6 +45,13 @@ struct ServerAction
     uint32_t type;
 };
 
+class NetworkClient
+{
+public:
+    virtual void requestAnsvered(ServerAction action, char *data) = 0;
+    virtual ~NetworkClient() = default;
+};
+
 class LogAppServer : public QObject
 {
     Q_OBJECT

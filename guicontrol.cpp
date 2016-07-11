@@ -245,6 +245,9 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     }
 
     initRootWidget();
+    if (doc->getStatus() != DS_OPEN)
+        return;
+
     LogItem *root = doc->getRootItem();
 
     LogItem *item = root->getChild();
@@ -392,7 +395,7 @@ void GuiControl::focusItem(LogItem *item)
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
         LogTextEdit *textEdit = getTextEdit(layout);
         textEdit->setFocus();
-        mainScroll->ensureWidgetVisible(textEdit, 50, 200);
+        mainScroll->ensureWidgetVisible(textEdit);
     }
 }
 

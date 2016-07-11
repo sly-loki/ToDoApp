@@ -94,13 +94,6 @@ public:
     bool isChildrenHided() {return childrenHided;}
 };
 
-enum DocumentType
-{
-    DT_LOCAL = 0,
-    DT_REMOTE,
-    DT_CACHED
-};
-
 class ClientAction
 {
 protected:
@@ -164,6 +157,20 @@ public:
     void revert();
 };
 
+enum DocumentStatus
+{
+    DS_OPEN = 0,
+    DS_LOADING,
+    DS_CLOSED
+};
+
+enum DocumentType
+{
+    DT_LOCAL = 0,
+    DT_REMOTE,
+    DT_CACHED
+};
+
 class LogControl: public QObject
 {
     Q_OBJECT
@@ -172,6 +179,7 @@ class LogControl: public QObject
     DB *db;
     QString name;
     DocumentType docType;
+    DocumentStatus docStatus;
 
     void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
@@ -180,6 +188,10 @@ class LogControl: public QObject
     std::vector<ClientAction *> redoActionList;
 
     void doAction(ClientAction *action);
+    void setStatus(DocumentStatus status);
+
+protected slots:
+    void onLoadingDone();
 
 public:
     LogControl(DB* db, QString name);
@@ -197,6 +209,8 @@ public:
     void addItem(LogItem *item, LogItem *parent, LogItem *prev = nullptr);
 
     void printItemTree();
+
+    DocumentStatus getStatus() {return docStatus;}
 
 public slots:
     void setItemDone(LogItem *item, bool state);

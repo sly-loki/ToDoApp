@@ -171,6 +171,7 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
     LogItem::setNextId(maxId+1);
 
     input.close();
+    emit loadingDone();
 }
 
 ItemVector XmlDB::getFirstLevelItems()

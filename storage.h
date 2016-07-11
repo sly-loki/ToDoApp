@@ -13,8 +13,10 @@ class LogControl;
 
 typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 
-class DB
+class DB: public QObject
 {
+    Q_OBJECT
+
 public:
     DB();
     virtual void saveItem(LogItem *item, const QString &text);
@@ -24,6 +26,8 @@ public:
     virtual ItemVector getChildsOf(LogItem *item);
     virtual QString getText(LogItem *item);
     virtual ~DB() {}
+signals:
+    void loadingDone();
 
 };
 

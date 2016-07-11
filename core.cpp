@@ -242,13 +242,34 @@ void LogControl::doAction(ClientAction *action)
     redoActionList.clear();
 }
 
+void LogControl::setStatus(DocumentStatus status)
+{
+    if (status != docStatus)
+        docStatus = status;
+}
+
+void LogControl::onLoadingDone()
+{
+    if (!rootItem->getChild()) {
+        createNewItem(rootItem, nullptr);
+    }
+    else {
+//        fillGui(rootItem);
+    }
+    printItemTree();
+    docStatus = DS_OPEN;
+}
+
 LogControl::LogControl(DB* db, QString name)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
     , name(name)
+    , docType(DT_CACHED)
+    , docStatus(DS_CLOSED)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
+    connect(db, SIGNAL(loadingDone()), this, SLOT(onLoadingDone()));
 }
 
 QString LogControl::getName()
@@ -258,14 +279,8 @@ QString LogControl::getName()
 
 void LogControl::loadData()
 {
+    docStatus = DS_LOADING;
     db->loadTree(this, rootItem);
-    if (!rootItem->getChild()) {
-        createNewItem(rootItem, nullptr);
-    }
-    else {
-//        fillGui(rootItem);
-    }
-    printItemTree();
 }
 
 void LogControl::setRootItem(LogItem *root)
