@@ -7,6 +7,7 @@
 
 #include "../network_def.h"
 #include "core.h"
+#include <map>
 #include <vector>
 
 class LogItem;
@@ -31,7 +32,7 @@ class TodoServer: public QObject
     Q_OBJECT
     QTcpServer server;
     QTcpSocket *clientConnection;
-    std::vector<LogControl *>docs;
+    std::map<uint64_t, LogControl *>docs;
 
 protected:
     void sendDocumentList(NetworkHeader *header, QTcpSocket *connection);
@@ -43,7 +44,7 @@ public:
     void sendPacket(NetworkHeader *header, const void *data);
     void readPacket();
     void sendItem(LogItem *item);
-    void sendChildrenIds(uint64_t itemId, std::vector<uint64_t> &ids);
+    void sendChildrenIds(NetworkHeader *header);
     void sendAction();
 
 signals:

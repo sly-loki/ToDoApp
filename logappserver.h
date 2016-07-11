@@ -67,7 +67,9 @@ public:
 
     void getItemList();
     void getItemData(uint64_t id);
-    void getItemChildern(uint64_t id);
+    void getItemChildern(uint64_t docId, uint64_t id);
+
+    void getDocList();
 
 public slots:
     void addItem(LogItem *item);
@@ -75,7 +77,11 @@ public slots:
     void sendAction(ServerAction action);
 
 signals:
+
+    void connected();
+
     void receivedRequest();
+    void docListReceived(std::vector<QString>);
     void itemListReceived(uint64_t *ids, uint count);
     void itemReceived(ServerItemData data);
     void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);

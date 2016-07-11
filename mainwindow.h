@@ -14,6 +14,7 @@ class MainWindow;
 class LogControl;
 class GuiControl;
 class ApplicationControl;
+class LogAppServer;
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +23,7 @@ class MainWindow : public QMainWindow
     std::map<QString, LogControl *> filesToDocs;
     GuiControl *guiControl;
     ApplicationControl *appControl;
+    LogAppServer *server;
     QDir appDir;
 
 public:
@@ -33,6 +35,9 @@ protected slots:
     void createDocument();
     void newDocButtonClicked();
     void onNewDocument(LogControl *doc);
+
+    void onServerConnected();
+    void onDocListReceived(std::vector<QString> docs);
 
 private:
     Ui::MainWindow *ui;

@@ -57,19 +57,17 @@ MainWindow::MainWindow(QWidget *parent) :
     DB *db = new XmlDB(TEST_FILE_NAME);
     guiControl = new GuiControl(ui->scrollArea);
 
-    LogAppServer *server = new LogAppServer();
+    server = new LogAppServer();
     appControl = new ApplicationControl(server);
-//    connect(control, SIGNAL(itemAdded(LogItem*)), server, SLOT(addItem(LogItem*)));
-    connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
-#define LOCALMOD
-#ifdef LOCALMOD
 
-//    guiControl->setCurrentDocument(control);
+    connect(server, SIGNAL(connected()), this, SLOT(onServerConnected()));
+    connect(server, SIGNAL(docListReceived(std::vector<QString>)), this, SLOT(onDocListReceived(std::vector<QString>)));
+    connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
+
+    server->connectToServer();
     ui->listWidget->setCurrentItem(ui->listWidget->item(0));
-#else
-        server->connectToServer();
-        appControl->start();
-#endif
+
+//        appControl->start();
 }
 
 MainWindow::~MainWindow()
@@ -110,4 +108,16 @@ void MainWindow::onNewDocument(LogControl *doc)
     filesToDocs[doc->getName()] = doc;
 
     ui->listWidget->addItem(doc->getName());
+}
+
+void MainWindow::onServerConnected()
+{
+    server->getDocList();
+}
+
+void MainWindow::onDocListReceived(std::vector<QString> docs)
+{
+    for (auto s: docs) {
+        ui->listWidget->addItem(s);
+    }
 }

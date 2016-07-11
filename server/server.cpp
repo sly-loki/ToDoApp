@@ -10,9 +10,11 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
 {
     std::vector<DocumentDescriptor> docDescs;
 
-    for (int i = 0; i < docs.size(); i++) {
+    for (auto it: docs) {
+
         DocumentDescriptor desc;
-        desc.id = i;
+
+        desc.id = it.first;
         memset(desc.name, 0, DOCUMENT_NAME_MAX_LENGHT);
         memcpy(desc.name, "one", sizeof("one"));
         docDescs.push_back(desc);
@@ -25,8 +27,10 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
 
 TodoServer::TodoServer(const std::vector<LogControl *> docs)
     : clientConnection(nullptr)
-    , docs(docs)
 {
+    for (int i = 0; i < docs.size(); i++) {
+        this->docs[i] = docs[i];
+    }
     connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
 
@@ -67,14 +71,31 @@ void TodoServer::sendItem(LogItem *item)
     sendPacket(&packet, item->getText().toStdString().c_str());
 }
 
-void TodoServer::sendChildrenIds(uint64_t itemId, std::vector<uint64_t> &ids)
+void TodoServer::sendChildrenIds(NetworkHeader *header)
 {
     NetworkHeader packet;
-    qDebug() << "send ids" << ids.size();
+
+    std::vector<uint64_t> ids;
+    LogControl *doc = docs[packet.docId];
+    if (!doc) {
+        qDebug() << "error: wrong document id!!!";
+        return;
+    }
+    LogItem *parent = doc->findItemById(header->itemId);
+    if (!parent) {
+        qDebug() << "error: no such item";
+    } else {
+        LogItem *child = parent->getChild();
+        while(child) {
+            ids.push_back(child->getId());
+            child = child->getNext();
+        }
+    }
+
     packet.type = PT_GET_CHILDREN;
-    packet.itemId = itemId;
+//    packet.itemId = itemId;
     packet.dataSize = ids.size() * sizeof(uint64_t);
-    sendPacket(&packet, (const void *)ids.data());
+    sendPacket(header, (const void *)ids.data());
 }
 
 void TodoServer::incomingMessage()
@@ -141,8 +162,8 @@ void TodoServer::incomingMessage()
         break;
     case PT_GET_CHILDREN:
     {
-        qDebug() << "request for children: " << packet.itemId;
-        emit childrenIdsRequested(packet.itemId);
+        qDebug() << "request for children: " << packet.docId << "." << packet.itemId;
+        sendChildrenIds(&packet);
     }
         break;
     default:

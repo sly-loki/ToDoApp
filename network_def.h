@@ -24,6 +24,7 @@ struct NetworkHeader
     uint64_t requestID;
     uint16_t type;
 
+    uint64_t docId;
     uint64_t itemId;
     uint64_t parentId;
     uint32_t dataSize;

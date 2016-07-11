@@ -96,6 +96,23 @@ void LogAppServer::readData()
         delete[] ids;
     }
         break;
+    case PT_GET_DOC_LIST: {
+        qDebug() << "get doc list";
+        std::vector<QString> docs;
+        int count = header.dataSize / sizeof(DocumentDescriptor);
+        DocumentDescriptor *descs = new DocumentDescriptor[count];
+        size_t readed = socket.read((char *)descs, header.dataSize);
+        if (readed != header.dataSize) {
+            qDebug() << "ERROR: ";
+            delete[] descs;  //fix
+            return;
+        }
+        for (int i = 0; i < count; i++) {
+            docs.push_back(QString((char *)(descs[i].name)));
+        }
+        emit docListReceived(docs);
+    }
+        break;
     default:
         break;
     }
@@ -113,6 +130,7 @@ bool LogAppServer::connectToServer()
 {
     socket.abort();
     socket.connectToHost("localhost", DEBUG_PORT);
+    emit connected();
 }
 
 bool LogAppServer::ping()
@@ -148,12 +166,23 @@ void LogAppServer::getItemData(uint64_t id)
     sendPacket(&header, nullptr);
 }
 
-void LogAppServer::getItemChildern(uint64_t id)
+void LogAppServer::getItemChildern(uint64_t docId, uint64_t id)
 {
     NetworkHeader header;
+    header.docId = docId;
     header.itemId = id;
     header.dataSize = 0;
     header.type = PT_GET_CHILDREN;
+
+    sendPacket(&header, nullptr);
+}
+
+void LogAppServer::getDocList()
+{
+    NetworkHeader header;
+    header.itemId = 0;
+    header.dataSize = 0;
+    header.type = PT_GET_DOC_LIST;
 
     sendPacket(&header, nullptr);
 }
