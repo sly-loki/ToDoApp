@@ -21,6 +21,11 @@ void LogAppServer::sendPacket(NetworkHeader *header, const void *data)
         socket.write((char *)data, header->dataSize);
 }
 
+void LogAppServer::sendPacketSync(NetworkHeader *header, const void *data)
+{
+    sendPacket(header, data);
+}
+
 void LogAppServer::readData()
 {
     NetworkHeader header;

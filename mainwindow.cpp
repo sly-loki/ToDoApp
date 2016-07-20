@@ -54,7 +54,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
 
-    DB *db = new XmlDB(TEST_FILE_NAME);
     guiControl = new GuiControl(ui->scrollArea);
 
     server = new LogAppServer();

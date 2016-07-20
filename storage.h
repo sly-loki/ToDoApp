@@ -36,8 +36,8 @@ class XmlDB: public DB
     QXmlStreamReader xmlStream;
     QXmlStreamWriter xmlWriter;
     QFile dbFile;
-    QString fileName;
     bool fileIsOk;
+    QString fileName;
 
     void saveNode(QXmlStreamWriter &stream, LogItem *node);
     void loadNode(QXmlStreamReader &stream, LogItem *node);

@@ -59,6 +59,7 @@ class LogAppServer : public QObject
     uint64_t request_id;
 
     void sendPacket(NetworkHeader *header, const void *data);
+    void sendPacketSync(NetworkHeader *header, const void *data);
 
 protected slots:
     void readData();

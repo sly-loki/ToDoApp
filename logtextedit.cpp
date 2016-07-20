@@ -12,7 +12,7 @@ unsigned int LogTextEdit::fontHeight = 1;
 
 void LogTextEdit::updateHeight()
 {
-    int newLineCount = document()->size().height();
+    unsigned int newLineCount = document()->size().height();
     if (newLineCount != lineCount) {
         if (newLineCount == 0)
             newLineCount = 1;

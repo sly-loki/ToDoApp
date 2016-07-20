@@ -213,12 +213,12 @@ void GuiControl::onItemFocusChanged(int direction)
 
 void GuiControl::onDocumentOpen(LogControl *doc)
 {
-
+    Q_UNUSED(doc);
 }
 
 void GuiControl::onDocumentClose(LogControl *doc)
 {
-
+    Q_UNUSED(doc);
 }
 
 void GuiControl::setCurrentDocument(LogControl *doc)
@@ -401,7 +401,6 @@ void GuiControl::focusItem(LogItem *item)
 
 void GuiControl::setItemDone(LogItem *item)
 {
-    bool done = item->isDone();
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
         QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
@@ -430,15 +429,16 @@ ItemWidget::ItemWidget()
 
 void ItemWidget::setText(QString text)
 {
-
+    Q_UNUSED(text);
 }
 
 QString ItemWidget::getText()
 {
-
+    return "";
 }
 
 void ItemWidget::addChild(ItemWidget *child, ItemWidget *after)
 {
-
+    Q_UNUSED(child);
+    Q_UNUSED(after);
 }

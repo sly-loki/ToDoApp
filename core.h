@@ -26,10 +26,19 @@ enum ItemType
     IT_LOG
 };
 
+enum ItemStatus
+{
+    IS_NOT_PRESENT = 0,
+    IS_DOWNLOADING,
+    IS_UPLOADING,
+    IS_PRESENT
+};
+
 class LogItem
 {
     uint64_t id;
     ItemType type;
+    ItemStatus status;
 
     LogControl *control;
     bool modified;
@@ -225,6 +234,7 @@ public slots:
 
 signals:
     void itemAdded(LogItem *);
+    void itemStatusChanged(LogItem *);
     void itemTextChanged(LogItem *);
     void itemModified(LogItem *);
     void itemDeleted(LogItem *);

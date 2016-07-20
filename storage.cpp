@@ -10,27 +10,30 @@ DB::DB()
 
 void DB::saveItem(LogItem *item, const QString &text)
 {
-
+    Q_UNUSED(item);
+    Q_UNUSED(text);
 }
 
 void DB::saveTree(LogItem *rootItem)
 {
-
+    Q_UNUSED(rootItem);
 }
 
 ItemVector DB::getFirstLevelItems()
 {
-
+    return ItemVector();
 }
 
 ItemVector DB::getChildsOf(LogItem *item)
 {
-
+    Q_UNUSED(item);
+    return ItemVector();
 }
 
 QString DB::getText(LogItem *item)
 {
-
+    Q_UNUSED(item);
+    return "";
 }
 
 
@@ -53,7 +56,8 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
 
 void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
 {
-
+    Q_UNUSED(stream);
+    Q_UNUSED(node);
 }
 
 XmlDB::XmlDB(const QString fileName)
@@ -70,7 +74,8 @@ XmlDB::XmlDB(const QString fileName)
 
 void XmlDB::saveItem(LogItem *item, const QString &text)
 {
-//    item->getId();
+    Q_UNUSED(item);
+    Q_UNUSED(text);
 }
 
 void XmlDB::saveTree(LogItem *rootItem)
@@ -182,12 +187,14 @@ ItemVector XmlDB::getFirstLevelItems()
 
 ItemVector XmlDB::getChildsOf(LogItem *item)
 {
+    Q_UNUSED(item);
     ItemVector result;
     return result;
 }
 
 QString XmlDB::getText(LogItem *item)
 {
+    Q_UNUSED(item);
     return "";
 }
 

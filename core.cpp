@@ -6,9 +6,10 @@
 uint64_t LogItem::nextId = 1;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
-    : control(control)
-    , id(id)
+    : id(id)
     , type(IT_TODO)
+    , status(IS_NOT_PRESENT)
+    , control(control)
     , modified(false)
     , syncedWithServer(false)
     , parent(parent)
