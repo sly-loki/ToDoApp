@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QListWidget>
 #include <QDir>
+#include <QTimer>
+#include <QLabel>
 
 #include <map>
 
@@ -25,6 +27,8 @@ class MainWindow : public QMainWindow
     ApplicationControl *appControl;
     LogAppServer *server;
     QDir appDir;
+    QTimer connectionTimer;
+    QLabel *serverStatusLabel;
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -35,8 +39,10 @@ protected slots:
     void createDocument();
     void newDocButtonClicked();
     void onNewDocument(LogControl *doc);
+    void serverPooling();
 
     void onServerConnected();
+    void onServerDisconnected(QString reason);
     void onDocListReceived(std::vector<QString> docs);
 
 private:

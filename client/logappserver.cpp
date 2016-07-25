@@ -1,5 +1,6 @@
 #include "logappserver.h"
 
+
 #include <cassert>
 
 #include "core.h"
@@ -129,13 +130,24 @@ LogAppServer::LogAppServer(QObject *parent)
     , request_id(0)
 {
     connect(&socket, SIGNAL(readyRead()), this, SLOT(readData()));
+    connect(&socket, SIGNAL(connected()), this, SLOT(onConnectionEstablished()));
+    connect(&socket, SIGNAL(disconnected()), this, SLOT(onConnectionLost()));
+    connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onConnectionError(QAbstractSocket::SocketError)));
 }
 
-bool LogAppServer::connectToServer()
+void LogAppServer::connectToServer()
 {
-    socket.abort();
-    socket.connectToHost("localhost", DEBUG_PORT);
-    emit connected();
+//    socket.abort();
+    QAbstractSocket::SocketState state = socket.state();
+    switch (state) {
+    case QAbstractSocket::UnconnectedState:
+        socket.connectToHost("localhost", DEBUG_PORT);
+        status = SS_CONNECTING;
+        break;
+    case QAbstractSocket::ConnectedState:
+        status = SS_CONNECTED;
+        break;
+    }
 }
 
 bool LogAppServer::ping()
@@ -211,6 +223,28 @@ void LogAppServer::removeItem(LogItem *item)
 void LogAppServer::sendAction(ServerAction action)
 {
 
+}
+
+void LogAppServer::onConnectionEstablished()
+{
+    status = SS_CONNECTED;
+    emit connected();
+}
+
+void LogAppServer::onConnectionLost()
+{
+    status = SS_DISCONNECTED;
+    socket.disconnectFromHost();
+    socket.abort();
+    emit disconnected("Connection lost");
+}
+
+void LogAppServer::onConnectionError(QAbstractSocket::SocketError socketError)
+{
+    status = SS_DISCONNECTED;
+    socket.disconnectFromHost();
+    socket.abort();
+    emit disconnected("Error: " + socket.errorString());
 }
 
 

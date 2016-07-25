@@ -60,10 +60,19 @@ MainWindow::MainWindow(QWidget *parent) :
     appControl = new ApplicationControl(server);
 
     connect(server, SIGNAL(connected()), this, SLOT(onServerConnected()));
+    connect(server, SIGNAL(disconnected(QString)), this, SLOT(onServerDisconnected(QString)));
     connect(server, SIGNAL(docListReceived(std::vector<QString>)), this, SLOT(onDocListReceived(std::vector<QString>)));
     connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
 
+    connectionTimer.setInterval(1000);
+    connectionTimer.setSingleShot(true);
+    connect(&connectionTimer, SIGNAL(timeout()), this, SLOT(serverPooling()));
+
+    serverStatusLabel = new QLabel();
+    ui->statusBar->addWidget(serverStatusLabel);
     server->connectToServer();
+    serverPooling();
+
     ui->listWidget->setCurrentItem(ui->listWidget->item(0));
 
 //        appControl->start();
@@ -109,9 +118,27 @@ void MainWindow::onNewDocument(LogControl *doc)
     ui->listWidget->addItem(doc->getName());
 }
 
+void MainWindow::serverPooling()
+{
+    if (server->getStatus() == SS_CONNECTED) {
+        serverStatusLabel->setText("connected");
+    } else {
+//        if (server->getStatus() == SS_DISCONNECTED)
+        server->connectToServer();
+        connectionTimer.start();
+    }
+
+}
+
 void MainWindow::onServerConnected()
 {
     server->getDocList();
+}
+
+void MainWindow::onServerDisconnected(QString reason)
+{
+    serverStatusLabel->setText(reason);
+    serverPooling();
 }
 
 void MainWindow::onDocListReceived(std::vector<QString> docs)

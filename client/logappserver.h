@@ -14,7 +14,8 @@ struct NetworkHeader;
 
 enum ServerStatus
 {
-    SS_OK,
+    SS_CONNECTING,
+    SS_CONNECTED,
     SS_DISCONNECTED,
     SS_ERROR
 };
@@ -57,6 +58,7 @@ class LogAppServer : public QObject
     Q_OBJECT
     QTcpSocket socket;
     uint64_t request_id;
+    ServerStatus status;
 
     void sendPacket(NetworkHeader *header, const void *data);
     void sendPacketSync(NetworkHeader *header, const void *data);
@@ -66,8 +68,7 @@ protected slots:
 
 public:
     explicit LogAppServer(QObject *parent = 0);
-    bool connectToServer();
-    ServerStatus getStatus();
+    void connectToServer();
 
     bool ping();
     bool saveItem(LogItem *item);
@@ -78,15 +79,20 @@ public:
     void getItemChildern(uint64_t docId, uint64_t id);
 
     void getDocList();
+    ServerStatus getStatus() const {return status;}
 
 public slots:
     void addItem(LogItem *item);
     void removeItem(LogItem *item);
     void sendAction(ServerAction action);
+    void onConnectionEstablished();
+    void onConnectionLost();
+    void onConnectionError(QAbstractSocket::SocketError socketError);
 
 signals:
 
     void connected();
+    void disconnected(QString);
 
     void receivedRequest();
     void docListReceived(std::vector<QString>);
