@@ -12,6 +12,7 @@ TARGET = logApp
 TEMPLATE = app
 CONFIG += c++11
 
+INCLUDEPATH += ../include
 
 SOURCES += main.cpp\
         mainwindow.cpp \

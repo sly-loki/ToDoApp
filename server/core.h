@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-#include "../storage.h"
+#include "storage.h"
 
 class LogControl;
 

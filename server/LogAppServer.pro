@@ -8,6 +8,8 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
+INCLUDEPATH += ../include
+
 SOURCES += main.cpp \
     core.cpp \
     storage.cpp \

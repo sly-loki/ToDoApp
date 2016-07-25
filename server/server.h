@@ -5,7 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-#include "../network_def.h"
+#include "network_def.h"
 #include "core.h"
 #include <map>
 #include <vector>
