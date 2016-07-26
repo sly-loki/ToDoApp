@@ -89,11 +89,12 @@ class LogControl: public QObject
 
     LogItem *rootItem;
     DB *db;
+    QString docName;
 
 //    void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
-    LogControl(DB* db);
+    LogControl(DB* db, QString name);
     void loadData();
     void setRootItem(LogItem *root);
 
@@ -112,13 +113,13 @@ public:
 
     void printItemTree();
 
+    QString getName() {return docName;}
+
 public slots:
     void setItemDone(LogItem *item, bool state);
 
 //    void createItem(CreateItemData data);
 //    void changeItem(ChangeItemData data);
-//    void removeItem(RemoveItemData data);
-//    void sendItem(uint64_t id);
 //    void sendChildrenIds(uint64_t id);
 
 signals:

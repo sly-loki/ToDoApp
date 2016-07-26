@@ -43,6 +43,7 @@ struct ServerItemData
 
 struct ServerAction
 {
+    uint64_t docId;
     uint32_t type;
 };
 
@@ -59,6 +60,7 @@ class LogAppServer : public QObject
     QTcpSocket socket;
     uint64_t request_id;
     ServerStatus status;
+    std::map<uint64_t, RemoteDB *> requests;
 
     void sendPacket(NetworkHeader *header, const void *data);
     void sendPacketSync(NetworkHeader *header, const void *data);

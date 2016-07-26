@@ -38,10 +38,9 @@ int main(int argc, char *argv[])
         QString fileName = appDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db);
+        LogControl *control = new LogControl(db, s);
         control->loadData();
         docs.push_back(control);
-
     }
 
     QCoreApplication a(argc, argv);

@@ -28,6 +28,6 @@ HEADERS  += mainwindow.h \
     storage.h \
     core.h \
     logappserver.h \
-    network_def.h
+    ../include/network_def.h
 
 FORMS    += mainwindow.ui

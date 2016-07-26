@@ -14,9 +14,10 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
 
         DocumentDescriptor desc;
 
+        QString name = it.second->getName();
         desc.id = it.first;
         memset(desc.name, 0, DOCUMENT_NAME_MAX_LENGHT);
-        memcpy(desc.name, "one", sizeof("one"));
+        memcpy(desc.name, name.toStdString().c_str(), name.length());
         docDescs.push_back(desc);
     }
 
@@ -60,9 +61,36 @@ void TodoServer::readPacket()
 
 }
 
-void TodoServer::sendItem(LogItem *item)
+void TodoServer::createItem(NetworkHeader *header, const char *data)
+{
+    LogControl *doc = docs[header->docId];
+    if (!doc) {
+        qDebug() << "doc not exists";
+        return;
+    }
+    LogItem *parent = doc->findItemById(header->parentId);
+    if (!parent) {
+        qDebug() << "parent not exists";
+        return;
+    }
+    LogItem *newItem = new LogItem(doc, parent, 0);
+    newItem->setText(data);
+    parent->addAsChild(newItem);
+}
+
+void TodoServer::sendItem(NetworkHeader *header)
 {
     NetworkHeader packet;
+    LogControl *doc = docs[header->docId];
+    if (!doc) {
+        qDebug() << "doc not exists";
+        return;
+    }
+    LogItem *item = doc->findItemById(header->itemId);
+    if (!item) {
+        qDebug() << "item not exists";
+        return;
+    }
     qDebug() << "send item";
     packet.type = PT_GET_ITEM;
     packet.itemId = item->getId();
@@ -102,74 +130,63 @@ void TodoServer::incomingMessage()
 {
     NetworkHeader packet;
     while (true) {
-    if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
-        qDebug() << "read error";
-        return;
-    }
-    char * text = nullptr;
-    if (packet.dataSize) {
-        text = new char[packet.dataSize+1];
-        size_t readed = clientConnection->read((char *)text, packet.dataSize);
-        if (readed != packet.dataSize) {
-            qDebug() << "data read error";
-            throw "bad data";
+        if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
+            qDebug() << "read error";
+            return;
         }
-    }
-    switch (packet.type) {
-    case PT_ITEM_CREATED:
-    {
-        qDebug() << "item created message";
-        qDebug() << "id : " << packet.itemId;
-        qDebug() << "text: " << text;
+        char * text = nullptr;
+        if (packet.dataSize) {
+            text = new char[packet.dataSize+1];
+            size_t readed = clientConnection->read((char *)text, packet.dataSize);
+            text[packet.dataSize] = '\0';
+            if (readed != packet.dataSize) {
+                qDebug() << "data read error";
+                throw "bad data";
+            }
+        }
+        switch (packet.type) {
+        case PT_ITEM_CREATED:
+        {
+            qDebug() << "item created message";
+            qDebug() << "id : " << packet.itemId;
+            qDebug() << "text: " << text;
 
-        CreateItemData data;
-        data.parentId = packet.parentId;
-        data.text = "";
-        data.prevItemId = 0;
+            createItem(&packet, text);
 
-        emit createItem(data);
-    }
-        break;
-    case PT_GET_DOC_LIST:
-    {
-        qDebug() << "get doc list";
-        sendDocumentList(&packet, clientConnection);
-    }
-        break;
-    case PT_GET_ITEM:
-    {
-        qDebug() << "get item: " << packet.itemId;
-        emit itemRequested(packet.itemId);
-    }
-        break;
-    case PT_GET_ALL_ITEMS:
-    {
-//        qDebug() << "request for all item";
-//        std::vector<uint64_t> ids;
-//        LogItem *root = control->getRootItem();
-//        std::function<void (LogItem *, std::vector<uint64_t> &)> f = [&f](LogItem *item, std::vector<uint64_t> &ids){
-//            ids.push_back(item->getId());
-//            LogItem *child = item->getChild();
-//            while (child) {
-//                f(child, ids);
-//                child = child->getNext();
-//            }
-//        };
-//        f(root, ids);
-//        packet.dataSize = ids.size() * sizeof(uint64_t);
-//        sendPacket(&packet, (const void *)ids.data());
-    }
-        break;
-    case PT_GET_CHILDREN:
-    {
-        qDebug() << "request for children: " << packet.docId << "." << packet.itemId;
-        sendChildrenIds(&packet);
-    }
-        break;
-    default:
-        qDebug() << "error here";
-        break;
-    }
+        }
+            break;
+        case PT_ITEM_DELETED:
+        {
+            qDebug() << "item delete message";
+        }
+            break;
+        case PT_GET_DOC_LIST:
+        {
+            qDebug() << "get doc list";
+            sendDocumentList(&packet, clientConnection);
+        }
+            break;
+        case PT_GET_ITEM:
+        {
+            qDebug() << "get item: " << packet.itemId;
+            sendItem(&packet);
+        }
+            break;
+        case PT_GET_ALL_ITEMS:
+        {
+            qDebug() << "get all items: not supported";
+        }
+            break;
+        case PT_GET_CHILDREN:
+        {
+            qDebug() << "request for children: " << packet.docId << "." << packet.itemId;
+            sendChildrenIds(&packet);
+        }
+            break;
+        default:
+            qDebug() << "error here";
+            break;
+        }
     }
 }
 

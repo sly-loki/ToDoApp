@@ -19,6 +19,9 @@ enum PACKET_TYPE
     PT_OPERATION_CONFIRMED
 };
 
+#define DOC_TYPE_SHARED 0
+#define DOC_TYPE_REMOTE 1
+
 struct NetworkHeader
 {
     uint64_t requestID;
@@ -34,6 +37,7 @@ struct DocumentDescriptor
 {
     uint64_t id;
     uint8_t name[DOCUMENT_NAME_MAX_LENGHT];
+    uint8_t docType;
 } __attribute__((packed));
 
 #define DEBUG_PORT 12054

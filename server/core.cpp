@@ -151,9 +151,10 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
-LogControl::LogControl(DB* db)
+LogControl::LogControl(DB* db, QString name)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
+    , docName(name)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
@@ -370,32 +371,12 @@ void LogControl::setItemDone(LogItem *item, bool state)
 
 //void LogControl::createItem(CreateItemData data)
 //{
-//    LogItem *parent = findItemById(data.parentId);
-//    if (parent) {
-//        LogItem *newItem = new LogItem(this, parent, 0);
-//        newItem->setText(data.text);
-//        parent->addAsChild(newItem);
-//    }
+
 //}
 
 //void LogControl::changeItem(ChangeItemData data)
 //{
 
-//}
-
-//void LogControl::removeItem(RemoveItemData data)
-//{
-
-//}
-
-//void LogControl::sendItem(uint64_t id)
-//{
-//    LogItem *item = findItemById(id);
-//    if (item) {
-//        server->sendItem(item);
-//    } else {
-//        // error processing here
-//    }
 //}
 
 //void LogControl::sendChildrenIds(uint64_t id)

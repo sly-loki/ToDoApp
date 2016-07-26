@@ -31,97 +31,99 @@ void LogAppServer::readData()
 {
     NetworkHeader header;
     while (true) {
-    int readed = socket.read((char *)&header, sizeof(NetworkHeader));
+        int readed = socket.read((char *)&header, sizeof(NetworkHeader));
 
-    if (readed != sizeof(NetworkHeader))
-        return;
-
-    switch (header.type) {
-    case PT_GET_ALL_ITEMS: {
-        qDebug() << "get all items response";
-        size_t itemCount = header.dataSize/sizeof(uint64_t);
-        uint64_t *ids = new uint64_t[itemCount];
-        size_t readed = socket.read((char *)ids, header.dataSize);
-        if (readed != header.dataSize) {
-            qDebug() << "ERROR: ";
-            delete[] ids;  //fix
+        if (readed != sizeof(NetworkHeader))
             return;
-        }
-        qDebug() << "readed " << itemCount << " items";
-        for (int i = 0; i < itemCount; i++) {
-            qDebug() << ids[i];
-        }
-        emit itemListReceived(ids, itemCount);
 
-        delete[] ids;
-    }
-        break;
-    case PT_GET_ITEM: {
-        ServerItemData itemData;
-        qDebug() << "get item response: " << header.itemId;
-        qDebug() << "text: " << header.dataSize;
-        if (header.dataSize) {
-            char *text = new char[header.dataSize+1];
-            size_t readed = socket.read(text, header.dataSize);
+        switch (header.type) {
+        case PT_GET_ALL_ITEMS: {
+    //        qDebug() << "get all items response";
+    //        size_t itemCount = header.dataSize/sizeof(uint64_t);
+    //        uint64_t *ids = new uint64_t[itemCount];
+    //        size_t readed = socket.read((char *)ids, header.dataSize);
+    //        if (readed != header.dataSize) {
+    //            qDebug() << "ERROR: ";
+    //            delete[] ids;  //fix
+    //            return;
+    //        }
+    //        qDebug() << "readed " << itemCount << " items";
+    //        for (int i = 0; i < itemCount; i++) {
+    //            qDebug() << ids[i];
+    //        }
+    //        emit itemListReceived(ids, itemCount);
+
+    //        delete[] ids;
+
+            //DEPRECATED
+        }
+            break;
+        case PT_GET_ITEM: {
+            ServerItemData itemData;
+            qDebug() << "get item response: " << header.itemId;
+            qDebug() << "text: " << header.dataSize;
+            if (header.dataSize) {
+                char *text = new char[header.dataSize+1];
+                size_t readed = socket.read(text, header.dataSize);
+                if (readed != header.dataSize) {
+                    qDebug() << "ERROR: ";
+                    delete[] text;  //fix
+                    return;
+                }
+                text[header.dataSize] = 0;
+                itemData.text = QString(text);
+                delete[] text;
+            }
+
+            itemData.itemId = header.itemId;
+            itemData.parentId = header.parentId;
+
+            emit itemReceived(itemData);
+
+        }
+            break;
+        case PT_GET_CHILDREN: {
+            qDebug() << "get children items response";
+            size_t itemCount = header.dataSize/sizeof(uint64_t);
+            if (itemCount == 0) {
+                emit itemChildrenReceived(header.itemId, nullptr, 0);
+            }
+            uint64_t *ids = new uint64_t[itemCount];
+            size_t readed = socket.read((char *)ids, header.dataSize);
             if (readed != header.dataSize) {
                 qDebug() << "ERROR: ";
-                delete[] text;  //fix
+                delete[] ids;  //fix
                 return;
             }
-            text[header.dataSize] = 0;
-            itemData.text = QString(text);
-            delete[] text;
-        }
+            qDebug() << "readed " << itemCount << " items";
+            for (int i = 0; i < itemCount; i++) {
+                qDebug() << ids[i];
+            }
+            emit itemChildrenReceived(header.itemId, ids, itemCount);
 
-        itemData.itemId = header.itemId;
-        itemData.parentId = header.parentId;
-
-        emit itemReceived(itemData);
-
-    }
-        break;
-    case PT_GET_CHILDREN: {
-        qDebug() << "get children items response";
-        size_t itemCount = header.dataSize/sizeof(uint64_t);
-        if (itemCount == 0) {
-            emit itemChildrenReceived(header.itemId, nullptr, 0);
+            delete[] ids;
         }
-        uint64_t *ids = new uint64_t[itemCount];
-        size_t readed = socket.read((char *)ids, header.dataSize);
-        if (readed != header.dataSize) {
-            qDebug() << "ERROR: ";
-            delete[] ids;  //fix
-            return;
+            break;
+        case PT_GET_DOC_LIST: {
+            qDebug() << "get doc list";
+            std::vector<QString> docs;
+            int count = header.dataSize / sizeof(DocumentDescriptor);
+            DocumentDescriptor *descs = new DocumentDescriptor[count];
+            size_t readed = socket.read((char *)descs, header.dataSize);
+            if (readed != header.dataSize) {
+                qDebug() << "ERROR: ";
+                delete[] descs;  //fix
+                return;
+            }
+            for (int i = 0; i < count; i++) {
+                docs.push_back(QString((char *)(descs[i].name)));
+            }
+            emit docListReceived(docs);
         }
-        qDebug() << "readed " << itemCount << " items";
-        for (int i = 0; i < itemCount; i++) {
-            qDebug() << ids[i];
+            break;
+        default:
+            break;
         }
-        emit itemChildrenReceived(header.itemId, ids, itemCount);
-
-        delete[] ids;
-    }
-        break;
-    case PT_GET_DOC_LIST: {
-        qDebug() << "get doc list";
-        std::vector<QString> docs;
-        int count = header.dataSize / sizeof(DocumentDescriptor);
-        DocumentDescriptor *descs = new DocumentDescriptor[count];
-        size_t readed = socket.read((char *)descs, header.dataSize);
-        if (readed != header.dataSize) {
-            qDebug() << "ERROR: ";
-            delete[] descs;  //fix
-            return;
-        }
-        for (int i = 0; i < count; i++) {
-            docs.push_back(QString((char *)(descs[i].name)));
-        }
-        emit docListReceived(docs);
-    }
-        break;
-    default:
-        break;
-    }
     }
 }
 

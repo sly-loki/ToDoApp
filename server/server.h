@@ -36,28 +36,28 @@ class TodoServer: public QObject
 
 protected:
     void sendDocumentList(NetworkHeader *header, QTcpSocket *connection);
-
-public:
-    TodoServer(const std::vector<LogControl*> docs);
-
-    void start();
+    void sendItem(NetworkHeader *header);
+    void sendChildrenIds(NetworkHeader *header);
     void sendPacket(NetworkHeader *header, const void *data);
     void readPacket();
-    void sendItem(LogItem *item);
-    void sendChildrenIds(NetworkHeader *header);
-    void sendAction();
 
-signals:
-    void createItem(CreateItemData data);
-    void moveItem();
-    void changeItemText(ChangeItemData data);
-    void removeItem(RemoveItemData data);
-    void itemRequested(uint64_t id);
-    void childrenIdsRequested(uint64_t parentId);
+    void createItem(NetworkHeader *header, const char *data);
 
 protected slots:
     void incomingMessage();
     void onNewConnection();
+
+public:
+    TodoServer(const std::vector<LogControl*> docs);
+    void start();
+
+signals:
+//    void createItem(CreateItemData data);
+//    void moveItem();
+//    void changeItemText(ChangeItemData data);
+//    void removeItem(RemoveItemData data);
+//    void itemRequested(uint64_t id);
+//    void childrenIdsRequested(uint64_t parentId);
 };
 
 #endif // SERVER_H
