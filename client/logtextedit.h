@@ -61,9 +61,7 @@ signals:
     void createdNewDocument(LogControl *doc);
 
 public slots:
-    void onItemListReceived(uint64_t *ids, uint count);
-    void onItemReceived(ServerItemData data);
-    void onItemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
+
 };
 
 class LogTextEdit : public QPlainTextEdit

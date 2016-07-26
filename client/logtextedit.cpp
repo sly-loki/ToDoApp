@@ -264,57 +264,14 @@ ApplicationControl::ApplicationControl(LogAppServer *server)
     , state(AS_START)
     , readAllItemsTask(nullptr)
 {
-    connect(server, SIGNAL(itemListReceived(uint64_t*,uint)), this, SLOT(onItemListReceived(uint64_t*,uint)));
-    connect(server, SIGNAL(itemReceived(ServerItemData)), this, SLOT(onItemReceived(ServerItemData)));
-    connect(server, SIGNAL(itemChildrenReceived(uint64_t,uint64_t*,uint)), this, SLOT(onItemChildrenReceived(uint64_t,uint64_t*,uint)));
 }
 
 bool ApplicationControl::createNewDocument(QString name, QString fullFileName)
 {
-    XmlDB *newDB = new XmlDB(fullFileName);
-    LogControl *newDoc = new LogControl(newDB, name);
-    newDoc->loadData();
-    emit createdNewDocument(newDoc);
+    return false;
 }
 
 void ApplicationControl::start()
 {
-    state = AS_RECEIVING_ITEMS;
-//    readAllItemsTask = new ReadServerItems(1, control, 0);
-//    server->getItemChildern(0);
 }
 
-void ApplicationControl::onItemListReceived(uint64_t *ids, uint count)
-{
-
-}
-
-void ApplicationControl::onItemReceived(ServerItemData data)
-{
-    qDebug() << "onItemReceived";
-    if (state == AS_RECEIVING_ITEMS) {
-        if (!readAllItemsTask) {
-            qDebug() << "error: receiving items, but task is null";
-            return;
-        }
-        if (readAllItemsTask->process(&data)) {
-            LogItem *root = readAllItemsTask->getRootItem();
-//            control->setRootItem(root);
-        }
-    }
-}
-
-void ApplicationControl::onItemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count)
-{
-    if (state == AS_RECEIVING_ITEMS) {
-        if (!readAllItemsTask) {
-            qDebug() << "error: receiving items, but task is null";
-            return;
-        }
-        readAllItemsTask->processChildren(parentId, ids, count);
-        for (int i = 0; i < count; i++) {
-//            server->getItemChildern(ids[i]);
-            server->getItemData(ids[i]);
-        }
-    }
-}

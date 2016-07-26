@@ -3,12 +3,14 @@
 
 #include <QDebug>
 
+#include "logappserver.h"
+
 uint64_t LogItem::nextId = 1;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     : id(id)
     , type(IT_TODO)
-    , status(IS_NOT_PRESENT)
+    , state(IS_NOT_PRESENT)
     , control(control)
     , modified(false)
     , syncedWithServer(false)
@@ -261,9 +263,11 @@ void LogControl::onLoadingDone()
     docStatus = DS_OPEN;
 }
 
-LogControl::LogControl(DB* db, QString name)
+LogControl::LogControl(DB* db, QString name, uint64_t id)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
+    , serverDB(nullptr)
+    , id(id)
     , name(name)
     , docType(DT_CACHED)
     , docStatus(DS_CLOSED)
@@ -294,6 +298,16 @@ void LogControl::setRootItem(LogItem *root)
     else {
         fillGui(rootItem);
     }
+}
+
+void LogControl::setServerDB(RemoteDB *db)
+{
+    if (serverDB) {
+        qDebug() << "server db already set";
+        return;
+    }
+    serverDB = db;
+    serverDB->start();
 }
 
 LogItem *LogControl::findItemById(uint64_t id)
@@ -443,7 +457,8 @@ void LogControl::moveItem(LogItem *item, int direction)
 
 void LogControl::save()
 {
-    db->saveTree(rootItem);
+    if (docType != DT_REMOTE)
+        db->saveTree(rootItem);
 }
 
 void LogControl::printItemTree()

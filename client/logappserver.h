@@ -54,6 +54,8 @@ public:
     virtual ~NetworkClient() = default;
 };
 
+class RemoteDB;
+
 class LogAppServer : public QObject
 {
     Q_OBJECT
@@ -77,8 +79,8 @@ public:
     bool saveTree(LogItem *root);
 
     void getItemList();
-    void getItemData(uint64_t id);
-    void getItemChildern(uint64_t docId, uint64_t id);
+    void getItemData(uint64_t docId, uint64_t id, RemoteDB *db);
+    void getItemChildern(uint64_t docId, uint64_t id, RemoteDB *db);
 
     void getDocList();
     ServerStatus getStatus() const {return status;}
@@ -98,23 +100,40 @@ signals:
 
     void receivedRequest();
     void docListReceived(std::vector<QString>);
-    void itemListReceived(uint64_t *ids, uint count);
-    void itemReceived(ServerItemData data);
-    void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
+//    void itemListReceived(uint64_t *ids, uint count);
+//    void itemReceived(ServerItemData data);
+//    void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
 
 public slots:
 };
 
-class RemoteDB: public DB
+class RemoteDB : public QObject
 {
+    Q_OBJECT
+
+    enum RemoteDbState
+    {
+        RDB_CREATED = 0,
+        RDB_SYNCHING,
+        RDB_SYNCHED
+    };
 
     LogAppServer *server;
-    QString docName;
+    LogControl *doc;
+    RemoteDbState state;
 
 public:
-    RemoteDB(LogAppServer *server, QString docName);
-    virtual void saveTree(LogItem *rootItem) override;
-    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
+    RemoteDB(LogAppServer *server, LogControl *doc);
+
+    void onItemListReceived(uint64_t parentId, uint64_t *ids, uint count);
+    void onItemReceived(ServerItemData data);
+    void start();
+
+    //    virtual void saveTree(LogItem *rootItem) override;
+    //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
+signals:
+//    void
+
 };
 
 #endif // LOGAPPSERVER_H

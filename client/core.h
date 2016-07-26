@@ -26,7 +26,7 @@ enum ItemType
     IT_LOG
 };
 
-enum ItemStatus
+enum ItemState
 {
     IS_NOT_PRESENT = 0,
     IS_DOWNLOADING,
@@ -38,7 +38,7 @@ class LogItem
 {
     uint64_t id;
     ItemType type;
-    ItemStatus status;
+    ItemState state;
 
     LogControl *control;
     bool modified;
@@ -95,6 +95,9 @@ public:
 
     bool isDone() {return done;}
     void setDone(bool state) {this->done = state;}
+
+    void setState(ItemState state) {this->state = state;}
+    ItemState getState() {return state;}
 
     uint64_t getId() const;
     void setId(const uint64_t &value);
@@ -180,12 +183,17 @@ enum DocumentType
     DT_CACHED
 };
 
+class RemoteDB;
+
 class LogControl: public QObject
 {
     Q_OBJECT
 
     LogItem *rootItem;
     DB *db;
+    RemoteDB *serverDB;
+    uint64_t id;
+
     QString name;
     DocumentType docType;
     DocumentStatus docStatus;
@@ -203,11 +211,15 @@ protected slots:
     void onLoadingDone();
 
 public:
-    LogControl(DB* db, QString name);
+    static const int ROOT_ITEM_ID = 0;
+
+    LogControl(DB* db, QString name, uint64_t id);
 
     QString getName();
     void loadData();
     void setRootItem(LogItem *root);
+    void setServerDB(RemoteDB *db);
+    uint64_t getId() {return id;}
 
     LogItem *findItemById(uint64_t id);
     LogItem *getNextItemInTree(LogItem *item);
@@ -234,7 +246,7 @@ public slots:
 
 signals:
     void itemAdded(LogItem *);
-    void itemStatusChanged(LogItem *);
+    void itemStateChanged(LogItem *);
     void itemTextChanged(LogItem *);
     void itemModified(LogItem *);
     void itemDeleted(LogItem *);
