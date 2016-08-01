@@ -218,7 +218,7 @@ public:
     QString getName();
     void loadData();
     void setRootItem(LogItem *root);
-    void setServerDB(RemoteDB *db);
+    void setServerDB(RemoteDB *db, DocumentType type);
     uint64_t getId() {return id;}
 
     LogItem *findItemById(uint64_t id);

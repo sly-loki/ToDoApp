@@ -13,9 +13,10 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
     for (auto it: docs) {
 
         DocumentDescriptor desc;
+        LogControl *doc = it.second;
 
-        QString name = it.second->getName();
-        desc.id = it.first;
+        QString name = doc->getName();
+        desc.id = doc->getId();
         memset(desc.name, 0, DOCUMENT_NAME_MAX_LENGHT);
         memcpy(desc.name, name.toStdString().c_str(), name.length());
         docDescs.push_back(desc);
@@ -30,7 +31,9 @@ TodoServer::TodoServer(const std::vector<LogControl *> docs)
     : clientConnection(nullptr)
 {
     for (int i = 0; i < docs.size(); i++) {
-        this->docs[i] = docs[i];
+        LogControl *doc = docs[i];
+        this->docs[doc->getId()] = doc;
+        qDebug() << "loaded doc: " << doc->getId();
     }
     connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
@@ -94,6 +97,7 @@ void TodoServer::sendItem(NetworkHeader *header)
     qDebug() << "send item";
     packet.type = PT_GET_ITEM;
     packet.itemId = item->getId();
+    packet.requestID = header->requestID;
     packet.dataSize = item->getText().size();
     packet.parentId = (item->getParent())?item->getParent()->getId():0;
     sendPacket(&packet, item->getText().toStdString().c_str());
@@ -101,10 +105,9 @@ void TodoServer::sendItem(NetworkHeader *header)
 
 void TodoServer::sendChildrenIds(NetworkHeader *header)
 {
-    NetworkHeader packet;
-
+    qDebug() << "get children with request id: " << header->requestID;
     std::vector<uint64_t> ids;
-    LogControl *doc = docs[packet.docId];
+    LogControl *doc = docs[header->docId];
     if (!doc) {
         qDebug() << "error: wrong document id!!!";
         return;
@@ -120,9 +123,9 @@ void TodoServer::sendChildrenIds(NetworkHeader *header)
         }
     }
 
-    packet.type = PT_GET_CHILDREN;
+//    packet.type = PT_GET_CHILDREN;
 //    packet.itemId = itemId;
-    packet.dataSize = ids.size() * sizeof(uint64_t);
+    header->dataSize = ids.size() * sizeof(uint64_t);
     sendPacket(header, (const void *)ids.data());
 }
 

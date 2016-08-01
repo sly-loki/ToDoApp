@@ -80,7 +80,7 @@ public:
 
     void getItemList();
     void getItemData(uint64_t docId, uint64_t id, RemoteDB *db);
-    void getItemChildern(uint64_t docId, uint64_t id, RemoteDB *db);
+    void getItemChildren(uint64_t docId, uint64_t id, RemoteDB *db);
 
     void getDocList();
     ServerStatus getStatus() const {return status;}
@@ -99,7 +99,7 @@ signals:
     void disconnected(QString);
 
     void receivedRequest();
-    void docListReceived(std::vector<QString>);
+    void docListReceived(std::vector<std::pair< uint64_t, QString>>);
 //    void itemListReceived(uint64_t *ids, uint count);
 //    void itemReceived(ServerItemData data);
 //    void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);
@@ -121,6 +121,7 @@ class RemoteDB : public QObject
     LogAppServer *server;
     LogControl *doc;
     RemoteDbState state;
+    size_t pendingRequests;
 
 public:
     RemoteDB(LogAppServer *server, LogControl *doc);

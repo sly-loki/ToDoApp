@@ -10,6 +10,16 @@
 #define TEST_FILE_NAME "/home/loki/.todo/midterm.xml"
 #define DEFAULT_APP_FOLDER_NAME ".todo/test"
 
+void MainWindow::addDocumentToList(LogControl *doc)
+{
+    QListWidgetItem *item = new QListWidgetItem(doc->getName());
+
+    item->setData(Qt::UserRole, QVariant(qulonglong(doc->getId())));
+    ui->listWidget->addItem(item);
+
+    idsToDocs[doc->getId()] = doc;
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -40,16 +50,15 @@ MainWindow::MainWindow(QWidget *parent) :
     QStringList fileList = appDir.entryList(filters);
     qDebug() << fileList;
 
-    for (auto s: fileList) {
+    for (int i = 0; i < fileList.size(); i++) {
+        auto s = fileList[i];
         QString fileName = appDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db, s);
+        LogControl *control = new LogControl(db, s, i);
         control->loadData();
 
-        filesToDocs[s] = control;
-
-        ui->listWidget->addItem(s);
+        addDocumentToList(control);
     }
 
     connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
@@ -61,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(server, SIGNAL(connected()), this, SLOT(onServerConnected()));
     connect(server, SIGNAL(disconnected(QString)), this, SLOT(onServerDisconnected(QString)));
-    connect(server, SIGNAL(docListReceived(std::vector<QString>)), this, SLOT(onDocListReceived(std::vector<QString>)));
+    connect(server, SIGNAL(docListReceived(std::vector<std::pair<uint64_t,QString> >)), this, SLOT(onDocListReceived(std::vector<std::pair<uint64_t,QString> >)));
     connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
 
     connectionTimer.setInterval(1000);
@@ -85,12 +94,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::onDocumentSelected(QListWidgetItem* item)
 {
-    QString name = item->text();
-    auto it = filesToDocs.find(name);
-    if (it != filesToDocs.end()) {
+    uint64_t id = item->data(Qt::UserRole).toUInt();
+    auto it = idsToDocs.find(id);
+    if (it != idsToDocs.end()) {
         guiControl->setCurrentDocument((*it).second);
     } else {
-        qDebug() << name << " not found";
+        qDebug() << "document with id: " << id << " not found";
     }
 }
 
@@ -113,9 +122,12 @@ void MainWindow::newDocButtonClicked()
 
 void MainWindow::onNewDocument(LogControl *doc)
 {
-    filesToDocs[doc->getName()] = doc;
-
-    ui->listWidget->addItem(doc->getName());
+    auto it = idsToDocs.find(doc->getId());
+    if (it != idsToDocs.end()) {
+        qDebug() << "error: document with this id already exists";
+        return;
+    }
+    addDocumentToList(doc);
 }
 
 void MainWindow::serverPooling()
@@ -141,9 +153,15 @@ void MainWindow::onServerDisconnected(QString reason)
     serverPooling();
 }
 
-void MainWindow::onDocListReceived(std::vector<QString> docs)
+void MainWindow::onDocListReceived(std::vector<std::pair<uint64_t, QString> > docs)
 {
     for (auto s: docs) {
-        ui->listWidget->addItem(s);
+        LogControl *doc = new LogControl(nullptr, s.second, s.first);
+        qDebug() << "created remote doc with id: " << s.first;
+        RemoteDB *rdb = new RemoteDB(server, doc);
+        doc->setServerDB(rdb, DT_REMOTE);
+        doc->loadData();
+
+        addDocumentToList(doc);
     }
 }

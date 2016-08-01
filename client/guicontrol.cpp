@@ -245,8 +245,8 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     }
 
     initRootWidget();
-    if (doc->getStatus() != DS_OPEN)
-        return;
+//    if (doc->getStatus() != DS_OPEN)
+//        return;
 
     LogItem *root = doc->getRootItem();
 

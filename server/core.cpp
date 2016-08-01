@@ -151,10 +151,11 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
-LogControl::LogControl(DB* db, QString name)
+LogControl::LogControl(DB* db, QString name, uint64_t id)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
     , docName(name)
+    , id(id)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));

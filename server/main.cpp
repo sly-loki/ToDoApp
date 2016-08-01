@@ -34,11 +34,12 @@ int main(int argc, char *argv[])
     qDebug() << fileList;
 
     std::vector<LogControl *> docs;
+    uint64_t id = 1000;
     for (auto s: fileList) {
         QString fileName = appDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db, s);
+        LogControl *control = new LogControl(db, s, id++);
         control->loadData();
         docs.push_back(control);
     }

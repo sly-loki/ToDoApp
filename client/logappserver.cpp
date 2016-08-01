@@ -2,6 +2,7 @@
 
 
 #include <cassert>
+#include <QtEndian>
 
 #include "core.h"
 #include "network_def.h"
@@ -13,9 +14,6 @@ void LogAppServer::sendPacket(NetworkHeader *header, const void *data)
         assert(data != nullptr);
 
     qDebug() << "send package";
-    header->requestID = request_id;
-
-    request_id++;
 
     socket.write((char *)header, sizeof(NetworkHeader));
     if (header->dataSize)
@@ -67,11 +65,13 @@ void LogAppServer::readData()
                 RemoteDB *db = (*it).second;
                 db->onItemReceived(itemData);
                 requests.erase(it);
+            } else {
+                qDebug() << "error: no db for this request!";
             }
         }
             break;
         case PT_GET_CHILDREN: {
-            qDebug() << "get children items response";
+            qDebug() << "get children items response: " << header.requestID;
             size_t itemCount = header.dataSize/sizeof(uint64_t);
             uint64_t *ids = nullptr;
 
@@ -96,6 +96,8 @@ void LogAppServer::readData()
                 RemoteDB *db = (*it).second;
                 db->onItemListReceived(header.itemId, ids, itemCount);
                 requests.erase(it);
+            } else {
+                qDebug() << "Error: not db registered for this request";
             }
 
             delete[] ids;
@@ -103,7 +105,7 @@ void LogAppServer::readData()
             break;
         case PT_GET_DOC_LIST: {
             qDebug() << "get doc list";
-            std::vector<QString> docs;
+            std::vector<std::pair<uint64_t, QString>> docs;
             int count = header.dataSize / sizeof(DocumentDescriptor);
             DocumentDescriptor *descs = new DocumentDescriptor[count];
             size_t readed = socket.read((char *)descs, header.dataSize);
@@ -113,7 +115,8 @@ void LogAppServer::readData()
                 return;
             }
             for (int i = 0; i < count; i++) {
-                docs.push_back(QString((char *)(descs[i].name)));
+                uint64_t id = descs[i].id;
+                docs.push_back( {id, QString((char *)(descs[i].name))} );
             }
             emit docListReceived(docs);
         }
@@ -177,7 +180,7 @@ void LogAppServer::getItemData(uint64_t docId, uint64_t id, RemoteDB *db)
     NetworkHeader header;
 
     header.requestID = request_id;
-    requests[request_id] = db;
+    requests[header.requestID] = db;
     request_id++;
 
     header.docId = docId;
@@ -188,17 +191,18 @@ void LogAppServer::getItemData(uint64_t docId, uint64_t id, RemoteDB *db)
     sendPacket(&header, nullptr);
 }
 
-void LogAppServer::getItemChildern(uint64_t docId, uint64_t id, RemoteDB *db)
+void LogAppServer::getItemChildren(uint64_t docId, uint64_t id, RemoteDB *db)
 {
     NetworkHeader header;
     header.requestID = request_id;
-    requests[request_id] = db;
+    requests[header.requestID] = db;
     request_id++;
 
     header.docId = docId;
     header.itemId = id;
     header.dataSize = 0;
     header.type = PT_GET_CHILDREN;
+    qDebug() << "get item children request id: " << header.requestID;
 
     sendPacket(&header, nullptr);
 }
@@ -259,12 +263,14 @@ void LogAppServer::onConnectionError(QAbstractSocket::SocketError socketError)
 RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     : server(server)
     , doc(doc)
+    , pendingRequests(0)
 {
 
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, uint64_t *ids, uint count)
 {
+    pendingRequests--;
     for (int i = 0; i < count; i++) {
         uint64_t id = ids[i];
         LogItem *item = doc->findItemById(id);
@@ -281,13 +287,23 @@ void RemoteDB::onItemListReceived(uint64_t parentId, uint64_t *ids, uint count)
         item->setState(IS_NOT_PRESENT);
         doc->addItem(item, parent);
 
+        server->getItemChildren(doc->getId(), id, this);
+        pendingRequests++;
+
+        qDebug() << "send request for item data: " << id;
         server->getItemData(doc->getId(), id, this);
+        pendingRequests++;
         item->setState(IS_DOWNLOADING);
+    }
+    if (!pendingRequests) {
+        qDebug() << "LOADING DONE";
+//        doc->setStatus(DS_);
     }
 }
 
 void RemoteDB::onItemReceived(ServerItemData data)
 {
+    pendingRequests--;
     LogItem *item = doc->findItemById(data.itemId);
     if (!item) {
         qDebug() << "ERROR: item not exists";
@@ -296,11 +312,16 @@ void RemoteDB::onItemReceived(ServerItemData data)
     item->setText(data.text);
     item->setState(IS_PRESENT);
     emit doc->itemTextChanged(item);
+    if (!pendingRequests) {
+        qDebug() << "LOADING DONE";
+//        doc->setStatus(DS_);
+    }
 }
 
 void RemoteDB::start()
 {
-    server->getItemChildern(doc->getId(), LogControl::ROOT_ITEM_ID, this);
+    pendingRequests = 1;
+    server->getItemChildren(doc->getId(), LogControl::ROOT_ITEM_ID, this);
 }
 
 //void RemoteDB::saveTree(LogItem *rootItem)

@@ -90,11 +90,12 @@ class LogControl: public QObject
     LogItem *rootItem;
     DB *db;
     QString docName;
+    uint64_t id;
 
 //    void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
-    LogControl(DB* db, QString name);
+    LogControl(DB* db, QString name, uint64_t id);
     void loadData();
     void setRootItem(LogItem *root);
 
@@ -114,6 +115,8 @@ public:
     void printItemTree();
 
     QString getName() {return docName;}
+
+    uint64_t getId() {return id;}
 
 public slots:
     void setItemDone(LogItem *item, bool state);

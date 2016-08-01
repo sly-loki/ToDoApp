@@ -22,13 +22,15 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    std::map<QString, LogControl *> filesToDocs;
+    std::map<uint64_t, LogControl *> idsToDocs;
     GuiControl *guiControl;
     ApplicationControl *appControl;
     LogAppServer *server;
     QDir appDir;
     QTimer connectionTimer;
     QLabel *serverStatusLabel;
+
+    void addDocumentToList(LogControl *doc);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -43,7 +45,7 @@ protected slots:
 
     void onServerConnected();
     void onServerDisconnected(QString reason);
-    void onDocListReceived(std::vector<QString> docs);
+    void onDocListReceived(std::vector<std::pair<uint64_t, QString>> docs);
 
 private:
     Ui::MainWindow *ui;

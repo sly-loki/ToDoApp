@@ -269,7 +269,7 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
     , serverDB(nullptr)
     , id(id)
     , name(name)
-    , docType(DT_CACHED)
+    , docType(DT_LOCAL)
     , docStatus(DS_CLOSED)
 {
     rootItem->setId(0);
@@ -285,7 +285,10 @@ QString LogControl::getName()
 void LogControl::loadData()
 {
     docStatus = DS_LOADING;
-    db->loadTree(this, rootItem);
+    if (docType == DT_LOCAL || docType == DT_CACHED)
+        db->loadTree(this, rootItem);
+    else
+        serverDB->start();
 }
 
 void LogControl::setRootItem(LogItem *root)
@@ -300,14 +303,14 @@ void LogControl::setRootItem(LogItem *root)
     }
 }
 
-void LogControl::setServerDB(RemoteDB *db)
+void LogControl::setServerDB(RemoteDB *db, DocumentType type)
 {
     if (serverDB) {
         qDebug() << "server db already set";
         return;
     }
     serverDB = db;
-    serverDB->start();
+    docType = type;
 }
 
 LogItem *LogControl::findItemById(uint64_t id)
