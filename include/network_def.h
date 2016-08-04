@@ -16,7 +16,16 @@ enum PACKET_TYPE
     PT_GET_ITEM,
     PT_GET_CHILDREN,
 
+    PT_RESPONSE,
     PT_OPERATION_CONFIRMED
+};
+
+enum ERROR_CODES
+{
+    ER_OK = 0,
+    ER_DOC_NOT_EXIST,
+    ER_PARENT_NOT_EXIST,
+    ER_ITEM_ALREADY_EXIST
 };
 
 #define DOC_TYPE_SHARED 0
@@ -32,6 +41,14 @@ struct NetworkHeader
     uint64_t parentId;
     uint32_t dataSize;
 } __attribute__((packed));
+
+struct ItemDescriptor
+{
+    uint64_t id;
+    uint64_t docId;
+    uint64_t parentId;
+    uint64_t prevId;
+}__attribute__((packed));
 
 struct DocumentDescriptor
 {

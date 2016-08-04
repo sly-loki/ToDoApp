@@ -64,21 +64,22 @@ void TodoServer::readPacket()
 
 }
 
-void TodoServer::createItem(NetworkHeader *header, const char *data)
+uint16_t TodoServer::createItem(ItemDescriptor item)
 {
-    LogControl *doc = docs[header->docId];
+    LogControl *doc = docs[item.docId];
     if (!doc) {
         qDebug() << "doc not exists";
-        return;
+        return ER_ITEM_ALREADY_EXIST;
     }
-    LogItem *parent = doc->findItemById(header->parentId);
+    LogItem *parent = doc->findItemById(item.parentId);
     if (!parent) {
         qDebug() << "parent not exists";
-        return;
+        return ER_PARENT_NOT_EXIST;
     }
-    LogItem *newItem = new LogItem(doc, parent, 0);
-    newItem->setText(data);
-    parent->addAsChild(newItem);
+    LogItem *newItem = new LogItem(doc, parent, item.id);
+    LogItem *prev = item.prevId?doc->findItemById(item.prevId):nullptr;
+    parent->addAsChild(newItem, prev);
+    return ER_OK;
 }
 
 void TodoServer::sendItem(NetworkHeader *header)
@@ -106,7 +107,7 @@ void TodoServer::sendItem(NetworkHeader *header)
 void TodoServer::sendChildrenIds(NetworkHeader *header)
 {
     qDebug() << "get children with request id: " << header->requestID;
-    std::vector<uint64_t> ids;
+    std::vector<ItemDescriptor> ids;
     LogControl *doc = docs[header->docId];
     if (!doc) {
         qDebug() << "error: wrong document id!!!";
@@ -118,14 +119,14 @@ void TodoServer::sendChildrenIds(NetworkHeader *header)
     } else {
         LogItem *child = parent->getChild();
         while(child) {
-            ids.push_back(child->getId());
+            ids.push_back({header->docId, child->getId(), parent->getId(), (child->getPrev())?child->getPrev()->getId():0});
             child = child->getNext();
         }
     }
 
 //    packet.type = PT_GET_CHILDREN;
 //    packet.itemId = itemId;
-    header->dataSize = ids.size() * sizeof(uint64_t);
+    header->dataSize = ids.size() * sizeof(ItemDescriptor);
     sendPacket(header, (const void *)ids.data());
 }
 
@@ -152,10 +153,13 @@ void TodoServer::incomingMessage()
         {
             qDebug() << "item created message";
             qDebug() << "id : " << packet.itemId;
-            qDebug() << "text: " << text;
 
-            createItem(&packet, text);
-
+            uint16_t result = createItem(*(ItemDescriptor *)text);
+            NetworkHeader header;
+            header.requestID = packet.requestID;
+            header.type = PT_RESPONSE;
+            header.dataSize = sizeof(uint16_t);
+            sendPacket(&header, &result);
         }
             break;
         case PT_ITEM_DELETED:

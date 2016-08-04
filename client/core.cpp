@@ -55,7 +55,7 @@ void LogItem::addAsChild(LogItem *item, LogItem *after)
 {
     if (after && after->parent != this) {
         qDebug() << "Error: after->parent != this";
-        return;
+        after = nullptr;
     }
 
     if (after) {

@@ -8,6 +8,7 @@
 #include <map>
 
 #include "storage.h"
+#include "network_def.h"
 
 class LogItem;
 struct NetworkHeader;
@@ -45,6 +46,8 @@ struct ServerAction
 {
     uint64_t docId;
     uint32_t type;
+    uint32_t dataSize;
+    uint8_t *data;
 };
 
 class NetworkClient
@@ -86,8 +89,9 @@ public:
     ServerStatus getStatus() const {return status;}
 
 public slots:
-    void addItem(LogItem *item);
-    void removeItem(LogItem *item);
+    void addItem(ItemDescriptor item);
+//    void changeItem(ItemDescriptor item);
+    void removeItem(ItemDescriptor item);
     void sendAction(ServerAction action);
     void onConnectionEstablished();
     void onConnectionLost();
@@ -126,12 +130,23 @@ class RemoteDB : public QObject
 public:
     RemoteDB(LogAppServer *server, LogControl *doc);
 
-    void onItemListReceived(uint64_t parentId, uint64_t *ids, uint count);
+    void onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count);
     void onItemReceived(ServerItemData data);
+    void onRequestAnsverReceived(uint64_t requestId, void *data);
     void start();
 
     //    virtual void saveTree(LogItem *rootItem) override;
     //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
+
+public slots:
+    void onItemAdded(LogItem *item);
+//    void onItemStateChanged(LogItem *item);
+//    void onItemTextChanged(LogItem *item);
+//    void onItemModified(LogItem *item);
+    void onItemDeleted(LogItem *item);
+//    void onItemFocused(LogItem *item);
+//    void onItemDoneChanged(LogItem *item);
+
 signals:
 //    void
 

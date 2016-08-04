@@ -38,10 +38,11 @@ protected:
     void sendDocumentList(NetworkHeader *header, QTcpSocket *connection);
     void sendItem(NetworkHeader *header);
     void sendChildrenIds(NetworkHeader *header);
+
     void sendPacket(NetworkHeader *header, const void *data);
     void readPacket();
 
-    void createItem(NetworkHeader *header, const char *data);
+    uint16_t createItem(ItemDescriptor item);
 
 protected slots:
     void incomingMessage();
