@@ -134,10 +134,15 @@ LogAppServer::LogAppServer(QObject *parent)
     : QObject(parent)
     , request_id(0)
 {
+//    socket.setProtocol(QSsl::TlsV1_0OrLater);
     connect(&socket, SIGNAL(readyRead()), this, SLOT(readData()));
-    connect(&socket, SIGNAL(connected()), this, SLOT(onConnectionEstablished()));
+    connect(&socket, SIGNAL(encrypted()), this, SLOT(onConnectionEstablished()));
+//    connect(&socket, SIGNAL(connected()), this, SLOT(onConnectionEstablished()));
+    connect(&socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
     connect(&socket, SIGNAL(disconnected()), this, SLOT(onConnectionLost()));
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onConnectionError(QAbstractSocket::SocketError)));
+    connect(&socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onConnectionSslError(QList<QSslError>)));
+    socket.addCaCertificates("/home/andrei/.todo/keys/cert.pem");
 }
 
 void LogAppServer::connectToServer()
@@ -146,7 +151,8 @@ void LogAppServer::connectToServer()
     QAbstractSocket::SocketState state = socket.state();
     switch (state) {
     case QAbstractSocket::UnconnectedState:
-        socket.connectToHost("localhost", DEBUG_PORT);
+        qDebug() << "connecting to server";
+        socket.connectToHostEncrypted("localhost", DEBUG_PORT);
         status = SS_CONNECTING;
         break;
     case QAbstractSocket::ConnectedState:
@@ -251,12 +257,14 @@ void LogAppServer::sendAction(ServerAction action)
 
 void LogAppServer::onConnectionEstablished()
 {
+    qDebug() << "connection established";
     status = SS_CONNECTED;
     emit connected();
 }
 
 void LogAppServer::onConnectionLost()
 {
+    qDebug() << "disconnected" << socket.errorString();
     status = SS_DISCONNECTED;
     socket.disconnectFromHost();
     socket.abort();
@@ -265,10 +273,30 @@ void LogAppServer::onConnectionLost()
 
 void LogAppServer::onConnectionError(QAbstractSocket::SocketError socketError)
 {
+    qDebug() << "connection error: " << socketError;
     status = SS_DISCONNECTED;
     socket.disconnectFromHost();
     socket.abort();
     emit disconnected("Error: " + socket.errorString());
+}
+
+void LogAppServer::onConnectionSslError(QList<QSslError> errors)
+{
+    qDebug() << "connection ssl error: " << errors;
+    socket.disconnectFromHost();
+    socket.abort();
+}
+
+void LogAppServer::onSocketStateChanged(QAbstractSocket::SocketState state)
+{
+    qDebug() << "state changed: " << state;
+    switch(state) {
+    case QAbstractSocket::ConnectedState:
+//        socket.startClientEncryption();
+        break;
+    default:
+        break;
+    }
 }
 
 RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
@@ -276,7 +304,7 @@ RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     , doc(doc)
     , pendingRequests(0)
 {
-    connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
+//    connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count)
@@ -287,7 +315,7 @@ void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint c
         LogItem *item = doc->findItemById(id.id);
         if (item) {
             qDebug() << "ERROR: item already exists";
-            return;
+//            return;
         }
         LogItem *parent = doc->findItemById(parentId);
         if (!parent) {

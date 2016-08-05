@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QSslSocket>
 #include <QThread>
 
 #include <map>
@@ -62,7 +63,7 @@ class RemoteDB;
 class LogAppServer : public QObject
 {
     Q_OBJECT
-    QTcpSocket socket;
+    QSslSocket socket;
     uint64_t request_id;
     ServerStatus status;
     std::map<uint64_t, RemoteDB *> requests;
@@ -96,6 +97,8 @@ public slots:
     void onConnectionEstablished();
     void onConnectionLost();
     void onConnectionError(QAbstractSocket::SocketError socketError);
+    void onConnectionSslError(QList<QSslError> errors);
+    void onSocketStateChanged(QAbstractSocket::SocketState state);
 
 signals:
 

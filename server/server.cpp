@@ -6,6 +6,28 @@
 
 #include "core.h"
 
+void TodoServer::incomingConnection(qintptr handle)
+{
+    if (clientConnection)
+        delete clientConnection;
+    clientConnection = new QSslSocket();
+    connect(clientConnection, SIGNAL(readyRead()), this, SLOT(incomingMessage()));
+    connect(clientConnection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onSocketError(QAbstractSocket::SocketError)));
+    connect(clientConnection, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSocketSslError()));
+    connect(clientConnection, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
+
+//    clientConnection->setProtocol(QSsl::SslV3);
+
+    if (!clientConnection->setSocketDescriptor(handle))
+        qDebug() << "error: set descriptor failed";
+
+    clientConnection->setPrivateKey("/home/andrei/.todo/keys/key.pem");
+    clientConnection->setLocalCertificate("/home/andrei/.todo/keys/cert.pem");
+    qDebug() << "socket state: " << clientConnection->state();
+    clientConnection->startServerEncryption();
+    qDebug() << "new connection established";
+}
+
 void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
 {
     std::vector<DocumentDescriptor> docDescs;
@@ -35,12 +57,12 @@ TodoServer::TodoServer(const std::vector<LogControl *> docs)
         this->docs[doc->getId()] = doc;
         qDebug() << "loaded doc: " << doc->getId();
     }
-    connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+//    connect(&server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
 
 void TodoServer::start()
 {
-    if (!server.listen(QHostAddress::Any, DEBUG_PORT)) {
+    if (!listen(QHostAddress::Any, DEBUG_PORT)) {
         qDebug() << "server listen error";
         return;
     }
@@ -119,7 +141,12 @@ void TodoServer::sendChildrenIds(NetworkHeader *header)
     } else {
         LogItem *child = parent->getChild();
         while(child) {
-            ids.push_back({header->docId, child->getId(), parent->getId(), (child->getPrev())?child->getPrev()->getId():0});
+            ItemDescriptor itemd;
+            itemd.id = child->getId();
+            itemd.docId = header->docId;
+            itemd.parentId = parent->getId();
+            itemd.prevId = (child->getPrev())?child->getPrev()->getId():0;
+            ids.push_back(itemd);
             child = child->getNext();
         }
     }
@@ -199,9 +226,28 @@ void TodoServer::incomingMessage()
 
 void TodoServer::onNewConnection()
 {
-    if (clientConnection)
-        delete clientConnection;
-    clientConnection = server.nextPendingConnection();
-    connect(clientConnection, SIGNAL(readyRead()), this, SLOT(incomingMessage()));
-    qDebug() << "new connection established";
+//    if (clientConnection)
+//        delete clientConnection;
+//    QTcpSocket *soc = server.nextPendingConnection();
+//    clientConnection = new QSslSocket();
+//    clientConnection->setSocketDescriptor(soc->socketDescriptor());
+//    clientConnection->startServerEncryption();
+//    connect(clientConnection, SIGNAL(readyRead()), this, SLOT(incomingMessage()));
+    //    qDebug() << "new connection established";
+}
+
+void TodoServer::onSocketError(QAbstractSocket::SocketError error)
+{
+    qDebug() << "socket error: " << error;
+    qDebug() << clientConnection->errorString();
+}
+
+void TodoServer::onSocketSslError()
+{
+    qDebug() << "socket ssl error";
+}
+
+void TodoServer::onSocketStateChanged(QAbstractSocket::SocketState state)
+{
+    qDebug() << "socket state changed: " << state;
 }

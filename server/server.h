@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpServer>
+#include <QSslSocket>
 #include <QTcpSocket>
 
 #include "network_def.h"
@@ -27,14 +28,16 @@ struct RemoveItemData {
     uint64_t itemId;
 };
 
-class TodoServer: public QObject
+class TodoServer: public QTcpServer
 {
     Q_OBJECT
-    QTcpServer server;
-    QTcpSocket *clientConnection;
+    QSslSocket *clientConnection;
     std::map<uint64_t, LogControl *>docs;
 
 protected:
+
+    virtual void incomingConnection(qintptr handle);
+
     void sendDocumentList(NetworkHeader *header, QTcpSocket *connection);
     void sendItem(NetworkHeader *header);
     void sendChildrenIds(NetworkHeader *header);
@@ -47,6 +50,9 @@ protected:
 protected slots:
     void incomingMessage();
     void onNewConnection();
+    void onSocketError(QAbstractSocket::SocketError error);
+    void onSocketSslError();
+    void onSocketStateChanged(QAbstractSocket::SocketState state);
 
 public:
     TodoServer(const std::vector<LogControl*> docs);
