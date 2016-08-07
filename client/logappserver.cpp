@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <QtEndian>
+#include <QDir>
 
 #include "core.h"
 
@@ -12,11 +13,22 @@ void LogAppServer::sendPacket(NetworkHeader *header, const void *data)
     if (header->dataSize)
         assert(data != nullptr);
 
-    qDebug() << "send package";
+    int writed = socket.write((char *)header, sizeof(NetworkHeader));
+    if (writed != sizeof(NetworkHeader)) {
+        qDebug() << "ERROR: write error: " << writed;
+        if (writed == -1)
+            qDebug() << socket.errorString();
 
-    socket.write((char *)header, sizeof(NetworkHeader));
-    if (header->dataSize)
+    }
+    if (header->dataSize) {
         socket.write((char *)data, header->dataSize);
+        if (writed != header->dataSize) {
+            qDebug() << "ERROR: data write error: " << writed;
+            if (writed == -1)
+                qDebug() << socket.errorString();
+        }
+    }
+    socket.waitForBytesWritten(1000);
 }
 
 void LogAppServer::sendPacketSync(NetworkHeader *header, const void *data)
@@ -134,7 +146,7 @@ LogAppServer::LogAppServer(QObject *parent)
     : QObject(parent)
     , request_id(0)
 {
-//    socket.setProtocol(QSsl::TlsV1_0OrLater);
+//    socket.setProtocol(QSsl::P);
     connect(&socket, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(&socket, SIGNAL(encrypted()), this, SLOT(onConnectionEstablished()));
 //    connect(&socket, SIGNAL(connected()), this, SLOT(onConnectionEstablished()));
@@ -142,7 +154,7 @@ LogAppServer::LogAppServer(QObject *parent)
     connect(&socket, SIGNAL(disconnected()), this, SLOT(onConnectionLost()));
     connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onConnectionError(QAbstractSocket::SocketError)));
     connect(&socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onConnectionSslError(QList<QSslError>)));
-    socket.addCaCertificates("/home/andrei/.todo/keys/cert.pem");
+    socket.addCaCertificates(QDir::homePath() + "/.todo/keys/cert.pem");
 }
 
 void LogAppServer::connectToServer()

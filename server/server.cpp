@@ -4,6 +4,8 @@
 #include <functional>
 #include <cassert>
 
+#include <QDir>
+
 #include "core.h"
 
 void TodoServer::incomingConnection(qintptr handle)
@@ -21,8 +23,9 @@ void TodoServer::incomingConnection(qintptr handle)
     if (!clientConnection->setSocketDescriptor(handle))
         qDebug() << "error: set descriptor failed";
 
-    clientConnection->setPrivateKey("/home/andrei/.todo/keys/key.pem");
-    clientConnection->setLocalCertificate("/home/andrei/.todo/keys/cert.pem");
+    clientConnection->setPrivateKey(QDir::homePath() + "/.todo/keys/key.pem");
+    clientConnection->setLocalCertificate(QDir::homePath() +  "/.todo/keys/cert.pem");
+    clientConnection->ignoreSslErrors();
     qDebug() << "socket state: " << clientConnection->state();
     clientConnection->startServerEncryption();
     qDebug() << "new connection established";
@@ -74,11 +77,11 @@ void TodoServer::sendPacket(NetworkHeader *header, const void *data)
     if (header->dataSize)
         assert(data != nullptr);
 
-    qDebug() << "send package";
-
     clientConnection->write((char *)header, sizeof(NetworkHeader));
     if (header->dataSize)
         clientConnection->write((char *)data, header->dataSize);
+
+    clientConnection->waitForBytesWritten(1000);
 }
 
 void TodoServer::readPacket()
@@ -161,18 +164,45 @@ void TodoServer::incomingMessage()
 {
     NetworkHeader packet;
     while (true) {
-        if (clientConnection->read((char *)(&packet), sizeof(packet)) != sizeof(packet)) {
-            qDebug() << "read error";
+        int readed = clientConnection->read((char *)(&packet), sizeof(packet));
+        if (readed == 0)
             return;
+        if (readed != sizeof(packet)) {
+            if (readed == -1 || readed == 0) {
+                qDebug() << "ERROR: read error: " << readed;
+//                qDebug() << clientConnection->errorString();
+//                qDebug() << clientConnection->error();
+//                return;
+            } else {
+                while (readed < sizeof(packet)) {
+                    int sub_read = clientConnection->read(((char *)(&packet)) + readed, sizeof(packet) - readed);
+                    if (sub_read  == -1) {
+//                        qDebug() << "ERROR: sub read error";
+//                        return;
+                    }
+                    readed += sub_read;
+                }
+            }
         }
         char * text = nullptr;
         if (packet.dataSize) {
             text = new char[packet.dataSize+1];
-            size_t readed = clientConnection->read((char *)text, packet.dataSize);
+            int readed = clientConnection->read((char *)text, packet.dataSize);
             text[packet.dataSize] = '\0';
             if (readed != packet.dataSize) {
-                qDebug() << "data read error";
-                throw "bad data";
+                if (readed == -1 || readed == 0) {
+                    qDebug() << "ERROR: read error";
+  //                  return;
+                } else {
+                    while (readed < sizeof(packet)) {
+                        int sub_read = clientConnection->read(((char *)text) + readed, sizeof(packet) - readed);
+                        if (sub_read  == -1) {
+                            qDebug() << "ERROR: sub read error";
+//                            return;
+                        }
+                        readed += sub_read;
+                    }
+                }
             }
         }
         switch (packet.type) {
