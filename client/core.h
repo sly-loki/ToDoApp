@@ -246,6 +246,7 @@ public slots:
 
 signals:
     void itemAdded(LogItem *);
+    void itemCreated(LogItem *);
     void itemStateChanged(LogItem *);
     void itemTextChanged(LogItem *);
     void itemModified(LogItem *);

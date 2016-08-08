@@ -46,6 +46,7 @@ protected:
     void readPacket();
 
     uint16_t createItem(ItemDescriptor item);
+    uint16_t removeItem(ItemDescriptor item);
 
 protected slots:
     void incomingMessage();

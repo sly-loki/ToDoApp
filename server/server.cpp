@@ -107,6 +107,24 @@ uint16_t TodoServer::createItem(ItemDescriptor item)
     return ER_OK;
 }
 
+uint16_t TodoServer::removeItem(ItemDescriptor item)
+{
+    LogControl *doc = docs[item.docId];
+    if (!doc) {
+        qDebug() << "doc not exists";
+        return ER_ITEM_ALREADY_EXIST;
+    }
+
+    LogItem *i = doc->findItemById(item.id);
+    if (!i) {
+        qDebug() << "item not exists";
+        return ER_ITEM_NOT_EXIST;
+    }
+
+    i->detachFromTree();
+    return ER_OK;
+}
+
 void TodoServer::sendItem(NetworkHeader *header)
 {
     NetworkHeader packet;
@@ -212,6 +230,7 @@ void TodoServer::incomingMessage()
             qDebug() << "id : " << packet.itemId;
 
             uint16_t result = createItem(*(ItemDescriptor *)text);
+
             NetworkHeader header;
             header.requestID = packet.requestID;
             header.type = PT_RESPONSE;
@@ -222,6 +241,15 @@ void TodoServer::incomingMessage()
         case PT_ITEM_DELETED:
         {
             qDebug() << "item delete message";
+            qDebug() << "id : " << packet.itemId;
+
+            uint16_t result = removeItem(*(ItemDescriptor *)text);
+
+            NetworkHeader header;
+            header.requestID = packet.requestID;
+            header.type = PT_RESPONSE;
+            header.dataSize = sizeof(uint16_t);
+            sendPacket(&header, &result);
         }
             break;
         case PT_GET_DOC_LIST:

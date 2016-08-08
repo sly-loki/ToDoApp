@@ -149,6 +149,7 @@ void CreateAction::make()
     emit doc->itemAdded(item);
     this->item = item;
     emit doc->itemFocused(item);
+    emit doc->itemCreated(item);
 }
 
 void CreateAction::revert()

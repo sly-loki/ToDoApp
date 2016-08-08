@@ -316,7 +316,8 @@ RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     , doc(doc)
     , pendingRequests(0)
 {
-//    connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
+    connect(doc, SIGNAL(itemCreated(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
+    connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(onItemDeleted(LogItem*)));
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count)
