@@ -77,13 +77,19 @@ signals:
 class ItemWidget: public QWidget
 {
     Q_OBJECT
+    QCheckBox *box;
+    QPushButton *foldWidget;
+    LogTextEdit * textField;
+
 public:
-    ItemWidget();
+    ItemWidget(LogItem *item);
     QString getText();
 
 public slots:
     void addChild(ItemWidget *child, ItemWidget *after);
     void setText(QString text);
+    void setFold(bool folded);
+    void setDone(bool done);
 
 signals:
     void foldChanged(bool folded);
@@ -94,6 +100,15 @@ signals:
     void removePressed();
     void moved();
     void focusSwitched();
+
+protected:
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+
+protected slots:
+    void onFoldClicked(bool folded);
+    void onDoneClicked(bool done);
 };
 
 #endif // GUICONTROL_H

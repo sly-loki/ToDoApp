@@ -105,15 +105,9 @@ QWidget *GuiControl::createItemWidget(LogItem *item)
     hLayout->addWidget(newElement);
 
     QWidget *holderWidget = new QWidget();
-//    QColor qcolor = QColor(color, color, color);
-//    QString style = QString("background-color:%1%2;").arg("#").arg(qcolor.value());
-//    color+=10;
-//    holderWidget->setStyleSheet(style);
+
     holderWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
-    static int count = 0;
-//    ((QGroupBox *)holderWidget)->setTitle(QString("%1").arg(count));
-    count++;
-//    layout->addWidget(newElement);
+
     layout->addLayout(hLayout);
     layout->setContentsMargins(50,0,0,0);
     holderWidget->setLayout(layout);
@@ -422,14 +416,83 @@ void GuiControl::setItemText(LogItem *item)
     }
 }
 
-ItemWidget::ItemWidget()
+ItemWidget::ItemWidget(LogItem *item)
 {
+    QBoxLayout *layout = new QVBoxLayout();
+    QBoxLayout *hLayout = new QHBoxLayout();
+
+    textField = new LogTextEdit(item);
+    textField->setObjectName("itemTextField");
+
+    foldWidget = new QPushButton();
+    foldWidget->setFixedSize(15,15);
+    foldWidget->setStyleSheet("background:red");
+    foldWidget->setCheckable(true);
+    foldWidget->setChecked(item->isChildrenHided());
+    hLayout->addWidget(foldWidget);
+
+    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(onFoldClicked(bool)));
+
+    if (!item->getChild()) {
+        foldWidget->setEnabled(false);
+        foldWidget->setStyleSheet("background: grey");
+    }
+
+    box = new QCheckBox;
+    connect(box, SIGNAL(stateChanged(int)), this, SLOT(onDoneClicked(bool)));
+
+    hLayout->setContentsMargins(0,0,0,0);
+    hLayout->addWidget(box);
+    hLayout->addWidget(textField);
+
+    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
+
+    layout->addLayout(hLayout);
+    layout->setContentsMargins(50,0,0,0);
+    setLayout(layout);
 
 }
 
 void ItemWidget::setText(QString text)
 {
-    Q_UNUSED(text);
+    textField->blockSignals(true);
+    textField->setPlainText(text);
+    textField->blockSignals(false);
+}
+
+void ItemWidget::setFold(bool folded)
+{
+
+}
+
+void ItemWidget::setDone(bool done)
+{
+
+}
+
+void ItemWidget::mousePressEvent(QMouseEvent *event)
+{
+    QWidget::mousePressEvent(event);
+}
+
+void ItemWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    QWidget::mouseReleaseEvent(event);
+}
+
+void ItemWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    QWidget::mouseMoveEvent(event);
+}
+
+void ItemWidget::onFoldClicked(bool folded)
+{
+
+}
+
+void ItemWidget::onDoneClicked(bool done)
+{
+
 }
 
 QString ItemWidget::getText()
