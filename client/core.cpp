@@ -20,7 +20,7 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     , firstChild(nullptr)
     , text("")
     , done(false)
-    , childrenHided(false)
+    , folded(false)
 {
     if (id == 0) {
         this->id = nextId;
@@ -174,6 +174,7 @@ EditAction::EditAction(LogControl *doc, LogItem *item, QString newText)
 void EditAction::make()
 {
     item->setText(textAfterEdit);
+    emit doc->itemTextChanged(item);
 }
 
 void EditAction::revert()
@@ -321,7 +322,7 @@ LogItem *LogControl::findItemById(uint64_t id)
 
 LogItem *LogControl::getNextItemInTree(LogItem *item)
 {
-    if (item->getChild() && !item->isChildrenHided())
+    if (item->getChild() && !item->isFolded())
         return item->getChild();
     else if (item->getNext())
         return item->getNext();
@@ -343,7 +344,7 @@ LogItem *LogControl::getPrevItemInTree(LogItem *item)
         return rootItem;
     if (item->prev) {
         LogItem *temp = item->prev->getLastChild();
-        if (temp && !item->prev->isChildrenHided()) {
+        if (temp && !item->prev->isFolded()) {
             while (temp->getChild())
                 temp = temp->getLastChild();
             return temp;

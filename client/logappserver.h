@@ -41,6 +41,8 @@ struct ServerItemData
     uint64_t itemId;
     uint64_t parentId;
     QString text;
+    bool done;
+    bool folded;
 };
 
 struct ServerAction
@@ -91,7 +93,7 @@ public:
 
 public slots:
     void addItem(ItemDescriptor item);
-//    void changeItem(ItemDescriptor item);
+    void changeItem(ItemDescriptor item, QString text);
     void removeItem(ItemDescriptor item);
     void sendAction(ServerAction action);
     void onConnectionEstablished();
@@ -144,7 +146,7 @@ public:
 public slots:
     void onItemAdded(LogItem *item);
 //    void onItemStateChanged(LogItem *item);
-//    void onItemTextChanged(LogItem *item);
+    void onItemTextChanged(LogItem *item);
 //    void onItemModified(LogItem *item);
     void onItemDeleted(LogItem *item);
 //    void onItemFocused(LogItem *item);

@@ -30,6 +30,7 @@ class LogItem
 
     QString text;
     bool done;
+    bool folded;
 
     static uint64_t nextId; //for debug
 
@@ -72,6 +73,9 @@ public:
 
     bool isModified() {return modified;}
     void setModified(bool status) {modified = status;}
+
+    bool isFolded() {return folded;}
+    void setFolded(bool folded) {this->folded = folded;}
 
     bool isSynced() {return syncedWithServer;}
     void setSynced(bool status) {syncedWithServer = status;}

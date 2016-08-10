@@ -139,6 +139,8 @@ void TodoServer::sendItem(NetworkHeader *header)
         return;
     }
     qDebug() << "send item";
+
+    ItemDescriptor itemd;
     packet.type = PT_GET_ITEM;
     packet.itemId = item->getId();
     packet.requestID = header->requestID;
@@ -167,6 +169,8 @@ void TodoServer::sendChildrenIds(NetworkHeader *header)
             itemd.docId = header->docId;
             itemd.parentId = parent->getId();
             itemd.prevId = (child->getPrev())?child->getPrev()->getId():0;
+            itemd.done = child->isDone()?1:0;
+            itemd.folded = child->isFolded()?1:0;
             ids.push_back(itemd);
             child = child->getNext();
         }
@@ -244,6 +248,20 @@ void TodoServer::incomingMessage()
             qDebug() << "id : " << packet.itemId;
 
             uint16_t result = removeItem(*(ItemDescriptor *)text);
+
+            NetworkHeader header;
+            header.requestID = packet.requestID;
+            header.type = PT_RESPONSE;
+            header.dataSize = sizeof(uint16_t);
+            sendPacket(&header, &result);
+        }
+            break;
+        case PT_ITEM_CHANGED:
+        {
+            qDebug() << "item change message";
+            qDebug() << packet.docId << "." << packet.itemId;
+
+            uint16_t result = ER_OK;
 
             NetworkHeader header;
             header.requestID = packet.requestID;

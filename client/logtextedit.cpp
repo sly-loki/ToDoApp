@@ -31,12 +31,16 @@ LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
     : QPlainTextEdit(parent)
     , item(item)
     , lineCount(0)
+    , editCountSinceLastSignal(0)
 {
     const QFontMetrics fm = fontMetrics();
     LogTextEdit::fontHeight = fm.height();
     setPlainText(item->getText());
     updateHeight();
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    timer.setSingleShot(true);
+
+    connect(&timer, SIGNAL(timeout()), this, SIGNAL(itemTextChanged()));
     connect(this, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
 }
 
@@ -44,6 +48,15 @@ void LogTextEdit::onTextChanged()
 {
 //    item->setText(toPlainText());
     updateHeight();
+    editCountSinceLastSignal++;
+    if (editCountSinceLastSignal >= EDIT_TRASHOLD) {
+        editCountSinceLastSignal = 0;
+        timer.stop();
+        emit itemTextChanged();
+    }
+    else {
+        timer.start(TIME_TRASHOLD);
+    }
 }
 
 void LogTextEdit::keyPressEvent(QKeyEvent *e)
@@ -85,7 +98,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             emit savePressed();
             break;
         case Qt::Key_U:
-            emit foldCombinationPressed(!item->isChildrenHided());
+            emit foldCombinationPressed(!item->isFolded());
             break;
         case Qt::Key_D:
             emit donePressed();

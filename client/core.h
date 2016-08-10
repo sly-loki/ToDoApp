@@ -52,7 +52,7 @@ class LogItem
     QString text;
     bool done;
 
-    bool childrenHided;
+    bool folded;
 
     static uint64_t nextId; //for debug
 
@@ -102,8 +102,8 @@ public:
     uint64_t getId() const;
     void setId(const uint64_t &value);
 
-    void setChildrenHided(bool hide) {childrenHided = hide;}
-    bool isChildrenHided() {return childrenHided;}
+    void setFolded(bool folded) {this->folded = folded;}
+    bool isFolded() {return folded;}
 };
 
 class ClientAction

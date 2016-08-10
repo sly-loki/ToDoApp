@@ -76,7 +76,7 @@ QWidget *GuiControl::createItemWidget(LogItem *item)
     connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
     connect(newElement, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
     connect(newElement, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
-    connect(newElement, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+    connect(newElement, SIGNAL(itemTextChanged()), this, SLOT(onItemTextChanged()));
     connect(newElement, SIGNAL(switchFocusPressed(int)), this, SLOT(onItemFocusChanged(int)));
     connect(newElement, SIGNAL(movePressed(int)), this, SLOT(onItemMovePressed(int)));
     connect(newElement, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
@@ -89,7 +89,7 @@ QWidget *GuiControl::createItemWidget(LogItem *item)
     foldWidget->setFixedSize(15,15);
     foldWidget->setStyleSheet("background:red");
     foldWidget->setCheckable(true);
-    foldWidget->setChecked(item->isChildrenHided());
+    foldWidget->setChecked(item->isFolded());
     hLayout->addWidget(foldWidget);
     connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
     if (!item->getChild()) {
@@ -287,7 +287,7 @@ void GuiControl::oneOfItemsFoldChanged(bool folded)
     LogTextEdit *edit = (LogTextEdit*)parent->findChild<LogTextEdit*>("itemTextField");
     if (edit) {
         LogItem *item = edit->getItem();
-        item->setChildrenHided(folded);
+        item->setFolded(folded);
         LogItem *child = item->getChild();
         getFoldButton(guiItemsMap[item]->layout())->setChecked(folded);
         while(child) {
@@ -361,7 +361,7 @@ void GuiControl::addItem(LogItem *item)
         index = (parentLayout == rootWidget->layout())? 0 : 1;
     }
     parentLayout->insertWidget(index, holderWidget);
-    if (parent->isChildrenHided())
+    if (parent->isFolded())
         holderWidget->setVisible(false);
 /////////
 
@@ -428,7 +428,7 @@ ItemWidget::ItemWidget(LogItem *item)
     foldWidget->setFixedSize(15,15);
     foldWidget->setStyleSheet("background:red");
     foldWidget->setCheckable(true);
-    foldWidget->setChecked(item->isChildrenHided());
+    foldWidget->setChecked(item->isFolded());
     hLayout->addWidget(foldWidget);
 
     connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(onFoldClicked(bool)));

@@ -3,6 +3,7 @@
 
 #include <QPlainTextEdit>
 #include <QLayout>
+#include <QTimer>
 #include <memory>
 #include <map>
 #include <vector>
@@ -72,6 +73,11 @@ class LogTextEdit : public QPlainTextEdit
 
     static unsigned int fontHeight;
 
+    QTimer timer;
+    uint editCountSinceLastSignal;
+    static const int EDIT_TRASHOLD = 10;
+    static const int TIME_TRASHOLD = 1000;
+
     void updateHeight();
 
 protected:
@@ -96,6 +102,7 @@ signals:
     void savePressed();
     void switchFocusPressed(int);
     void donePressed();
+    void itemTextChanged();
 };
 
 #endif // LOGTEXTEDIT_H

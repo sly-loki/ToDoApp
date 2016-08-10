@@ -49,6 +49,8 @@ struct ItemDescriptor
     uint64_t docId;
     uint64_t parentId;
     uint64_t prevId;
+    uint8_t done;
+    uint8_t folded;
 }__attribute__((packed));
 
 struct DocumentDescriptor

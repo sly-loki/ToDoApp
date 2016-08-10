@@ -15,6 +15,7 @@ LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     , prev(nullptr)
     , firstChild(nullptr)
     , done(false)
+    , folded(false)
 {
     if (id == 0) {
         this->id = nextId;
