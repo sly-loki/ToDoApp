@@ -1,5 +1,6 @@
 #include "guicontrol.h"
 #include "logtextedit.h"
+#include "itemwidget.h"
 
 #include <QGroupBox>
 #include <QTextBlock>
@@ -66,53 +67,23 @@ void GuiControl::addChildern(LogItem *item)
     }
 }
 
-QWidget *GuiControl::createItemWidget(LogItem *item)
+ItemWidget *GuiControl::createItemWidget(LogItem *item)
 {
-    QBoxLayout *layout = new QVBoxLayout();
-    QBoxLayout *hLayout = new QHBoxLayout();
+    ItemWidget *itemWidget = new ItemWidget(item);
 
-    LogTextEdit * newElement = new LogTextEdit(item);
-    newElement->setObjectName("itemTextField");
-    connect(newElement, SIGNAL(foldCombinationPressed(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
-    connect(newElement, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
-    connect(newElement, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
-    connect(newElement, SIGNAL(itemTextChanged()), this, SLOT(onItemTextChanged()));
-    connect(newElement, SIGNAL(switchFocusPressed(int)), this, SLOT(onItemFocusChanged(int)));
-    connect(newElement, SIGNAL(movePressed(int)), this, SLOT(onItemMovePressed(int)));
-    connect(newElement, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
-    connect(newElement, SIGNAL(redoPressed()), this, SIGNAL(redoPressed()));
-    connect(newElement, SIGNAL(removePressed()), this, SLOT(onItemRemovePressed()));
-    connect(newElement, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
-    connect(newElement, SIGNAL(donePressed()), this, SLOT(onItemDonePressed()));
+    connect(itemWidget, SIGNAL(foldChanged(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
+    connect(itemWidget, SIGNAL(newSiblingPressed()), this, SLOT(onNewSiblingPressed()));
+    connect(itemWidget, SIGNAL(newChildPressed()), this, SLOT(onNewChildPressed()));
+    connect(itemWidget, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+    connect(itemWidget, SIGNAL(switchFocusPressed(int)), this, SLOT(onItemFocusChanged(int)));
+    connect(itemWidget, SIGNAL(movePressed(int)), this, SLOT(onItemMovePressed(int)));
+    connect(itemWidget, SIGNAL(undoPressed()), this, SIGNAL(undoPressed()));
+    connect(itemWidget, SIGNAL(redoPressed()), this, SIGNAL(redoPressed()));
+    connect(itemWidget, SIGNAL(removePressed()), this, SLOT(onItemRemovePressed()));
+    connect(itemWidget, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
+    connect(itemWidget, SIGNAL(doneChanged(bool)), this, SLOT(onItemDoneChanged(bool)));
 
-    QPushButton *foldWidget = new QPushButton();
-    foldWidget->setFixedSize(15,15);
-    foldWidget->setStyleSheet("background:red");
-    foldWidget->setCheckable(true);
-    foldWidget->setChecked(item->isFolded());
-    hLayout->addWidget(foldWidget);
-    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(oneOfItemsFoldChanged(bool)));
-    if (!item->getChild()) {
-        foldWidget->setEnabled(false);
-        foldWidget->setStyleSheet("background: grey");
-    }
-
-    QCheckBox *box = new QCheckBox;
-    connect(box, SIGNAL(stateChanged(int)), this, SLOT(oneOfItemsDoneChanged(int)));
-
-    hLayout->setContentsMargins(0,0,0,0);
-    hLayout->addWidget(box);
-    hLayout->addWidget(newElement);
-
-    QWidget *holderWidget = new QWidget();
-
-    holderWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
-
-    layout->addLayout(hLayout);
-    layout->setContentsMargins(50,0,0,0);
-    holderWidget->setLayout(layout);
-
-    return holderWidget;
+    return itemWidget;
 
 }
 
@@ -126,55 +97,46 @@ GuiControl::GuiControl(QScrollArea *scroll)
 
 void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
 {
-    QWidget *itemWidget = guiItemsMap[item];
+    ItemWidget *itemWidget = guiItemsMap[item];
 
     auto it = guiItemsMap.find(target);
+    ItemWidget *prevWidget = nullptr;
+    if (item->getPrev())
+        prevWidget = guiItemsMap[item->getPrev()];
 
     QBoxLayout *targetLayout = nullptr;
     if (it != guiItemsMap.end()) {
-        targetLayout = (QBoxLayout*)((*it).second->layout());
+        ItemWidget *parentItem = (*it).second;
+        parentItem->addChild(itemWidget, prevWidget);
     }
     else {
         targetLayout = (QBoxLayout*)(rootWidget->layout());
-    }
-
-
-    QWidget *prevWidget = nullptr;
-    if (item->getPrev()) {
-        auto it = guiItemsMap.find(item->getPrev());
-        if (it != guiItemsMap.end()) {
-            prevWidget = (*it).second;
+        if (prevWidget) {
+            int index = targetLayout->indexOf(prevWidget) + 1;
+            targetLayout->insertWidget(index, itemWidget);
+        }
+        else {
+            targetLayout->insertWidget(0, itemWidget);
         }
     }
-    if (prevWidget) {
-        int index = targetLayout->indexOf(prevWidget);
-        targetLayout->insertWidget(index+1, itemWidget);
-    }
-    else {
-        if (targetLayout == rootWidget->layout())
-            targetLayout->insertWidget(0, itemWidget);
-        else
-            targetLayout->insertWidget(1, itemWidget);
-    }
 
-//    itemWidget->layout()->itemAt(0)->widget()->setFocus();
-    focusItem(item);
+    itemWidget->setFocus();
 }
 
 void GuiControl::unplagItem(LogItem *item)
 {
-//    QBoxLayout *itemLayout = guiItemsMap[item];
     auto it = guiItemsMap.find(item->getParent());
+    ItemWidget *itemWidget = guiItemsMap[item];
 
-    QBoxLayout *parentLayout = nullptr;
     if (it != guiItemsMap.end()) {
-        parentLayout = (QBoxLayout*)((*it).second->layout());
+        ItemWidget *parentItem = (*it).second;
+        parentItem->unplagChild(itemWidget);
     }
     else {
-        parentLayout = (QBoxLayout*)(rootWidget->layout());
+        QBoxLayout *parentLayout = (QBoxLayout*)(rootWidget->layout());
+        parentLayout->removeWidget(itemWidget);
+        itemWidget->setParent(nullptr);
     }
-    parentLayout->removeWidget(guiItemsMap[item]);
-    guiItemsMap[item]->setParent(nullptr);
 }
 
 void GuiControl::onNewChildPressed()
@@ -192,16 +154,18 @@ void GuiControl::onNewSiblingPressed()
 
 void GuiControl::onItemTextChanged()
 {
-    LogTextEdit *textEdit = (LogTextEdit *)sender();
-    QString text = textEdit->toPlainText();
-    LogItem *item = textEdit->getItem();
+
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    LogItem *item = itemWidget->getLogItem();
+    QString text = itemWidget->getText();
+
     emit itemTextChanged(item, text);
 }
 
 void GuiControl::onItemFocusChanged(int direction)
 {
-    LogTextEdit *textEdit = (LogTextEdit *)sender();
-    LogItem *item = textEdit->getItem();
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    LogItem *item = itemWidget->getLogItem();
     emit itemFocusChanged(item, direction);
 }
 
@@ -282,26 +246,16 @@ void GuiControl::oneOfItemsDoneChanged(int state)
 
 void GuiControl::oneOfItemsFoldChanged(bool folded)
 {
-    QWidget *parent = (QWidget*)(sender()->parent());
-
-    LogTextEdit *edit = (LogTextEdit*)parent->findChild<LogTextEdit*>("itemTextField");
-    if (edit) {
-        LogItem *item = edit->getItem();
-        item->setFolded(folded);
-        LogItem *child = item->getChild();
-        getFoldButton(guiItemsMap[item]->layout())->setChecked(folded);
-        while(child) {
-            QWidget *cWidget = guiItemsMap[child];
-            cWidget->setVisible(!folded);
-            child = child->getNext();
-        }
-    }
+    ItemWidget *itemWidget = (ItemWidget*)(sender());
+    itemWidget->setFold(folded);
+    LogItem *item = itemWidget->getLogItem();
+    item->setFolded(folded);
 }
 
 void GuiControl::onItemMovePressed(int direction)
 {
-    LogTextEdit *textEdit = (LogTextEdit *)sender();
-    LogItem *item = textEdit->getItem();
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    LogItem *item = itemWidget->getLogItem();
     emit itemMoveRequested(item, direction);
 }
 
@@ -312,40 +266,33 @@ void GuiControl::onItemRemovePressed()
     emit removeItemRequest(item);
 }
 
-void GuiControl::onItemDonePressed()
+void GuiControl::onItemDoneChanged(bool done)
 {
-    LogTextEdit *textEdit = (LogTextEdit *)sender();
-    LogItem *item = textEdit->getItem();
-    emit itemDoneChanged(item, !item->isDone());
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    LogItem *item = itemWidget->getLogItem();
+    emit itemDoneChanged(item, done);
 }
 
 void GuiControl::addItem(LogItem *item)
 {
-    QBoxLayout *parentLayout = nullptr;
+    ItemWidget *parentItem = nullptr;
     if (!item)
         return;
 
     LogItem *parent = item->getParent();
+
     auto it = guiItemsMap.find(parent);
     if (it != guiItemsMap.end())
-        parentLayout = (QBoxLayout*)((*it).second->layout());
+        parentItem = (ItemWidget*)((*it).second);
 
-    if (!parentLayout)
-        parentLayout = (QBoxLayout*)(rootWidget->layout());
-
-    if (parent->getId() != 0) {
-        getFoldButton(parentLayout)->setEnabled(true);
-        getFoldButton(parentLayout)->setStyleSheet("background:red");
-    }
-
-    QWidget *holderWidget = nullptr;//guiItemsMap[item];
-    if (holderWidget == nullptr) {
-        holderWidget = createItemWidget(item);
-        guiItemsMap[item] = holderWidget;
+    ItemWidget *itemWidget = nullptr;//guiItemsMap[item];
+    if (itemWidget == nullptr) {
+        itemWidget = createItemWidget(item);
+        guiItemsMap[item] = itemWidget;
     }
 
 /////////////
-    QWidget *prevWidget = nullptr;
+    ItemWidget *prevWidget = nullptr;
     if (item->getPrev()) {
         auto it = guiItemsMap.find(item->getPrev());
         if (it != guiItemsMap.end()) {
@@ -353,22 +300,19 @@ void GuiControl::addItem(LogItem *item)
         }
     }
 
-    int index = 0;
-    if (prevWidget) {
-        index = parentLayout->indexOf(prevWidget) + 1;
+    if (parentItem)
+    {
+        parentItem->addChild(itemWidget, prevWidget);
+    } else {
+        int index = 0;
+        QBoxLayout *parentLayout = (QBoxLayout *)rootWidget->layout();
+        if (prevWidget)
+            index = parentLayout->indexOf(prevWidget) + 1;
+        parentLayout->insertWidget(index, itemWidget);
     }
-    else {
-        index = (parentLayout == rootWidget->layout())? 0 : 1;
-    }
-    parentLayout->insertWidget(index, holderWidget);
-    if (parent->isFolded())
-        holderWidget->setVisible(false);
-/////////
 
     if (item->isDone())
-        setItemDone(item);
-//    else
-//        focusItem(item);
+        itemWidget->setDone(true);
 }
 
 void GuiControl::removeItem(LogItem *item)
@@ -386,10 +330,9 @@ void GuiControl::focusItem(LogItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
-        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        LogTextEdit *textEdit = getTextEdit(layout);
-        textEdit->setFocus();
-        mainScroll->ensureWidgetVisible(textEdit);
+        ItemWidget *itemWidget = (*it).second;
+        itemWidget->setFocus();
+        mainScroll->ensureWidgetVisible(itemWidget);
     }
 }
 
@@ -397,8 +340,7 @@ void GuiControl::setItemDone(LogItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
-        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        setDoneState(layout, item->isDone());
+        (*it).second->setDone(item->isDone());
     }
 }
 
@@ -406,102 +348,6 @@ void GuiControl::setItemText(LogItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
-        QBoxLayout *layout = (QBoxLayout*)((*it).second->layout());
-        LogTextEdit *edit = getTextEdit(layout);
-        //disconnect(edit, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
-        edit->blockSignals(true);
-        edit->setPlainText(item->getText());
-        edit->blockSignals(false);
-//        connect(edit, SIGNAL(textChanged()), this, SLOT(onItemTextChanged()));
+        (*it).second->setText(item->getText());
     }
-}
-
-ItemWidget::ItemWidget(LogItem *item)
-{
-    QBoxLayout *layout = new QVBoxLayout();
-    QBoxLayout *hLayout = new QHBoxLayout();
-
-    textField = new LogTextEdit(item);
-    textField->setObjectName("itemTextField");
-
-    foldWidget = new QPushButton();
-    foldWidget->setFixedSize(15,15);
-    foldWidget->setStyleSheet("background:red");
-    foldWidget->setCheckable(true);
-    foldWidget->setChecked(item->isFolded());
-    hLayout->addWidget(foldWidget);
-
-    connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(onFoldClicked(bool)));
-
-    if (!item->getChild()) {
-        foldWidget->setEnabled(false);
-        foldWidget->setStyleSheet("background: grey");
-    }
-
-    box = new QCheckBox;
-    connect(box, SIGNAL(stateChanged(int)), this, SLOT(onDoneClicked(bool)));
-
-    hLayout->setContentsMargins(0,0,0,0);
-    hLayout->addWidget(box);
-    hLayout->addWidget(textField);
-
-    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
-
-    layout->addLayout(hLayout);
-    layout->setContentsMargins(50,0,0,0);
-    setLayout(layout);
-
-}
-
-void ItemWidget::setText(QString text)
-{
-    textField->blockSignals(true);
-    textField->setPlainText(text);
-    textField->blockSignals(false);
-}
-
-void ItemWidget::setFold(bool folded)
-{
-
-}
-
-void ItemWidget::setDone(bool done)
-{
-
-}
-
-void ItemWidget::mousePressEvent(QMouseEvent *event)
-{
-    QWidget::mousePressEvent(event);
-}
-
-void ItemWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-    QWidget::mouseReleaseEvent(event);
-}
-
-void ItemWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    QWidget::mouseMoveEvent(event);
-}
-
-void ItemWidget::onFoldClicked(bool folded)
-{
-
-}
-
-void ItemWidget::onDoneClicked(bool done)
-{
-
-}
-
-QString ItemWidget::getText()
-{
-    return "";
-}
-
-void ItemWidget::addChild(ItemWidget *child, ItemWidget *after)
-{
-    Q_UNUSED(child);
-    Q_UNUSED(after);
 }

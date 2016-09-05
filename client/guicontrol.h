@@ -19,7 +19,7 @@ class GuiControl: public QObject
 
     QWidget *rootWidget;
     QScrollArea *mainScroll;
-    std::map<LogItem*, QWidget*> guiItemsMap;
+    std::map<LogItem*, ItemWidget*> guiItemsMap;
     LogControl *currentDocument;
 
     static LogTextEdit *getTextEdit(QLayout *itemLayout);
@@ -29,7 +29,7 @@ class GuiControl: public QObject
     void setDoneState(QBoxLayout *itemLayout, bool done);
     void initRootWidget();
     void addChildern(LogItem *item);
-    QWidget *createItemWidget(LogItem *item);
+    ItemWidget *createItemWidget(LogItem *item);
 
 protected slots:
     void onNewChildPressed();
@@ -40,7 +40,7 @@ protected slots:
     void oneOfItemsFoldChanged(bool folded);
     void onItemMovePressed(int direction);
     void onItemRemovePressed();
-    void onItemDonePressed();
+    void onItemDoneChanged(bool done);
 
 public:
     GuiControl(QScrollArea *scroll);
@@ -72,43 +72,6 @@ signals:
     void redoPressed();
     void savePressed();
 
-};
-
-class ItemWidget: public QWidget
-{
-    Q_OBJECT
-    QCheckBox *box;
-    QPushButton *foldWidget;
-    LogTextEdit * textField;
-
-public:
-    ItemWidget(LogItem *item);
-    QString getText();
-
-public slots:
-    void addChild(ItemWidget *child, ItemWidget *after);
-    void setText(QString text);
-    void setFold(bool folded);
-    void setDone(bool done);
-
-signals:
-    void foldChanged(bool folded);
-    void doneChanged(bool done);
-    void textChanged(QString text);
-    void newSiblingPressed();
-    void newChildPressed();
-    void removePressed();
-    void moved();
-    void focusSwitched();
-
-protected:
-    virtual void mousePressEvent(QMouseEvent *event) override;
-    virtual void mouseReleaseEvent(QMouseEvent *event) override;
-    virtual void mouseMoveEvent(QMouseEvent *event) override;
-
-protected slots:
-    void onFoldClicked(bool folded);
-    void onDoneClicked(bool done);
 };
 
 #endif // GUICONTROL_H

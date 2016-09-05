@@ -55,7 +55,7 @@ void LogTextEdit::onTextChanged()
         emit itemTextChanged();
     }
     else {
-        timer.start(TIME_TRASHOLD);
+        timer.start(TIME_TRASHOLD_MS);
     }
 }
 

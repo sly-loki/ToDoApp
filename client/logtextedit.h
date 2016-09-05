@@ -76,7 +76,7 @@ class LogTextEdit : public QPlainTextEdit
     QTimer timer;
     uint editCountSinceLastSignal;
     static const int EDIT_TRASHOLD = 10;
-    static const int TIME_TRASHOLD = 1000;
+    static const int TIME_TRASHOLD_MS = 1000;
 
     void updateHeight();
 

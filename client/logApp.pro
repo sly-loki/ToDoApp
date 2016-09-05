@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     guicontrol.cpp \
     storage.cpp \
     core.cpp \
-    logappserver.cpp
+    logappserver.cpp \
+    itemwidget.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
@@ -28,6 +29,7 @@ HEADERS  += mainwindow.h \
     storage.h \
     core.h \
     logappserver.h \
-    ../include/network_def.h
+    ../include/network_def.h \
+    itemwidget.h
 
 FORMS    += mainwindow.ui
