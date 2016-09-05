@@ -279,9 +279,53 @@ ApplicationControl::ApplicationControl(LogAppServer *server)
 {
 }
 
-bool ApplicationControl::createNewDocument(QString name, QString fullFileName)
+QString getRandomFileName(size_t length)
 {
+    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+
+    QTime currentTime = QTime::currentTime();
+    qsrand(currentTime.hour() + currentTime.second() + currentTime.minute() + currentTime.msec());
+    QString randomString;
+    for(int i=0; i<length; ++i)
+    {
+        int index = qrand() % possibleCharacters.length();
+        QChar nextChar = possibleCharacters.at(index);
+        randomString.append(nextChar);
+    }
+    return randomString;
+}
+
+bool ApplicationControl::createNewDocument(QString name, QString fullFileName, DocumentType type)
+{
+    LogControl *newDoc = nullptr;
+    if (type == DT_LOCAL || type == DT_CACHED) {
+        QFile file(fullFileName);
+        if (file.exists()) {
+            qDebug() << "error: file exists";
+            return false;
+        }
+
+        file.open(QIODevice::ReadWrite);
+        if (!file.isOpen())
+            return false;
+        file.close();
+
+        DB *db = new XmlDB(fullFileName);
+        newDoc = new LogControl(db, name, LogControl::getNextDocId());
+    }
+    if (type == DT_REMOTE || type == DT_CACHED) {
+        if (!newDoc)
+            newDoc = new LogControl(nullptr, name, LogControl::getNextDocId());
+//        server->createDocument();
+        RemoteDB *rdb = new RemoteDB(server, newDoc);
+        newDoc->setServerDB(rdb, type);
+    }
+    if (newDoc) {
+        newDoc->loadData();
+        return true;
+    }
     return false;
+
 }
 
 void ApplicationControl::start()

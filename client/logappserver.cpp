@@ -21,9 +21,9 @@ void LogAppServer::sendPacket(NetworkHeader *header, const void *data)
 
     }
     if (header->dataSize) {
-        socket.write((char *)data, header->dataSize);
+        writed = socket.write((char *)data, header->dataSize);
         if (writed != header->dataSize) {
-            qDebug() << "ERROR: data write error: " << writed;
+            qDebug() << "ERROR: data write error: " << writed << " need: " << header->dataSize;
             if (writed == -1)
                 qDebug() << socket.errorString();
         }
@@ -259,7 +259,7 @@ void LogAppServer::changeItem(ItemDescriptor item, QString text)
     header.dataSize = text.size();
     header.type = PT_ITEM_CHANGED;
 
-//    sendPacket(&header, text.toStdString().c_str());
+    sendPacket(&header, text.toStdString().c_str());
 }
 
 void LogAppServer::removeItem(ItemDescriptor item)
@@ -410,7 +410,12 @@ void RemoteDB::onItemAdded(LogItem *item)
 
 void RemoteDB::onItemTextChanged(LogItem *item)
 {
-
+    ItemDescriptor id;
+    id.id = item->getId();
+    id.docId = doc->getId();
+    id.prevId = item->getPrev()?item->getPrev()->getId():0;
+    id.parentId = item->getParent()->getId();
+    server->changeItem(id, item->getText());
 }
 
 void RemoteDB::onItemDeleted(LogItem *item)

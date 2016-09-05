@@ -260,6 +260,7 @@ void TodoServer::incomingMessage()
         {
             qDebug() << "item change message";
             qDebug() << packet.docId << "." << packet.itemId;
+            qDebug() << "text: " << text;
 
             uint16_t result = ER_OK;
 

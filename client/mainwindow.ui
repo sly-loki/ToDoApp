@@ -33,7 +33,7 @@
           <property name="enabled">
            <bool>true</bool>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
            <property name="spacing">
             <number>3</number>
            </property>
@@ -50,27 +50,85 @@
             <number>1</number>
            </property>
            <item>
-            <widget class="QLineEdit" name="docNameLine"/>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="docNameLine"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="docOkButton">
+               <property name="text">
+                <string>OK</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="docCancelButton">
+               <property name="text">
+                <string>Cancel</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QPushButton" name="docOkButton">
-             <property name="text">
-              <string>OK</string>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <property name="bottomMargin">
+              <number>0</number>
              </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="docCancelButton">
-             <property name="text">
-              <string>Cancel</string>
-             </property>
-            </widget>
+             <item>
+              <widget class="QCheckBox" name="docLocalBox">
+               <property name="text">
+                <string>Store locally</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="docRemoteBox">
+               <property name="text">
+                <string>Store on server</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
         </item>
         <item>
          <widget class="QListWidget" name="listWidget"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="viewSettingsButton">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -92,7 +150,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>383</width>
+             <width>331</width>
              <height>563</height>
             </rect>
            </property>

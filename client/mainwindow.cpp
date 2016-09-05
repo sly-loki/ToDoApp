@@ -73,7 +73,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(server, SIGNAL(docListReceived(std::vector<std::pair<uint64_t,QString> >)), this, SLOT(onDocListReceived(std::vector<std::pair<uint64_t,QString> >)));
     connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
 
-    connectionTimer.setInterval(1000);
+    connectionTimer.setInterval(5000);
     connectionTimer.setSingleShot(true);
     connect(&connectionTimer, SIGNAL(timeout()), this, SLOT(serverPooling()));
 
@@ -111,10 +111,11 @@ void MainWindow::createDocument()
 void MainWindow::newDocButtonClicked()
 {
     if (sender() == ui->docOkButton) {
+        DocumentType type = (ui->docLocalBox->isChecked())?(ui->docRemoteBox->isChecked()?DT_CACHED:DT_LOCAL):DT_REMOTE;
         QString name = ui->docNameLine->text();
         QString fileName = appDir.path() + QDir::separator() + name + ".xml";
         if (!QFile(fileName).exists()) {
-            appControl->createNewDocument(name, fileName);
+            appControl->createNewDocument(name, fileName, type);
         }
     }
     ui->newDocWidget->setVisible(false);

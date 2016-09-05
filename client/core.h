@@ -204,6 +204,8 @@ class LogControl: public QObject
     std::vector<ClientAction *> actionList;
     std::vector<ClientAction *> redoActionList;
 
+    static uint64_t maxId;
+
     void doAction(ClientAction *action);
     void setStatus(DocumentStatus status);
 
@@ -212,6 +214,8 @@ protected slots:
 
 public:
     static const int ROOT_ITEM_ID = 0;
+
+    static uint64_t getNextDocId() {return ++maxId;}
 
     LogControl(DB* db, QString name, uint64_t id);
 

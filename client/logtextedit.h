@@ -55,7 +55,7 @@ class ApplicationControl : public QObject
 
 public:
     ApplicationControl(LogAppServer *server);
-    bool createNewDocument(QString name, QString fullFileName);
+    bool createNewDocument(QString name, QString fullFileName, DocumentType type);
     void start();
 
 signals:
