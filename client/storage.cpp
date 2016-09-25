@@ -14,7 +14,7 @@ void DB::saveItem(LogItem *item, const QString &text)
     Q_UNUSED(text);
 }
 
-void DB::saveTree(LogItem *rootItem)
+void DB::saveDocument(LogItem *rootItem)
 {
     Q_UNUSED(rootItem);
 }
@@ -60,6 +60,23 @@ void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
     Q_UNUSED(node);
 }
 
+void XmlDB::loadMetadata(QXmlStreamReader &stream, LogControl *doc)
+{
+    while (!xmlStream.hasError())
+    {
+        QXmlStreamReader::TokenType token = xmlStream.readNext();
+        if (token == QXmlStreamReader::EndElement)
+            break;
+        QString type = stream.name().toString();
+        stream.readNext();
+        if (type == "name") {
+            doc->setName(stream.text().toString());
+        } else if (type == "id") {
+//            doc->set
+        }
+    }
+}
+
 XmlDB::XmlDB(const QString fileName)
     : DB()
     , fileIsOk(false)
@@ -78,7 +95,7 @@ void XmlDB::saveItem(LogItem *item, const QString &text)
     Q_UNUSED(text);
 }
 
-void XmlDB::saveTree(LogItem *rootItem)
+void XmlDB::saveDocument(LogControl *doc)
 {
 //    if (fileIsOk)
 //        return;
@@ -87,7 +104,13 @@ void XmlDB::saveTree(LogItem *rootItem)
     xmlWriter.setDevice(&output);
     xmlWriter.setAutoFormatting(true);
     xmlWriter.writeStartDocument();
+    xmlWriter.writeStartElement("meta");
+    xmlWriter.writeTextElement("name", QString("%1").arg(doc->getName()));
+    xmlWriter.writeTextElement("id", QString("%1").arg(doc->getId()));
+    xmlWriter.writeEndElement();
     xmlWriter.writeStartElement("document");
+
+    LogItem *rootItem = doc->getRootItem();
     LogItem *item = rootItem->getChild();
     while(item) {
         saveNode(xmlWriter, item);
@@ -118,6 +141,9 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
         if (token == QXmlStreamReader::StartElement)
         {
 //            qDebug() << "token readed: " << xmlStream.name() << xmlStream.text();
+            if (xmlStream.name() == "meta")
+                loadMetadata(xmlStream, control);
+
             if (xmlStream.name() == "item") {
 
                 if (currentItem) {

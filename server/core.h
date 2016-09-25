@@ -96,10 +96,15 @@ class LogControl: public QObject
     QString docName;
     uint64_t id;
 
+    static uint64_t maxId;
+
 //    void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
     LogControl(DB* db, QString name, uint64_t id);
+
+    static uint64_t getNextDocId() {return ++maxId;}
+
     void loadData();
     void setRootItem(LogItem *root);
 

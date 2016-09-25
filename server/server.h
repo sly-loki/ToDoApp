@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QSslSocket>
 #include <QTcpSocket>
+#include <QDir>
 
 #include "network_def.h"
 #include "core.h"
@@ -34,6 +35,8 @@ class TodoServer: public QTcpServer
     QSslSocket *clientConnection;
     std::map<uint64_t, LogControl *>docs;
 
+    QDir storageDir;
+
 protected:
 
     virtual void incomingConnection(qintptr handle);
@@ -48,6 +51,8 @@ protected:
     uint16_t createItem(ItemDescriptor item);
     uint16_t removeItem(ItemDescriptor item);
 
+    uint16_t createDocument(DocumentDescriptor desc);
+
 protected slots:
     void incomingMessage();
     void onNewConnection();
@@ -56,7 +61,7 @@ protected slots:
     void onSocketStateChanged(QAbstractSocket::SocketState state);
 
 public:
-    TodoServer(const std::vector<LogControl*> docs);
+    TodoServer(QString storageFolderName);
     void start();
 
 signals:

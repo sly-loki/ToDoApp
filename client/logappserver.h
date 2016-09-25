@@ -75,6 +75,11 @@ class LogAppServer : public QObject
 
 protected slots:
     void readData();
+    void onConnectionEstablished();
+    void onConnectionLost();
+    void onConnectionError(QAbstractSocket::SocketError socketError);
+    void onConnectionSslError(QList<QSslError> errors);
+    void onSocketStateChanged(QAbstractSocket::SocketState state);
 
 public:
     explicit LogAppServer(QObject *parent = 0);
@@ -96,11 +101,8 @@ public slots:
     void changeItem(ItemDescriptor item, QString text);
     void removeItem(ItemDescriptor item);
     void sendAction(ServerAction action);
-    void onConnectionEstablished();
-    void onConnectionLost();
-    void onConnectionError(QAbstractSocket::SocketError socketError);
-    void onConnectionSslError(QList<QSslError> errors);
-    void onSocketStateChanged(QAbstractSocket::SocketState state);
+
+    void createDocument(DocumentDescriptor docDesc);
 
 signals:
 

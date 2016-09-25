@@ -287,6 +287,11 @@ QString LogControl::getName()
     return name;
 }
 
+void LogControl::setName(QString name)
+{
+    this->name = name;
+}
+
 void LogControl::loadData()
 {
     docStatus = DS_LOADING;
@@ -466,7 +471,7 @@ void LogControl::moveItem(LogItem *item, int direction)
 void LogControl::save()
 {
     if (docType != DT_REMOTE)
-        db->saveTree(rootItem);
+        db->saveDocument(rootItem);
 }
 
 void LogControl::printItemTree()

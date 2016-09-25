@@ -20,7 +20,7 @@ class DB: public QObject
 public:
     DB();
     virtual void saveItem(LogItem *item, const QString &text);
-    virtual void saveTree(LogItem *rootItem) = 0;
+    virtual void saveDocument(LogItem *rootItem) = 0;
     virtual void loadTree(LogControl *control, LogItem *rootItem) = 0;
     virtual ItemVector getFirstLevelItems();
     virtual ItemVector getChildsOf(LogItem *item);
@@ -41,10 +41,11 @@ class XmlDB: public DB
 
     void saveNode(QXmlStreamWriter &stream, LogItem *node);
     void loadNode(QXmlStreamReader &stream, LogItem *node);
+    void loadMetadata(QXmlStreamReader &stream, LogControl *doc);
 public:
     XmlDB(const QString fileName);
     virtual void saveItem(LogItem *item, const QString &text) override;
-    virtual void saveTree(LogItem *rootItem) override;
+    virtual void saveDocument(LogControl *doc) override;
     virtual void loadTree(LogControl *control, LogItem *rootItem) override;
     virtual ItemVector getFirstLevelItems() override;
     virtual ItemVector getChildsOf(LogItem *item) override;

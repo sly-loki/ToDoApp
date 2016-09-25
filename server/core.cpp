@@ -4,6 +4,7 @@
 #include <QDebug>
 
 uint64_t LogItem::nextId = 1;
+uint64_t LogControl::maxId = 0;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     : control(control)
@@ -160,6 +161,8 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
+    if (id > maxId)
+        maxId = id;
 }
 
 void LogControl::loadData()

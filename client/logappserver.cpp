@@ -279,6 +279,17 @@ void LogAppServer::sendAction(ServerAction action)
 
 }
 
+void LogAppServer::createDocument(DocumentDescriptor docDesc)
+{
+    NetworkHeader header;
+
+    header.dataSize = sizeof(DocumentDescriptor);
+    header.type = PT_DOC_CREATE;
+
+    sendPacket(&header, &docDesc);
+
+}
+
 void LogAppServer::onConnectionEstablished()
 {
     qDebug() << "connection established";

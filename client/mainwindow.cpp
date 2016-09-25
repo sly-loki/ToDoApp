@@ -12,7 +12,10 @@
 
 void MainWindow::addDocumentToList(LogControl *doc)
 {
-    QListWidgetItem *item = new QListWidgetItem(doc->getName());
+    static std::map<DocumentType, QString> DT_TO_STRING = {{DT_CACHED, "shared"}, {DT_LOCAL, "local"}, {DT_REMOTE, "remote"}};
+    QString docType = DT_TO_STRING[doc->getType()];
+
+    QListWidgetItem *item = new QListWidgetItem(doc->getName() + " (" + docType + ")");
 
     item->setData(Qt::UserRole, QVariant(qulonglong(doc->getId())));
     ui->listWidget->addItem(item);
@@ -106,6 +109,7 @@ void MainWindow::onDocumentSelected(QListWidgetItem* item)
 void MainWindow::createDocument()
 {
     ui->newDocWidget->setVisible(true);
+    ui->docNameLine->setFocus();
 }
 
 void MainWindow::newDocButtonClicked()

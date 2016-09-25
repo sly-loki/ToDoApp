@@ -52,9 +52,30 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
     sendPacket(&response, docDescs.data());
 }
 
-TodoServer::TodoServer(const std::vector<LogControl *> docs)
+TodoServer::TodoServer(QString storageFolderName)
     : clientConnection(nullptr)
+    , storageDir(storageFolderName)
 {
+    if (!storageDir.exists())
+        storageDir.mkpath(storageFolderName);
+
+    QStringList filters;
+    filters.append("*.xml");
+    QStringList fileList = storageDir.entryList(filters);
+    qDebug() << fileList;
+
+    std::vector<LogControl *> docs;
+    uint64_t id = 1000;
+    for (auto s: fileList) {
+        QString fileName = storageDir.path() + QDir::separator() + s;
+
+        DB *db = new XmlDB(fileName);
+        LogControl *control = new LogControl(db, s, id++);
+        control->loadData();
+        docs.push_back(control);
+    }
+
+
     for (int i = 0; i < docs.size(); i++) {
         LogControl *doc = docs[i];
         this->docs[doc->getId()] = doc;
@@ -122,6 +143,33 @@ uint16_t TodoServer::removeItem(ItemDescriptor item)
     }
 
     i->detachFromTree();
+    return ER_OK;
+}
+
+uint16_t TodoServer::createDocument(DocumentDescriptor desc)
+{
+    LogControl *newDoc = nullptr;
+
+    QString noteName = QString((const char *)desc.name);
+    QString fileName = storageDir.path() + QDir::separator() + noteName + ".xml";
+    QFile file(fileName);
+    if (file.exists()) {
+        qDebug() << "error: file exists";
+        return ER_ITEM_ALREADY_EXIST;
+    }
+
+    file.open(QIODevice::ReadWrite);
+    if (!file.isOpen())
+        return ER_INTERNAL_ERROR;
+    file.close();
+
+    DB *db = new XmlDB(fileName);
+    newDoc = new LogControl(db, noteName, LogControl::getNextDocId());
+
+    if (newDoc) {
+        newDoc->loadData();
+    }
+
     return ER_OK;
 }
 
@@ -294,10 +342,16 @@ void TodoServer::incomingMessage()
             sendChildrenIds(&packet);
         }
             break;
+        case PT_DOC_CREATE:
+        {
+            qDebug() << "create document request: ";
+        }
+            break;
         default:
             qDebug() << "error here";
             break;
         }
+        delete[] text;
     }
 }
 

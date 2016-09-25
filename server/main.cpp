@@ -15,7 +15,7 @@
 int main(int argc, char *argv[])
 {
     QString tmpDir = QDir::tempPath();
-    QLockFile lockFile(tmpDir + "/todo_server.lock");
+    QLockFile lockFile(tmpDir + QDir::separator() + "todo_server.lock");
 
     if(!lockFile.tryLock(100)){
         std::cout << "Error: another instance of server already lanched" << std::endl;
@@ -23,29 +23,9 @@ int main(int argc, char *argv[])
     }
 
     QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;
-    QDir appDir = QDir(appDirectoryName);
-    if (!appDir.exists()) {
-        appDir.mkpath(appDirectoryName);
-    }
-
-    QStringList filters;
-    filters.append("*.xml");
-    QStringList fileList = appDir.entryList(filters);
-    qDebug() << fileList;
-
-    std::vector<LogControl *> docs;
-    uint64_t id = 1000;
-    for (auto s: fileList) {
-        QString fileName = appDir.path() + QDir::separator() + s;
-
-        DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db, s, id++);
-        control->loadData();
-        docs.push_back(control);
-    }
 
     QCoreApplication a(argc, argv);
-    TodoServer todoServer(docs);
+    TodoServer todoServer(appDirectoryName);
 //    XmlDB db("/tmp/test.xml");
 //    LogControl control(&db, &todoServer);
 

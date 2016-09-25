@@ -220,6 +220,7 @@ public:
     LogControl(DB* db, QString name, uint64_t id);
 
     QString getName();
+    void setName(QString name);
     void loadData();
     void setRootItem(LogItem *root);
     void setServerDB(RemoteDB *db, DocumentType type);
@@ -236,6 +237,7 @@ public:
     void printItemTree();
 
     DocumentStatus getStatus() {return docStatus;}
+    DocumentType getType() {return docType;}
 
 public slots:
     void setItemDone(LogItem *item, bool state);
