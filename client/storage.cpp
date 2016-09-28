@@ -14,9 +14,9 @@ void DB::saveItem(LogItem *item, const QString &text)
     Q_UNUSED(text);
 }
 
-void DB::saveDocument(LogItem *rootItem)
+void DB::saveDocument(LogControl *doc)
 {
-    Q_UNUSED(rootItem);
+    Q_UNUSED(doc);
 }
 
 ItemVector DB::getFirstLevelItems()
@@ -62,17 +62,22 @@ void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
 
 void XmlDB::loadMetadata(QXmlStreamReader &stream, LogControl *doc)
 {
-    while (!xmlStream.hasError())
+    while (!stream.hasError())
     {
-        QXmlStreamReader::TokenType token = xmlStream.readNext();
-        if (token == QXmlStreamReader::EndElement)
+        QXmlStreamReader::TokenType token = stream.readNext();
+        if (token == QXmlStreamReader::EndElement && stream.name() == "meta")
             break;
+        if (token != QXmlStreamReader::StartElement)
+            continue;
+
         QString type = stream.name().toString();
         stream.readNext();
         if (type == "name") {
             doc->setName(stream.text().toString());
+            qDebug() << "read doc name: " << stream.text();
         } else if (type == "id") {
 //            doc->set
+            qDebug() << "read doc id: " << stream.text();
         }
     }
 }
@@ -141,8 +146,10 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
         if (token == QXmlStreamReader::StartElement)
         {
 //            qDebug() << "token readed: " << xmlStream.name() << xmlStream.text();
-            if (xmlStream.name() == "meta")
+            if (xmlStream.name() == "meta") {
                 loadMetadata(xmlStream, control);
+                continue;
+            }
 
             if (xmlStream.name() == "item") {
 

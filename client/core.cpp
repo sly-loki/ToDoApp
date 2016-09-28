@@ -471,7 +471,7 @@ void LogControl::moveItem(LogItem *item, int direction)
 void LogControl::save()
 {
     if (docType != DT_REMOTE)
-        db->saveDocument(rootItem);
+        db->saveDocument(this);
 }
 
 void LogControl::printItemTree()

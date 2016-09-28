@@ -20,7 +20,7 @@ class DB: public QObject
 public:
     DB();
     virtual void saveItem(LogItem *item, const QString &text);
-    virtual void saveDocument(LogItem *rootItem) = 0;
+    virtual void saveDocument(LogControl *doc) = 0;
     virtual void loadTree(LogControl *control, LogItem *rootItem) = 0;
     virtual ItemVector getFirstLevelItems();
     virtual ItemVector getChildsOf(LogItem *item);

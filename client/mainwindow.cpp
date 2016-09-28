@@ -137,6 +137,7 @@ void MainWindow::onNewDocument(LogControl *doc)
 
 void MainWindow::serverPooling()
 {
+    qDebug() << "here";
     if (server->getStatus() == SS_CONNECTED) {
         serverStatusLabel->setText("connected");
     } else {
@@ -155,7 +156,8 @@ void MainWindow::onServerConnected()
 void MainWindow::onServerDisconnected(QString reason)
 {
     serverStatusLabel->setText(reason);
-    serverPooling();
+    connectionTimer.start();
+//    serverPooling();
 }
 
 void MainWindow::onDocListReceived(std::vector<std::pair<uint64_t, QString> > docs)
