@@ -146,6 +146,20 @@ uint16_t TodoServer::removeItem(ItemDescriptor item)
     return ER_OK;
 }
 
+uint16_t TodoServer::setItemText(NetworkHeader *header, QString text)
+{
+    LogControl *doc = docs[header->docId];
+    if (!doc)
+        return ER_DOC_NOT_EXIST;
+
+    LogItem *item = doc->findItemById(header->itemId);
+    if (!item)
+        return ER_ITEM_NOT_EXIST;
+
+    item->setText(text);
+    return ER_OK;
+}
+
 uint16_t TodoServer::createDocument(DocumentDescriptor desc)
 {
     LogControl *newDoc = nullptr;
@@ -170,6 +184,12 @@ uint16_t TodoServer::createDocument(DocumentDescriptor desc)
         newDoc->loadData();
     }
 
+    return ER_OK;
+}
+
+uint16_t TodoServer::removeDocument(DocumentDescriptor desc)
+{
+    Q_UNUSED(desc);
     return ER_OK;
 }
 
@@ -310,7 +330,7 @@ void TodoServer::incomingMessage()
             qDebug() << packet.docId << "." << packet.itemId;
             qDebug() << "text: " << text;
 
-            uint16_t result = ER_OK;
+            uint16_t result = setItemText(&packet, QString(text));
 
             NetworkHeader header;
             header.requestID = packet.requestID;

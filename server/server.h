@@ -50,8 +50,10 @@ protected:
 
     uint16_t createItem(ItemDescriptor item);
     uint16_t removeItem(ItemDescriptor item);
+    uint16_t setItemText(NetworkHeader *header, QString text);
 
     uint16_t createDocument(DocumentDescriptor desc);
+    uint16_t removeDocument(DocumentDescriptor desc);
 
 protected slots:
     void incomingMessage();

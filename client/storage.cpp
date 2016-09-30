@@ -109,11 +109,12 @@ void XmlDB::saveDocument(LogControl *doc)
     xmlWriter.setDevice(&output);
     xmlWriter.setAutoFormatting(true);
     xmlWriter.writeStartDocument();
+    xmlWriter.writeStartElement("document");
+
     xmlWriter.writeStartElement("meta");
     xmlWriter.writeTextElement("name", QString("%1").arg(doc->getName()));
     xmlWriter.writeTextElement("id", QString("%1").arg(doc->getId()));
     xmlWriter.writeEndElement();
-    xmlWriter.writeStartElement("document");
 
     LogItem *rootItem = doc->getRootItem();
     LogItem *item = rootItem->getChild();
