@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     storage.cpp \
     core.cpp \
     logappserver.cpp \
-    itemwidget.cpp
+    itemwidget.cpp \
+    applicationcontrol.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
@@ -30,6 +31,7 @@ HEADERS  += mainwindow.h \
     core.h \
     logappserver.h \
     ../include/network_def.h \
-    itemwidget.h
+    itemwidget.h \
+    applicationcontrol.h
 
 FORMS    += mainwindow.ui

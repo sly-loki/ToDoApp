@@ -72,9 +72,9 @@ public:
 
     const QString &getText() {return text;}
     void setText(const QString newText) {text = newText;}
-    LogItem *getParent() {return parent;}
-    LogItem *getChild() {return firstChild;}
-    LogItem *getLastChild() {
+    LogItem *getParent() const {return parent;}
+    LogItem *getChild() const {return firstChild;}
+    LogItem *getLastChild() const {
         if (!firstChild)
             return nullptr;
         LogItem *temp = firstChild;
@@ -82,28 +82,28 @@ public:
             temp = temp->next;
         return temp;
     }
-    LogItem *getNext() {return next;}
-    LogItem *getPrev() {return prev;}
+    LogItem *getNext() const {return next;}
+    LogItem *getPrev() const {return prev;}
 
     void save();
 
-    bool isModified() {return modified;}
+    bool isModified() const {return modified;}
     void setModified(bool status) {modified = status;}
 
-    bool isSynced() {return syncedWithServer;}
+    bool isSynced() const {return syncedWithServer;}
     void setSynced(bool status) {syncedWithServer = status;}
 
-    bool isDone() {return done;}
+    bool isDone() const {return done;}
     void setDone(bool state) {this->done = state;}
 
     void setState(ItemState state) {this->state = state;}
-    ItemState getState() {return state;}
+    ItemState getState() const {return state;}
 
     uint64_t getId() const;
     void setId(const uint64_t &value);
 
     void setFolded(bool folded) {this->folded = folded;}
-    bool isFolded() {return folded;}
+    bool isFolded() const {return folded;}
 };
 
 class ClientAction

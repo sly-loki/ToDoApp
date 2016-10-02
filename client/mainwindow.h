@@ -25,9 +25,6 @@ class MainWindow : public QMainWindow
     std::map<uint64_t, LogControl *> idsToDocs;
     GuiControl *guiControl;
     ApplicationControl *appControl;
-    LogAppServer *server;
-    QDir appDir;
-    QTimer connectionTimer;
     QLabel *serverStatusLabel;
 
     void addDocumentToList(LogControl *doc);
@@ -40,12 +37,9 @@ protected slots:
     void onDocumentSelected(QListWidgetItem *item);
     void createDocument();
     void newDocButtonClicked();
-    void onNewDocument(LogControl *doc);
-    void serverPooling();
 
-    void onServerConnected();
-    void onServerDisconnected(QString reason);
-    void onDocListReceived(std::vector<std::pair<uint64_t, QString>> docs);
+    void onNewDocument(LogControl *doc);
+    void onConnectionStatusChanged(QString status);
 
 private:
     Ui::MainWindow *ui;

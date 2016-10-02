@@ -262,6 +262,18 @@ void LogAppServer::changeItem(ItemDescriptor item, QString text)
     sendPacket(&header, text.toStdString().c_str());
 }
 
+void LogAppServer::moveItem(ItemDescriptor item)
+{
+    NetworkHeader header;
+    header.itemId = item.id;
+    header.docId = item.docId;
+
+    header.dataSize = sizeof(ItemDescriptor);
+    header.type = PT_ITEM_MOVED;
+
+    sendPacket(&header, &item);
+}
+
 void LogAppServer::removeItem(ItemDescriptor item)
 {
     NetworkHeader header;
@@ -334,6 +346,14 @@ void LogAppServer::onSocketStateChanged(QAbstractSocket::SocketState state)
     }
 }
 
+void RemoteDB::fillItemDescriptor(ItemDescriptor &id, const LogItem *item)
+{
+    id.id = item->getId();
+    id.docId = doc->getId();
+    id.prevId = item->getPrev()?item->getPrev()->getId():0;
+    id.parentId = item->getParent()->getId();
+}
+
 RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     : server(server)
     , doc(doc)
@@ -342,6 +362,7 @@ RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     connect(doc, SIGNAL(itemCreated(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
     connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(onItemDeleted(LogItem*)));
     connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(onItemTextChanged(LogItem*)));
+    connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(onItemModified(LogItem*)));
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count)
@@ -412,30 +433,28 @@ void RemoteDB::start()
 void RemoteDB::onItemAdded(LogItem *item)
 {
     ItemDescriptor id;
-    id.id = item->getId();
-    id.docId = doc->getId();
-    id.prevId = item->getPrev()?item->getPrev()->getId():0;
-    id.parentId = item->getParent()->getId();
+    fillItemDescriptor(id, item);
     server->addItem(id);
 }
 
 void RemoteDB::onItemTextChanged(LogItem *item)
 {
     ItemDescriptor id;
-    id.id = item->getId();
-    id.docId = doc->getId();
-    id.prevId = item->getPrev()?item->getPrev()->getId():0;
-    id.parentId = item->getParent()->getId();
+    fillItemDescriptor(id, item);
     server->changeItem(id, item->getText());
+}
+
+void RemoteDB::onItemModified(LogItem *item)
+{
+    ItemDescriptor id;
+    fillItemDescriptor(id, item);
+    server->moveItem(id);
 }
 
 void RemoteDB::onItemDeleted(LogItem *item)
 {
     ItemDescriptor id;
-    id.id = item->getId();
-    id.docId = doc->getId();
-    id.prevId = item->getPrev()?item->getPrev()->getId():0;
-    id.parentId = item->getParent()->getId();
+    fillItemDescriptor(id, item);
     server->removeItem(id);
 }
 

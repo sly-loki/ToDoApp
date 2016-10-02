@@ -13,58 +13,6 @@
 #include "logappserver.h"
 #include "core.h"
 
-enum ApplicationState
-{
-    AS_START = 0,
-    AS_RECEIVING_ITEMS,
-    AS_NORMAL
-};
-
-class ApplicationTask
-{
-    uint64_t id;
-public:
-    ApplicationTask(uint64_t id);
-    virtual ~ApplicationTask();
-
-    uint64_t getId();
-    virtual bool process(void *data) = 0;
-};
-
-class ReadServerItems: public ApplicationTask
-{
-    std::map<uint64_t, LogItem *> items;
-    uint remainintCount;
-    LogControl *control;
-
-public:
-    ReadServerItems(uint64_t id, LogControl *control, uint count);
-
-    virtual bool process(void *data);
-    void processChildren(uint64_t parentId, uint64_t *ids, uint count);
-    LogItem *getRootItem();
-};
-
-class ApplicationControl : public QObject
-{
-    Q_OBJECT
-    LogAppServer *server;
-    ApplicationState state;
-    std::vector<ApplicationTask *> asyncTasks;
-    ReadServerItems *readAllItemsTask;
-
-public:
-    ApplicationControl(LogAppServer *server);
-    bool createNewDocument(QString name, QString fullFileName, DocumentType type);
-    void start();
-
-signals:
-    void createdNewDocument(LogControl *doc);
-
-public slots:
-
-};
-
 class LogTextEdit : public QPlainTextEdit
 {
     Q_OBJECT

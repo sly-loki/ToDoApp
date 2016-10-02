@@ -160,6 +160,11 @@ uint16_t TodoServer::setItemText(NetworkHeader *header, QString text)
     return ER_OK;
 }
 
+uint16_t TodoServer::moveItem(ItemDescriptor item)
+{
+
+}
+
 uint16_t TodoServer::createDocument(DocumentDescriptor desc)
 {
     LogControl *newDoc = nullptr;
@@ -339,6 +344,20 @@ void TodoServer::incomingMessage()
             sendPacket(&header, &result);
         }
             break;
+        case PT_ITEM_MOVED:
+        {
+            qDebug() << "item move message";
+            qDebug() << packet.docId << "." << packet.itemId;
+
+            uint16_t result = moveItem(*(ItemDescriptor *)text);
+
+            NetworkHeader header;
+            header.requestID = packet.requestID;
+            header.type = PT_RESPONSE;
+            header.dataSize = sizeof(uint16_t);
+            sendPacket(&header, &result);
+        }
+            break;
         case PT_GET_DOC_LIST:
         {
             qDebug() << "get doc list";
@@ -368,7 +387,7 @@ void TodoServer::incomingMessage()
         }
             break;
         default:
-            qDebug() << "error here";
+            qDebug() << "error here: " << packet.type;
             break;
         }
         delete[] text;

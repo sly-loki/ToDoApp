@@ -99,6 +99,7 @@ public:
 public slots:
     void addItem(ItemDescriptor item);
     void changeItem(ItemDescriptor item, QString text);
+    void moveItem(ItemDescriptor item);
     void removeItem(ItemDescriptor item);
     void sendAction(ServerAction action);
 
@@ -134,6 +135,8 @@ class RemoteDB : public QObject
     RemoteDbState state;
     size_t pendingRequests;
 
+    void fillItemDescriptor(ItemDescriptor &id, const LogItem *item);
+
 public:
     RemoteDB(LogAppServer *server, LogControl *doc);
 
@@ -149,7 +152,7 @@ public slots:
     void onItemAdded(LogItem *item);
 //    void onItemStateChanged(LogItem *item);
     void onItemTextChanged(LogItem *item);
-//    void onItemModified(LogItem *item);
+    void onItemModified(LogItem *item);
     void onItemDeleted(LogItem *item);
 //    void onItemFocused(LogItem *item);
 //    void onItemDoneChanged(LogItem *item);
