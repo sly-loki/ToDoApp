@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     core.cpp \
     logappserver.cpp \
     itemwidget.cpp \
-    applicationcontrol.cpp
+    applicationcontrol.cpp \
+    settings.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
@@ -32,6 +33,7 @@ HEADERS  += mainwindow.h \
     logappserver.h \
     ../include/network_def.h \
     itemwidget.h \
-    applicationcontrol.h
+    applicationcontrol.h \
+    settings.h
 
 FORMS    += mainwindow.ui
