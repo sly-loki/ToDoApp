@@ -160,9 +160,55 @@ uint16_t TodoServer::setItemText(NetworkHeader *header, QString text)
     return ER_OK;
 }
 
-uint16_t TodoServer::moveItem(ItemDescriptor item)
+uint16_t TodoServer::moveItem(ItemDescriptor id)
 {
+    LogControl *doc = docs[id.docId];
+    if (!doc)
+        return ER_DOC_NOT_EXIST;
 
+    LogItem *item = doc->findItemById(id.id);
+    if (!item)
+        return ER_ITEM_NOT_EXIST;
+
+    LogItem *newParent = doc->findItemById(id.parentId);
+    if (!newParent)
+        return ER_ITEM_NOT_EXIST;
+
+    LogItem *newPrev = nullptr;
+    if (id.prevId != 0)
+        newPrev = doc->findItemById(id.prevId);
+
+    item->detachFromTree();
+
+    newParent->addAsChild(item, newPrev);
+    return ER_OK;
+}
+
+uint16_t TodoServer::setItemDone(ItemDescriptor id)
+{
+    LogControl *doc = docs[id.docId];
+    if (!doc)
+        return ER_DOC_NOT_EXIST;
+
+    LogItem *item = doc->findItemById(id.id);
+    if (!item)
+        return ER_ITEM_NOT_EXIST;
+
+    item->setDone(id.done);
+    return ER_OK;
+}
+
+uint16_t TodoServer::setItemFold(ItemDescriptor id)
+{
+    LogControl *doc = docs[id.docId];
+    if (!doc)
+        return ER_DOC_NOT_EXIST;
+
+    LogItem *item = doc->findItemById(id.id);
+    if (!item)
+        return ER_ITEM_NOT_EXIST;
+
+    item->setFolded(id.folded);
 }
 
 uint16_t TodoServer::createDocument(DocumentDescriptor desc)
@@ -217,7 +263,7 @@ void TodoServer::sendItem(NetworkHeader *header)
     packet.type = PT_GET_ITEM;
     packet.itemId = item->getId();
     packet.requestID = header->requestID;
-    packet.dataSize = item->getText().size();
+    packet.dataSize = item->getText().toStdString().size();
     packet.parentId = (item->getParent())?item->getParent()->getId():0;
     sendPacket(&packet, item->getText().toStdString().c_str());
 }
@@ -333,7 +379,7 @@ void TodoServer::incomingMessage()
         {
             qDebug() << "item change message";
             qDebug() << packet.docId << "." << packet.itemId;
-            qDebug() << "text: " << text;
+            qDebug() << "text " << packet.dataSize << " : " << text;
 
             uint16_t result = setItemText(&packet, QString(text));
 
@@ -356,6 +402,24 @@ void TodoServer::incomingMessage()
             header.type = PT_RESPONSE;
             header.dataSize = sizeof(uint16_t);
             sendPacket(&header, &result);
+        }
+            break;
+        case PT_ITEM_DONE_CHANGED:
+        {
+            qDebug() << "item done message";
+
+            uint16_t result = moveItem(*(ItemDescriptor *)text);
+
+            NetworkHeader header;
+            header.requestID = packet.requestID;
+            header.type = PT_RESPONSE;
+            header.dataSize = sizeof(uint16_t);
+            sendPacket(&header, &result);
+        }
+            break;
+        case PT_ITEM_FOLD_CHANGED:
+        {
+
         }
             break;
         case PT_GET_DOC_LIST:

@@ -192,6 +192,7 @@ void GuiControl::setCurrentDocument(LogControl *doc)
         disconnect(currentDocument, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
         disconnect(currentDocument, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
         disconnect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), currentDocument, SLOT(setItemDone(LogItem*,bool)));
+        disconnect(this, SIGNAL(itemFoldChanged(LogItem*,bool)), currentDocument, SLOT(setItemFold(LogItem*,bool)));
         disconnect(this, SIGNAL(itemFocusChanged(LogItem*,int)), currentDocument, SLOT(switchFocusTo(LogItem*,int)));
         disconnect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), currentDocument, SLOT(createNewItem(LogItem*,LogItem*)));
         disconnect(this, SIGNAL(itemMoveRequested(LogItem*,int)), currentDocument, SLOT(moveItem(LogItem*,int)));
@@ -219,8 +220,10 @@ void GuiControl::setCurrentDocument(LogControl *doc)
     connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
     connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)), Qt::QueuedConnection);
     connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+//    connect(doc, SIGNAL(itemFoldChanged(LogItem*)), this, SLOT(set)
     connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
     connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
+    connect(this, SIGNAL(itemFoldChanged(LogItem*,bool)), doc, SLOT(setItemFold(LogItem*,bool)));
     connect(this, SIGNAL(itemFocusChanged(LogItem*,int)), doc, SLOT(switchFocusTo(LogItem*,int)));
     connect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), doc, SLOT(createNewItem(LogItem*,LogItem*)));
     connect(this, SIGNAL(itemMoveRequested(LogItem*,int)), doc, SLOT(moveItem(LogItem*,int)));
@@ -249,7 +252,7 @@ void GuiControl::oneOfItemsFoldChanged(bool folded)
     ItemWidget *itemWidget = (ItemWidget*)(sender());
     itemWidget->setFold(folded);
     LogItem *item = itemWidget->getLogItem();
-    item->setFolded(folded);
+    emit itemFoldChanged(item, folded);
 }
 
 void GuiControl::onItemMovePressed(int direction)

@@ -20,6 +20,7 @@ class ItemWidget: public QWidget
     LogTextEdit * textField;
 
     bool folded;
+//    bool done;
 
     QBoxLayout *layout;
     QBoxLayout *childrenLayout;

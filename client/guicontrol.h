@@ -62,6 +62,7 @@ public slots:
 
 signals:
     void itemDoneChanged(LogItem *item, bool state);
+    void itemFoldChanged(LogItem *item, bool state);
     void newItemRequest(LogItem *parent, LogItem *prev);
     void removeItemRequest(LogItem *item);
     void itemTextChanged(LogItem *item, QString newText);

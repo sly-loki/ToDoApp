@@ -170,6 +170,8 @@ void LogAppServer::connectToServer()
     case QAbstractSocket::ConnectedState:
         status = SS_CONNECTED;
         break;
+    default:
+        break;
     }
 }
 
@@ -256,7 +258,7 @@ void LogAppServer::changeItem(ItemDescriptor item, QString text)
     header.itemId = item.id;
     header.docId = item.docId;
 
-    header.dataSize = text.size();
+    header.dataSize = text.toStdString().size();
     header.type = PT_ITEM_CHANGED;
 
     sendPacket(&header, text.toStdString().c_str());
@@ -289,6 +291,26 @@ void LogAppServer::removeItem(ItemDescriptor item)
 void LogAppServer::sendAction(ServerAction action)
 {
 
+}
+
+void LogAppServer::setItemDone(ItemDescriptor id)
+{
+    NetworkHeader header;
+
+    header.dataSize = sizeof(ItemDescriptor);
+    header.type = PT_ITEM_DONE_CHANGED;
+
+    sendPacket(&header, &id);
+}
+
+void LogAppServer::setItemFolded(ItemDescriptor id)
+{
+    NetworkHeader header;
+
+    header.dataSize = sizeof(ItemDescriptor);
+    header.type = PT_ITEM_FOLD_CHANGED;
+
+    sendPacket(&header, &id);
 }
 
 void LogAppServer::createDocument(DocumentDescriptor docDesc)
@@ -352,6 +374,8 @@ void RemoteDB::fillItemDescriptor(ItemDescriptor &id, const LogItem *item)
     id.docId = doc->getId();
     id.prevId = item->getPrev()?item->getPrev()->getId():0;
     id.parentId = item->getParent()->getId();
+    id.done = item->isDone()?1:0;
+    id.folded = item->isFolded()?1:0;
 }
 
 RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
@@ -363,6 +387,8 @@ RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
     connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(onItemDeleted(LogItem*)));
     connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(onItemTextChanged(LogItem*)));
     connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(onItemModified(LogItem*)));
+    connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(onItemDoneChanged(LogItem*)));
+//    connect(doc, SIGNAL(item))
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count)
@@ -456,6 +482,20 @@ void RemoteDB::onItemDeleted(LogItem *item)
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->removeItem(id);
+}
+
+void RemoteDB::onItemDoneChanged(LogItem *item)
+{
+    ItemDescriptor id;
+    fillItemDescriptor(id, item);
+    server->setItemDone(id);
+}
+
+void RemoteDB::onItemFoldChanged(LogItem *item)
+{
+    ItemDescriptor id;
+    fillItemDescriptor(id, item);
+    server->setItemFolded(id);
 }
 
 //void RemoteDB::saveTree(LogItem *rootItem)

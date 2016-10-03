@@ -102,6 +102,8 @@ public slots:
     void moveItem(ItemDescriptor item);
     void removeItem(ItemDescriptor item);
     void sendAction(ServerAction action);
+    void setItemDone(ItemDescriptor id);
+    void setItemFolded(ItemDescriptor id);
 
     void createDocument(DocumentDescriptor docDesc);
 
@@ -155,7 +157,8 @@ public slots:
     void onItemModified(LogItem *item);
     void onItemDeleted(LogItem *item);
 //    void onItemFocused(LogItem *item);
-//    void onItemDoneChanged(LogItem *item);
+    void onItemDoneChanged(LogItem *item);
+    void onItemFoldChanged(LogItem *item);
 
 signals:
 //    void

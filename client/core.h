@@ -241,6 +241,7 @@ public:
 
 public slots:
     void setItemDone(LogItem *item, bool state);
+    void setItemFold(LogItem *item, bool state);
     void setItemText(LogItem *item, QString text);
     void undoLastAction();
     void redoAction();
@@ -259,6 +260,7 @@ signals:
     void itemDeleted(LogItem *);
     void itemFocused(LogItem *);
     void itemDoneChanged(LogItem *);
+    void itemFoldChanged(LogItem *);
 };
 
 #endif // CORE_H

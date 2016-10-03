@@ -503,6 +503,14 @@ void LogControl::setItemDone(LogItem *item, bool state)
     }
 }
 
+void LogControl::setItemFold(LogItem *item, bool state)
+{
+    if (item->isFolded() == state)
+        return;
+    item->setFolded(state);
+    emit itemFoldChanged(item);
+}
+
 void LogControl::setItemText(LogItem *item, QString text)
 {
     EditAction *action = new EditAction(this, item, text);
