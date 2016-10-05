@@ -92,6 +92,16 @@ void LogItem::save()
     control->save();
 }
 
+void LogItem::cleanModified()
+{
+    modified = false;
+    LogItem *temp = getChild();
+    while (temp) {
+        temp->cleanModified();
+        temp = temp->getNext();
+    }
+}
+
 uint64_t LogItem::getId() const
 {
     return id;
@@ -246,6 +256,7 @@ void LogControl::doAction(ClientAction *action)
     action->make();
     actionList.push_back(action);
     redoActionList.clear();
+    setModified(true);
 }
 
 void LogControl::setStatus(DocumentStatus status)
@@ -274,6 +285,7 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
     , name(name)
     , docType(DT_LOCAL)
     , docStatus(DS_CLOSED)
+    , modified(false)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
@@ -282,7 +294,7 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
         maxId = id;
 }
 
-QString LogControl::getName()
+QString LogControl::getName() const
 {
     return name;
 }
@@ -472,6 +484,7 @@ void LogControl::save()
 {
     if (docType != DT_REMOTE)
         db->saveDocument(this);
+    setModified(false);
 }
 
 void LogControl::printItemTree()
@@ -485,6 +498,14 @@ void LogControl::printItemTree()
         }
     };
     f(rootItem, QString(""));
+}
+
+void LogControl::setModified(bool modified)
+{
+    if (modified != this->modified) {
+        this->modified = modified;
+        emit docModifiedChanged(this->modified);
+    }
 }
 
 void LogControl::setItemDone(LogItem *item, bool state)
@@ -526,6 +547,7 @@ void LogControl::undoLastAction()
     actionList.pop_back();
     action->revert();
     redoActionList.push_back(action);
+    setModified(true);
 }
 
 void LogControl::redoAction()
@@ -537,5 +559,6 @@ void LogControl::redoAction()
     redoActionList.pop_back();
     action->make();
     actionList.push_back(action);
+    setModified(true);
 }
 

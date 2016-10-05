@@ -82,6 +82,7 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
     if (newDoc) {
         newDoc->loadData();
         newDoc->save();
+        emit createdNewDocument(newDoc);
         return true;
     }
     return false;
@@ -109,9 +110,20 @@ void ApplicationControl::start()
         DB *db = new XmlDB(fileName);
         LogControl *doc = new LogControl(db, s, i);
         doc->loadData();
+        documents.push_back(doc);
 
         emit documentAdded(doc);
     }
+}
+
+bool ApplicationControl::canExit()
+{
+    for(LogControl *doc: documents) {
+        if (doc->getModified()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void ApplicationControl::onServerConnected()
@@ -139,6 +151,7 @@ void ApplicationControl::onDocListReceived(std::vector<std::pair<uint64_t, QStri
 {
     for (auto s: docs) {
         LogControl *doc = new LogControl(nullptr, s.second, s.first);
+        documents.push_back(doc);
         qDebug() << "created remote doc with id: " << s.first;
         RemoteDB *rdb = new RemoteDB(server, doc);
         doc->setServerDB(rdb, DT_REMOTE);

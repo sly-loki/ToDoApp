@@ -28,10 +28,14 @@ class MainWindow : public QMainWindow
     QLabel *serverStatusLabel;
 
     void addDocumentToList(LogControl *doc);
+    QString getNameForDoc(const LogControl *doc);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent *e) override;
 
 protected slots:
     void onDocumentSelected(QListWidgetItem *item);
@@ -40,6 +44,7 @@ protected slots:
 
     void onNewDocument(LogControl *doc);
     void onConnectionStatusChanged(QString status);
+    void onDocModifiedChanged(bool modified);
 
 private:
     Ui::MainWindow *ui;

@@ -10,15 +10,22 @@
 
 void MainWindow::addDocumentToList(LogControl *doc)
 {
-    static std::map<DocumentType, QString> DT_TO_STRING = {{DT_CACHED, "shared"}, {DT_LOCAL, "local"}, {DT_REMOTE, "remote"}};
-    QString docType = DT_TO_STRING[doc->getType()];
 
-    QListWidgetItem *item = new QListWidgetItem(doc->getName() + " (" + docType + ")");
+    QListWidgetItem *item = new QListWidgetItem(getNameForDoc(doc));
 
     item->setData(Qt::UserRole, QVariant(qulonglong(doc->getId())));
     ui->listWidget->addItem(item);
 
     idsToDocs[doc->getId()] = doc;
+    connect(doc, SIGNAL(docModifiedChanged(bool)), this, SLOT(onDocModifiedChanged(bool)));
+}
+
+QString MainWindow::getNameForDoc(const LogControl *doc)
+{
+    static std::map<DocumentType, QString> DT_TO_STRING = {{DT_CACHED, "shared"}, {DT_LOCAL, "local"}, {DT_REMOTE, "remote"}};
+    QString docType = DT_TO_STRING[doc->getType()];
+    QString name = doc->getName() + " (" + docType + ")" + (doc->getModified()?"*":"");
+    return name;
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -46,7 +53,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(appControl, SIGNAL(setConnectionStatus(QString)), this, SLOT(onConnectionStatusChanged(QString)));
     connect(appControl, SIGNAL(documentAdded(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
 
-
     serverStatusLabel = new QLabel();
     ui->statusBar->addWidget(serverStatusLabel);
 
@@ -58,6 +64,11 @@ MainWindow::~MainWindow()
     delete appControl;
     delete guiControl;
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    e->ignore();
 }
 
 void MainWindow::onDocumentSelected(QListWidgetItem* item)
@@ -100,4 +111,18 @@ void MainWindow::onNewDocument(LogControl *doc)
 void MainWindow::onConnectionStatusChanged(QString status)
 {
     serverStatusLabel->setText(status);
+}
+
+void MainWindow::onDocModifiedChanged(bool modified)
+{
+    Q_UNUSED(modified);
+    LogControl *doc = static_cast<LogControl *>(sender());
+    if (doc) {
+        for (int i = 0; i <  ui->listWidget->count(); i++) {
+            QListWidgetItem *item = ui->listWidget->item(i);
+            if (item->data(Qt::UserRole).toULongLong() == doc->getId()) {
+                item->setText(getNameForDoc(doc));
+            }
+        }
+    }
 }

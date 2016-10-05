@@ -1,6 +1,8 @@
 #ifndef APPLICATIONCONTROL_H
 #define APPLICATIONCONTROL_H
 
+#include <vector>
+
 #include <QObject>
 #include <QDir>
 #include <QTimer>
@@ -33,6 +35,8 @@ class ApplicationControl : public QObject
     ApplicationState state;
     ApplicationConnectionState connectionState;
 
+    std::vector<LogControl *> documents;
+
     QDir appDir;
     QTimer connectionTimer;
 
@@ -45,6 +49,7 @@ public:
 
     bool createNewDocument(QString name, DocumentType type);
     void start();
+    bool canExit();
 
 public slots:
     void onServerConnected();

@@ -316,6 +316,8 @@ void GuiControl::addItem(LogItem *item)
 
     if (item->isDone())
         itemWidget->setDone(true);
+    if (item->isFolded())
+        itemWidget->setFold(true);
 }
 
 void GuiControl::removeItem(LogItem *item)

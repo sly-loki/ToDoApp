@@ -89,6 +89,7 @@ public:
 
     bool isModified() const {return modified;}
     void setModified(bool status) {modified = status;}
+    void cleanModified();
 
     bool isSynced() const {return syncedWithServer;}
     void setSynced(bool status) {syncedWithServer = status;}
@@ -198,13 +199,15 @@ class LogControl: public QObject
     DocumentType docType;
     DocumentStatus docStatus;
 
-    void fillGui(LogItem *item);
-    LogItem *findItem(LogItem *parent, uint64_t id);
-
     std::vector<ClientAction *> actionList;
     std::vector<ClientAction *> redoActionList;
 
+    bool modified;
+
     static uint64_t maxId;
+
+    void fillGui(LogItem *item);
+    LogItem *findItem(LogItem *parent, uint64_t id);
 
     void doAction(ClientAction *action);
     void setStatus(DocumentStatus status);
@@ -219,12 +222,12 @@ public:
 
     LogControl(DB* db, QString name, uint64_t id);
 
-    QString getName();
+    QString getName() const;
     void setName(QString name);
     void loadData();
     void setRootItem(LogItem *root);
     void setServerDB(RemoteDB *db, DocumentType type);
-    uint64_t getId() {return id;}
+    uint64_t getId() const {return id;}
 
     LogItem *findItemById(uint64_t id);
     LogItem *getNextItemInTree(LogItem *item);
@@ -236,8 +239,11 @@ public:
 
     void printItemTree();
 
-    DocumentStatus getStatus() {return docStatus;}
-    DocumentType getType() {return docType;}
+    DocumentStatus getStatus() const {return docStatus;}
+    DocumentType getType() const {return docType;}
+
+    void setModified(bool modified);
+    bool getModified() const {return modified;}
 
 public slots:
     void setItemDone(LogItem *item, bool state);
@@ -252,6 +258,7 @@ public slots:
     void save();
 
 signals:
+    void docModifiedChanged(bool modified);
     void itemAdded(LogItem *);
     void itemCreated(LogItem *);
     void itemStateChanged(LogItem *);
