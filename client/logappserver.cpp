@@ -407,7 +407,7 @@ void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint c
             return;
         }
         item = new LogItem(doc, parent, itemd.id);
-        item->setState(IS_NOT_PRESENT);
+        item->setState(ItemState::NOT_PRESENT);
         item->setDone(itemd.done);
         item->setFolded(itemd.folded);
 
@@ -420,7 +420,7 @@ void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint c
         qDebug() << "send request for item data: " << itemd.id;
         server->getItemData(doc->getId(), itemd.id, this);
         pendingRequests++;
-        item->setState(IS_DOWNLOADING);
+        item->setState(ItemState::DOWNLOADING);
     }
     if (!pendingRequests) {
         qDebug() << "LOADING DONE";
@@ -437,7 +437,7 @@ void RemoteDB::onItemReceived(ServerItemData data)
         return;
     }
     item->setText(data.text);
-    item->setState(IS_PRESENT);
+    item->setState(ItemState::PRESENT);
     emit doc->itemTextChanged(item);
     if (!pendingRequests) {
         qDebug() << "LOADING DONE";

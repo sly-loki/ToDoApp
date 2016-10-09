@@ -46,7 +46,9 @@ ItemWidget::ItemWidget(LogItem *item)
     connect(doneBox, SIGNAL(stateChanged(int)), this, SLOT(onDoneClicked(int)));
 
     hLayout->setContentsMargins(0,0,0,0);
-    hLayout->addWidget(doneBox);
+    if (item->getType() == ItemType::TODO) {
+        hLayout->addWidget(doneBox);
+    }
     hLayout->addWidget(textField);
 
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);

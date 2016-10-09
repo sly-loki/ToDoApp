@@ -10,8 +10,8 @@ uint64_t LogControl::maxId = 0;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     : id(id)
-    , type(IT_TODO)
-    , state(IS_NOT_PRESENT)
+    , type(ItemType::TODO)
+    , state(ItemState::NOT_PRESENT)
     , control(control)
     , modified(false)
     , syncedWithServer(false)
@@ -404,28 +404,28 @@ void LogControl::switchFocusTo(LogItem *item, int to)
     static const int PAGESTEP = 5;
     LogItem *nextItem = item;
     switch (to) {
-    case ME_UP:
+    case UP:
         nextItem = getPrevItemInTree(item);
         break;
-    case ME_DOWN:
+    case DOWN:
         nextItem = getNextItemInTree(item);
         break;
-    case ME_LEFT:
+    case LEFT:
         if (item->getParent() && item->getParent() != rootItem)
             nextItem = item->getParent();
         break;
-    case ME_PAGE_UP:
+    case PAGE_UP:
         for (int i = 0; i < PAGESTEP; i++)
             nextItem = getPrevItemInTree(nextItem);
         break;
-    case ME_PAGE_DOWN:
+    case PAGE_DOWN:
         for (int i = 0; i < PAGESTEP; i++)
             nextItem = getNextItemInTree(nextItem);
         break;
-    case ME_TO_BEGIN:
+    case TO_BEGIN:
         nextItem = rootItem->getChild();
         break;
-    case ME_TO_END:
+    case TO_END:
         nextItem = rootItem->getLastChild();
         while(nextItem->getLastChild())
             nextItem = nextItem->getLastChild();
@@ -448,25 +448,25 @@ void LogControl::moveItem(LogItem *item, int direction)
     LogItem *newPrev = nullptr;
 
     switch(direction) {
-    case ME_UP:
+    case UP:
         if (!item->getPrev())
             return;
         newPrev = item->getPrev()->getPrev();
         newParent = item->getParent();
         break;
-    case ME_DOWN:
+    case DOWN:
         if (!item->getNext())
             return;
         newPrev = item->getNext();
         newParent = item->getParent();
         break;
-    case ME_LEFT:
+    case LEFT:
         if(item->getParent() == rootItem)
             return;
         newParent = item->getParent()->getParent();
         newPrev = item->getParent();
         break;
-    case ME_RIGHT:
+    case RIGHT:
         if (!item->getPrev())
             return;
         newParent = item->getPrev();

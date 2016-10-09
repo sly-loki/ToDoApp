@@ -62,7 +62,8 @@ void LogTextEdit::onTextChanged()
 void LogTextEdit::keyPressEvent(QKeyEvent *e)
 {
     static std::map<int, MoveEvent> keyToMove =
-                {{Qt::Key_Up, ME_UP}, {Qt::Key_Down, ME_DOWN}, {Qt::Key_Left, ME_LEFT}, {Qt::Key_I, ME_UP}, {Qt::Key_K, ME_DOWN}, {Qt::Key_J, ME_LEFT}};
+                {{Qt::Key_Up, MoveEvent::UP}, {Qt::Key_Down, MoveEvent::DOWN}, {Qt::Key_Left, MoveEvent::LEFT},
+                 {Qt::Key_I, MoveEvent::UP}, {Qt::Key_K, MoveEvent::DOWN}, {Qt::Key_J, MoveEvent::LEFT}};
 
     if (e->modifiers() == Qt::ShiftModifier) {
         bool processed = true;
@@ -71,7 +72,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             emit newSiblingPressed();
             break;
         case Qt::Key_Backtab:
-            emit movePressed(ME_LEFT);
+            emit movePressed(MoveEvent::LEFT);
             break;
         default:
             processed = false;
@@ -89,7 +90,7 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             emit undoPressed();
             break;
         case Qt::Key_Tab:
-            emit movePressed(ME_RIGHT);
+            emit movePressed(MoveEvent::RIGHT);
             break;
         case Qt::Key_R:
             emit removePressed();
@@ -107,10 +108,10 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
             emit newChildPressed();
             break;
         case Qt::Key_Home:
-            emit switchFocusPressed(ME_TO_BEGIN);
+            emit switchFocusPressed(MoveEvent::TO_BEGIN);
             break;
         case Qt::Key_End:
-            emit switchFocusPressed(ME_TO_END);
+            emit switchFocusPressed(MoveEvent::TO_END);
             break;
         case Qt::Key_Up:
         case Qt::Key_Down:
@@ -138,9 +139,9 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_I:
         case Qt::Key_K:
             if (e->key() == Qt::Key_Up || e->key() == Qt::Key_I)
-                emit movePressed(ME_UP);
+                emit movePressed(MoveEvent::UP);
             else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_K)
-                emit movePressed(ME_DOWN);
+                emit movePressed(MoveEvent::DOWN);
             break;
         case Qt::Key_Z:
             emit redoPressed();
@@ -190,17 +191,17 @@ void LogTextEdit::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Tab: {
             QTextCursor cursor = textCursor();
             if (cursor.position() == 0) {
-                emit movePressed(ME_RIGHT);
+                emit movePressed(MoveEvent::RIGHT);
             } else {
                 processed = false;
             }
         }
             break;
         case Qt::Key_PageUp:
-            emit switchFocusPressed(ME_PAGE_UP);
+            emit switchFocusPressed(MoveEvent::PAGE_UP);
             break;
         case Qt::Key_PageDown:
-            emit switchFocusPressed(ME_PAGE_DOWN);
+            emit switchFocusPressed(MoveEvent::PAGE_DOWN);
             break;
         default:
             processed = false;

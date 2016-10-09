@@ -10,28 +10,30 @@
 class LogControl;
 
 enum MoveEvent {
-    ME_UP = 0,
-    ME_DOWN,
-    ME_LEFT,
-    ME_RIGHT,
-    ME_PAGE_UP,
-    ME_PAGE_DOWN,
-    ME_TO_BEGIN,
-    ME_TO_END
+
+
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+    PAGE_UP,
+    PAGE_DOWN,
+    TO_BEGIN,
+    TO_END
 };
 
-enum ItemType
+enum class ItemType
 {
-    IT_TODO = 0,
-    IT_LOG
+    TODO = 0,
+    LOG
 };
 
-enum ItemState
+enum class ItemState
 {
-    IS_NOT_PRESENT = 0,
-    IS_DOWNLOADING,
-    IS_UPLOADING,
-    IS_PRESENT
+    NOT_PRESENT = 0,
+    DOWNLOADING,
+    UPLOADING,
+    PRESENT
 };
 
 class LogItem
@@ -105,6 +107,9 @@ public:
 
     void setFolded(bool folded) {this->folded = folded;}
     bool isFolded() const {return folded;}
+
+    void setType(ItemType type) {this->type = type;}
+    ItemType getType() const {return type;}
 };
 
 class ClientAction

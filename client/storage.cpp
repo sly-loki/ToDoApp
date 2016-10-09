@@ -41,6 +41,7 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
 {
     stream.writeStartElement("item");
     stream.writeTextElement("id", QString("%1").arg(node->getId()));
+    stream.writeTextElement("type", QString("%1").arg((node->getType() == ItemType::LOG)?1:0));
     stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
     stream.writeTextElement("text", node->getText());
     stream.writeTextElement("done", QString("%1").arg((node->isDone())?1:0));
@@ -198,6 +199,14 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
                     currentItem->setSynced(xmlStream.text() == "1");
                 } else if (type == "folded") {
                     currentItem->setFolded(xmlStream.text() == "1");
+                } else if (type == "type") {
+                    ItemType itemType = ItemType::TODO;
+                    if (xmlStream.text() == "0") {
+                        itemType = ItemType::TODO;
+                    } else if (xmlStream.text() == "1") {
+                        itemType = ItemType::LOG;
+                    }
+                    currentItem->setType(itemType);
                 }
             }
         }

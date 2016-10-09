@@ -68,7 +68,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
-    e->ignore();
+    //e->ignore();
 }
 
 void MainWindow::onDocumentSelected(QListWidgetItem* item)
