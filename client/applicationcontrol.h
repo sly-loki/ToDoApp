@@ -35,7 +35,8 @@ class ApplicationControl : public QObject
     ApplicationState state;
     ApplicationConnectionState connectionState;
 
-    std::vector<LogControl *> documents;
+    std::vector<LogControl *> localDocs;
+    std::vector<LogControl *> remoteDocs;
 
     QDir appDir;
     QTimer connectionTimer;

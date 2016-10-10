@@ -209,7 +209,7 @@ class LogControl: public QObject
 
     bool modified;
 
-    static uint64_t maxId;
+    static uint64_t maxDocId;
 
     void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
@@ -223,7 +223,7 @@ protected slots:
 public:
     static const int ROOT_ITEM_ID = 0;
 
-    static uint64_t getNextDocId() {return ++maxId;}
+    static uint64_t getNextDocId() {return ++maxDocId;}
 
     LogControl(DB* db, QString name, uint64_t id);
 

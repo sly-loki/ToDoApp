@@ -71,6 +71,7 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
 
         DB *db = new XmlDB(fullFileName);
         newDoc = new LogControl(db, name, LogControl::getNextDocId());
+        localDocs.push_back(newDoc);
     }
     if (type == DT_REMOTE || type == DT_CACHED) {
         if (!newDoc)
@@ -110,7 +111,7 @@ void ApplicationControl::start()
         DB *db = new XmlDB(fileName);
         LogControl *doc = new LogControl(db, s, i);
         doc->loadData();
-        documents.push_back(doc);
+        localDocs.push_back(doc);
 
         emit documentAdded(doc);
     }
@@ -118,7 +119,7 @@ void ApplicationControl::start()
 
 bool ApplicationControl::canExit()
 {
-    for(LogControl *doc: documents) {
+    for(LogControl *doc: localDocs) {
         if (doc->getModified()) {
             return false;
         }
@@ -151,12 +152,12 @@ void ApplicationControl::onDocListReceived(std::vector<std::pair<uint64_t, QStri
 {
     for (auto s: docs) {
         LogControl *doc = new LogControl(nullptr, s.second, s.first);
-        documents.push_back(doc);
+        remoteDocs.push_back(doc);
         qDebug() << "created remote doc with id: " << s.first;
         RemoteDB *rdb = new RemoteDB(server, doc);
         doc->setServerDB(rdb, DT_REMOTE);
         doc->loadData();
-
+        remoteDocs.push_back(doc);
         emit documentAdded(doc);
     }
 }

@@ -6,7 +6,7 @@
 #include "logappserver.h"
 
 uint64_t LogItem::nextId = 1;
-uint64_t LogControl::maxId = 0;
+uint64_t LogControl::maxDocId = 0;
 
 LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
     : id(id)
@@ -290,8 +290,8 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
     connect(db, SIGNAL(loadingDone()), this, SLOT(onLoadingDone()));
-    if (id > maxId)
-        maxId = id;
+    if (id > maxDocId)
+        maxDocId = id;
 }
 
 QString LogControl::getName() const
