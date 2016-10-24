@@ -9,7 +9,7 @@
 #include <QFile>
 
 class LogItem;
-class LogControl;
+class ClientDocument;
 
 typedef std::vector<std::pair<LogItem *, QString>> ItemVector;
 
@@ -20,8 +20,8 @@ class DB: public QObject
 public:
     DB();
     virtual void saveItem(LogItem *item, const QString &text);
-    virtual void saveDocument(LogControl *doc) = 0;
-    virtual void loadTree(LogControl *control, LogItem *rootItem) = 0;
+    virtual void saveDocument(ClientDocument *doc) = 0;
+    virtual void loadTree(ClientDocument *control, LogItem *rootItem) = 0;
     virtual ItemVector getFirstLevelItems();
     virtual ItemVector getChildsOf(LogItem *item);
     virtual QString getText(LogItem *item);
@@ -41,12 +41,12 @@ class XmlDB: public DB
 
     void saveNode(QXmlStreamWriter &stream, LogItem *node);
     void loadNode(QXmlStreamReader &stream, LogItem *node);
-    void loadMetadata(QXmlStreamReader &stream, LogControl *doc);
+    void loadMetadata(QXmlStreamReader &stream, ClientDocument *doc);
 public:
     XmlDB(const QString fileName);
     virtual void saveItem(LogItem *item, const QString &text) override;
-    virtual void saveDocument(LogControl *doc) override;
-    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
+    virtual void saveDocument(ClientDocument *doc) override;
+    virtual void loadTree(ClientDocument *control, LogItem *rootItem) override;
     virtual ItemVector getFirstLevelItems() override;
     virtual ItemVector getChildsOf(LogItem *item) override;
     virtual QString getText(LogItem *item) override;

@@ -14,7 +14,7 @@ void DB::saveItem(LogItem *item, const QString &text)
     Q_UNUSED(text);
 }
 
-void DB::saveDocument(LogControl *doc)
+void DB::saveDocument(ClientDocument *doc)
 {
     Q_UNUSED(doc);
 }
@@ -61,7 +61,7 @@ void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
     Q_UNUSED(node);
 }
 
-void XmlDB::loadMetadata(QXmlStreamReader &stream, LogControl *doc)
+void XmlDB::loadMetadata(QXmlStreamReader &stream, ClientDocument *doc)
 {
     while (!stream.hasError())
     {
@@ -101,7 +101,7 @@ void XmlDB::saveItem(LogItem *item, const QString &text)
     Q_UNUSED(text);
 }
 
-void XmlDB::saveDocument(LogControl *doc)
+void XmlDB::saveDocument(ClientDocument *doc)
 {
 //    if (fileIsOk)
 //        return;
@@ -128,7 +128,7 @@ void XmlDB::saveDocument(LogControl *doc)
     output.close();
 }
 
-void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
+void XmlDB::loadTree(ClientDocument *control, LogItem *rootItem)
 {
     QFile input(fileName);
     input.open(QIODevice::ReadOnly);

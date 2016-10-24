@@ -13,7 +13,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class LogControl;
+class ClientDocument;
 class GuiControl;
 class ApplicationControl;
 class LogAppServer;
@@ -22,13 +22,13 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    std::map<uint64_t, LogControl *> idsToDocs;
+    std::map<uint64_t, ClientDocument *> idsToDocs;
     GuiControl *guiControl;
     ApplicationControl *appControl;
     QLabel *serverStatusLabel;
 
-    void addDocumentToList(LogControl *doc);
-    QString getNameForDoc(const LogControl *doc);
+    void addDocumentToList(ClientDocument *doc);
+    QString getNameForDoc(const ClientDocument *doc);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -42,7 +42,7 @@ protected slots:
     void createDocument();
     void newDocButtonClicked();
 
-    void onNewDocument(LogControl *doc);
+    void onNewDocument(ClientDocument *doc);
     void onConnectionStatusChanged(QString status);
     void onDocModifiedChanged(bool modified);
 

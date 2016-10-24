@@ -7,7 +7,7 @@
 
 #include "storage.h"
 
-class LogControl;
+class ClientDocument;
 
 enum MoveEvent {
 
@@ -42,7 +42,7 @@ class LogItem
     ItemType type;
     ItemState state;
 
-    LogControl *control;
+    ClientDocument *control;
     bool modified;
     bool syncedWithServer;
 
@@ -58,14 +58,14 @@ class LogItem
 
     static uint64_t nextId; //for debug
 
-    friend class LogControl;
+    friend class ClientDocument;
     friend class DB;
 
 public:
 
     static void setNextId(uint64_t id) {if (id > nextId) nextId = id;}
 
-    LogItem(LogControl *control, LogItem *parent, uint64_t id = 0);
+    LogItem(ClientDocument *control, LogItem *parent, uint64_t id = 0);
     void switchTo(MoveEvent to);
     void remove();
     void detachFromTree();
@@ -115,9 +115,9 @@ public:
 class ClientAction
 {
 protected:
-    LogControl *doc;
+    ClientDocument *doc;
 public:
-    ClientAction(LogControl *doc);
+    ClientAction(ClientDocument *doc);
     virtual void make() = 0;
     virtual void revert() = 0;
 //    virtual void finalise() = 0;
@@ -131,7 +131,7 @@ class DeleteAction : public ClientAction
     LogItem *parent;
     LogItem *prev;
 public:
-    DeleteAction(LogControl *doc, LogItem *item);
+    DeleteAction(ClientDocument *doc, LogItem *item);
 
     void make();
     void revert();
@@ -143,7 +143,7 @@ class CreateAction: public ClientAction
     LogItem *parent;
     LogItem *prev;
 public:
-    CreateAction(LogControl *doc, LogItem *parent, LogItem *prev);
+    CreateAction(ClientDocument *doc, LogItem *parent, LogItem *prev);
 
     void make();
     void revert();
@@ -155,7 +155,7 @@ class EditAction: public ClientAction
     QString textBeforeEdit;
     QString textAfterEdit;
 public:
-    EditAction(LogControl *doc, LogItem *item, QString newText);
+    EditAction(ClientDocument *doc, LogItem *item, QString newText);
 
     void make();
     void revert();
@@ -169,7 +169,7 @@ class MoveAction: public ClientAction
     LogItem *newParent;
     LogItem *newPrev;
 public:
-    MoveAction(LogControl *doc, LogItem *item, LogItem *newParent, LogItem *newPrev);
+    MoveAction(ClientDocument *doc, LogItem *item, LogItem *newParent, LogItem *newPrev);
 
     void make();
     void revert();
@@ -191,7 +191,7 @@ enum DocumentType
 
 class RemoteDB;
 
-class LogControl: public QObject
+class ClientDocument: public QObject
 {
     Q_OBJECT
 
@@ -225,7 +225,7 @@ public:
 
     static uint64_t getNextDocId() {return ++maxDocId;}
 
-    LogControl(DB* db, QString name, uint64_t id);
+    ClientDocument(DB* db, QString name, uint64_t id);
 
     QString getName() const;
     void setName(QString name);

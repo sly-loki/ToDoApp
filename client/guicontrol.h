@@ -9,7 +9,7 @@
 class LogItem;
 class LogTextEdit;
 class LogDocument;
-class LogControl;
+class ClientDocument;
 
 class ItemWidget;
 
@@ -20,7 +20,7 @@ class GuiControl: public QObject
     QWidget *rootWidget;
     QScrollArea *mainScroll;
     std::map<LogItem*, ItemWidget*> guiItemsMap;
-    LogControl *currentDocument;
+    ClientDocument *currentDocument;
 
     static LogTextEdit *getTextEdit(QLayout *itemLayout);
     static QCheckBox *getDoneBox(QLayout *itemLayout);
@@ -49,9 +49,9 @@ public:
 
 public slots:
 
-    void onDocumentOpen(LogControl *doc);
-    void onDocumentClose(LogControl *doc);
-    void setCurrentDocument(LogControl *doc);
+    void onDocumentOpen(ClientDocument *doc);
+    void onDocumentClose(ClientDocument *doc);
+    void setCurrentDocument(ClientDocument *doc);
 
     void addItem(LogItem *item);
     void removeItem(LogItem *item);

@@ -169,17 +169,17 @@ void GuiControl::onItemFocusChanged(int direction)
     emit itemFocusChanged(item, direction);
 }
 
-void GuiControl::onDocumentOpen(LogControl *doc)
+void GuiControl::onDocumentOpen(ClientDocument *doc)
 {
     Q_UNUSED(doc);
 }
 
-void GuiControl::onDocumentClose(LogControl *doc)
+void GuiControl::onDocumentClose(ClientDocument *doc)
 {
     Q_UNUSED(doc);
 }
 
-void GuiControl::setCurrentDocument(LogControl *doc)
+void GuiControl::setCurrentDocument(ClientDocument *doc)
 {
     if (doc == currentDocument)
         return;

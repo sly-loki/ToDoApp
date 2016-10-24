@@ -9,7 +9,7 @@
 
 #include "core.h"
 
-class LogControl;
+class ClientDocument;
 class GuiControl;
 class LogAppServer;
 
@@ -35,8 +35,8 @@ class ApplicationControl : public QObject
     ApplicationState state;
     ApplicationConnectionState connectionState;
 
-    std::vector<LogControl *> localDocs;
-    std::vector<LogControl *> remoteDocs;
+    std::vector<ClientDocument *> localDocs;
+    std::vector<ClientDocument *> remoteDocs;
 
     QDir appDir;
     QTimer connectionTimer;
@@ -58,8 +58,8 @@ public slots:
     void onDocListReceived(std::vector<std::pair<uint64_t, QString>> docs);
 
 signals:
-    void createdNewDocument(LogControl *doc);
-    void documentAdded(LogControl *doc);
+    void createdNewDocument(ClientDocument *doc);
+    void documentAdded(ClientDocument *doc);
     void setConnectionStatus(QString);
     //void documentDeleted(LogCon)
 

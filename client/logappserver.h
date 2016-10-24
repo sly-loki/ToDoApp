@@ -133,14 +133,14 @@ class RemoteDB : public QObject
     };
 
     LogAppServer *server;
-    LogControl *doc;
+    ClientDocument *doc;
     RemoteDbState state;
     size_t pendingRequests;
 
     void fillItemDescriptor(ItemDescriptor &id, const LogItem *item);
 
 public:
-    RemoteDB(LogAppServer *server, LogControl *doc);
+    RemoteDB(LogAppServer *server, ClientDocument *doc);
 
     void onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count);
     void onItemReceived(ServerItemData data);

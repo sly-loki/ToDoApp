@@ -378,7 +378,7 @@ void RemoteDB::fillItemDescriptor(ItemDescriptor &id, const LogItem *item)
     id.folded = item->isFolded()?1:0;
 }
 
-RemoteDB::RemoteDB(LogAppServer *server, LogControl *doc)
+RemoteDB::RemoteDB(LogAppServer *server, ClientDocument *doc)
     : server(server)
     , doc(doc)
     , pendingRequests(0)
@@ -453,7 +453,7 @@ void RemoteDB::onRequestAnsverReceived(uint64_t requestId, void *data)
 void RemoteDB::start()
 {
     pendingRequests = 1;
-    server->getItemChildren(doc->getId(), LogControl::ROOT_ITEM_ID, this);
+    server->getItemChildren(doc->getId(), ClientDocument::ROOT_ITEM_ID, this);
 }
 
 void RemoteDB::onItemAdded(LogItem *item)

@@ -8,7 +8,7 @@
 #include "applicationcontrol.h"
 #include "logappserver.h"
 
-void MainWindow::addDocumentToList(LogControl *doc)
+void MainWindow::addDocumentToList(ClientDocument *doc)
 {
 
     QListWidgetItem *item = new QListWidgetItem(getNameForDoc(doc));
@@ -20,7 +20,7 @@ void MainWindow::addDocumentToList(LogControl *doc)
     connect(doc, SIGNAL(docModifiedChanged(bool)), this, SLOT(onDocModifiedChanged(bool)));
 }
 
-QString MainWindow::getNameForDoc(const LogControl *doc)
+QString MainWindow::getNameForDoc(const ClientDocument *doc)
 {
     static std::map<DocumentType, QString> DT_TO_STRING = {{DT_CACHED, "shared"}, {DT_LOCAL, "local"}, {DT_REMOTE, "remote"}};
     QString docType = DT_TO_STRING[doc->getType()];
@@ -49,9 +49,9 @@ MainWindow::MainWindow(QWidget *parent) :
     guiControl = new GuiControl(ui->scrollArea);
     appControl = new ApplicationControl();
 
-    connect(appControl, SIGNAL(createdNewDocument(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
+    connect(appControl, SIGNAL(createdNewDocument(ClientDocument*)), this, SLOT(onNewDocument(ClientDocument*)));
     connect(appControl, SIGNAL(setConnectionStatus(QString)), this, SLOT(onConnectionStatusChanged(QString)));
-    connect(appControl, SIGNAL(documentAdded(LogControl*)), this, SLOT(onNewDocument(LogControl*)));
+    connect(appControl, SIGNAL(documentAdded(ClientDocument*)), this, SLOT(onNewDocument(ClientDocument*)));
 
     serverStatusLabel = new QLabel();
     ui->statusBar->addWidget(serverStatusLabel);
@@ -98,7 +98,7 @@ void MainWindow::newDocButtonClicked()
     ui->newDocWidget->setVisible(false);
 }
 
-void MainWindow::onNewDocument(LogControl *doc)
+void MainWindow::onNewDocument(ClientDocument *doc)
 {
     auto it = idsToDocs.find(doc->getId());
     if (it != idsToDocs.end()) {
@@ -116,7 +116,7 @@ void MainWindow::onConnectionStatusChanged(QString status)
 void MainWindow::onDocModifiedChanged(bool modified)
 {
     Q_UNUSED(modified);
-    LogControl *doc = static_cast<LogControl *>(sender());
+    ClientDocument *doc = static_cast<ClientDocument *>(sender());
     if (doc) {
         for (int i = 0; i <  ui->listWidget->count(); i++) {
             QListWidgetItem *item = ui->listWidget->item(i);

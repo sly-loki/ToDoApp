@@ -56,7 +56,7 @@ QString getRandomFileName(size_t length)
 bool ApplicationControl::createNewDocument(QString name, DocumentType type)
 {
     QString fullFileName = appDir.path() + QDir::separator() + getRandomFileName(12) + ".xml";
-    LogControl *newDoc = nullptr;
+    ClientDocument *newDoc = nullptr;
     if (type == DT_LOCAL || type == DT_CACHED) {
         QFile file(fullFileName);
         if (file.exists()) {
@@ -70,12 +70,12 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
         file.close();
 
         DB *db = new XmlDB(fullFileName);
-        newDoc = new LogControl(db, name, LogControl::getNextDocId());
+        newDoc = new ClientDocument(db, name, ClientDocument::getNextDocId());
         localDocs.push_back(newDoc);
     }
     if (type == DT_REMOTE || type == DT_CACHED) {
         if (!newDoc)
-            newDoc = new LogControl(nullptr, name, LogControl::getNextDocId());
+            newDoc = new ClientDocument(nullptr, name, ClientDocument::getNextDocId());
 //        server->createDocument();
         RemoteDB *rdb = new RemoteDB(server, newDoc);
         newDoc->setServerDB(rdb, type);
@@ -109,7 +109,7 @@ void ApplicationControl::start()
         QString fileName = appDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *doc = new LogControl(db, s, i);
+        ClientDocument *doc = new ClientDocument(db, s, i);
         doc->loadData();
         localDocs.push_back(doc);
 
@@ -119,7 +119,7 @@ void ApplicationControl::start()
 
 bool ApplicationControl::canExit()
 {
-    for(LogControl *doc: localDocs) {
+    for(ClientDocument *doc: localDocs) {
         if (doc->getModified()) {
             return false;
         }
@@ -151,7 +151,7 @@ void ApplicationControl::onServerDisconnected(QString reason)
 void ApplicationControl::onDocListReceived(std::vector<std::pair<uint64_t, QString> > docs)
 {
     for (auto s: docs) {
-        LogControl *doc = new LogControl(nullptr, s.second, s.first);
+        ClientDocument *doc = new ClientDocument(nullptr, s.second, s.first);
         remoteDocs.push_back(doc);
         qDebug() << "created remote doc with id: " << s.first;
         RemoteDB *rdb = new RemoteDB(server, doc);

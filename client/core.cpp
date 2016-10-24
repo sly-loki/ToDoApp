@@ -6,9 +6,9 @@
 #include "logappserver.h"
 
 uint64_t LogItem::nextId = 1;
-uint64_t LogControl::maxDocId = 0;
+uint64_t ClientDocument::maxDocId = 0;
 
-LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
+LogItem::LogItem(ClientDocument *control, LogItem *parent, uint64_t id)
     : id(id)
     , type(ItemType::TODO)
     , state(ItemState::NOT_PRESENT)
@@ -114,7 +114,7 @@ void LogItem::setId(const uint64_t &value)
 
 //++++++++++++++++++++++++++++++++++++++++++++
 
-DeleteAction::DeleteAction(LogControl *doc, LogItem *item)
+DeleteAction::DeleteAction(ClientDocument *doc, LogItem *item)
     : ClientAction(doc)
     , item(item)
     , parent(item->getParent())
@@ -137,13 +137,13 @@ void DeleteAction::revert()
     doc->addItem(item, parent, prev);
 }
 
-ClientAction::ClientAction(LogControl *doc)
+ClientAction::ClientAction(ClientDocument *doc)
     : doc(doc)
 {
 
 }
 
-CreateAction::CreateAction(LogControl *doc, LogItem *parent, LogItem *prev)
+CreateAction::CreateAction(ClientDocument *doc, LogItem *parent, LogItem *prev)
     : ClientAction(doc)
     , parent(parent)
     , prev(prev)
@@ -173,7 +173,7 @@ void CreateAction::revert()
     emit doc->itemFocused(newFocusedItem);
 }
 
-EditAction::EditAction(LogControl *doc, LogItem *item, QString newText)
+EditAction::EditAction(ClientDocument *doc, LogItem *item, QString newText)
     : ClientAction(doc)
     , item(item)
     , textBeforeEdit(item->getText())
@@ -195,7 +195,7 @@ void EditAction::revert()
     emit doc->itemFocused(item);
 }
 
-MoveAction::MoveAction(LogControl *doc, LogItem *item, LogItem *newParent, LogItem *newPrev)
+MoveAction::MoveAction(ClientDocument *doc, LogItem *item, LogItem *newParent, LogItem *newPrev)
     : ClientAction(doc)
     , item(item)
     , oldParent(item->getParent())
@@ -225,7 +225,7 @@ void MoveAction::revert()
 
 //######################################
 
-void LogControl::fillGui(LogItem *item)
+void ClientDocument::fillGui(LogItem *item)
 {
     if (item->getParent() != nullptr)
         emit itemAdded(item);
@@ -237,7 +237,7 @@ void LogControl::fillGui(LogItem *item)
     }
 }
 
-LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
+LogItem *ClientDocument::findItem(LogItem *parent, uint64_t id)
 {
     if (parent->getId() == id)
         return parent;
@@ -251,7 +251,7 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
-void LogControl::doAction(ClientAction *action)
+void ClientDocument::doAction(ClientAction *action)
 {
     action->make();
     actionList.push_back(action);
@@ -259,13 +259,13 @@ void LogControl::doAction(ClientAction *action)
     setModified(true);
 }
 
-void LogControl::setStatus(DocumentStatus status)
+void ClientDocument::setStatus(DocumentStatus status)
 {
     if (status != docStatus)
         docStatus = status;
 }
 
-void LogControl::onLoadingDone()
+void ClientDocument::onLoadingDone()
 {
     if (!rootItem->getChild()) {
         createNewItem(rootItem, nullptr);
@@ -277,7 +277,7 @@ void LogControl::onLoadingDone()
     docStatus = DS_OPEN;
 }
 
-LogControl::LogControl(DB* db, QString name, uint64_t id)
+ClientDocument::ClientDocument(DB* db, QString name, uint64_t id)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
     , serverDB(nullptr)
@@ -294,26 +294,26 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
         maxDocId = id;
 }
 
-QString LogControl::getName() const
+QString ClientDocument::getName() const
 {
     return name;
 }
 
-void LogControl::setName(QString name)
+void ClientDocument::setName(QString name)
 {
     this->name = name;
 }
 
-void LogControl::loadData()
+void ClientDocument::loadData()
 {
     docStatus = DS_LOADING;
-    if (docType == DT_LOCAL || docType == DT_CACHED)
-        db->loadTree(this, rootItem);
-    else
+//    if (docType == DT_LOCAL || docType == DT_CACHED)
+//        db->loadTree(this, rootItem);
+//    else
         serverDB->start();
 }
 
-void LogControl::setRootItem(LogItem *root)
+void ClientDocument::setRootItem(LogItem *root)
 {
     delete rootItem;
     rootItem = root;
@@ -325,7 +325,7 @@ void LogControl::setRootItem(LogItem *root)
     }
 }
 
-void LogControl::setServerDB(RemoteDB *db, DocumentType type)
+void ClientDocument::setServerDB(RemoteDB *db, DocumentType type)
 {
     if (serverDB) {
         qDebug() << "server db already set";
@@ -335,12 +335,12 @@ void LogControl::setServerDB(RemoteDB *db, DocumentType type)
     docType = type;
 }
 
-LogItem *LogControl::findItemById(uint64_t id)
+LogItem *ClientDocument::findItemById(uint64_t id)
 {
     return findItem(rootItem, id);
 }
 
-LogItem *LogControl::getNextItemInTree(LogItem *item)
+LogItem *ClientDocument::getNextItemInTree(LogItem *item)
 {
     if (item->getChild() && !item->isFolded())
         return item->getChild();
@@ -358,7 +358,7 @@ LogItem *LogControl::getNextItemInTree(LogItem *item)
     return item;
 }
 
-LogItem *LogControl::getPrevItemInTree(LogItem *item)
+LogItem *ClientDocument::getPrevItemInTree(LogItem *item)
 {
     if (item == rootItem)
         return rootItem;
@@ -379,18 +379,18 @@ LogItem *LogControl::getPrevItemInTree(LogItem *item)
     }
 }
 
-LogItem *LogControl::getRootItem()
+LogItem *ClientDocument::getRootItem()
 {
     return rootItem;
 }
 
-void LogControl::addItem(LogItem *item, LogItem *parent, LogItem *prev)
+void ClientDocument::addItem(LogItem *item, LogItem *parent, LogItem *prev)
 {
     parent->addAsChild(item, prev);
     emit itemAdded(item);
 }
 
-void LogControl::removeItem(LogItem *item)
+void ClientDocument::removeItem(LogItem *item)
 {
     if (item->getChild()) {
         return;
@@ -399,7 +399,7 @@ void LogControl::removeItem(LogItem *item)
     doAction(action);
 }
 
-void LogControl::switchFocusTo(LogItem *item, int to)
+void ClientDocument::switchFocusTo(LogItem *item, int to)
 {
     static const int PAGESTEP = 5;
     LogItem *nextItem = item;
@@ -436,13 +436,13 @@ void LogControl::switchFocusTo(LogItem *item, int to)
     emit itemFocused(nextItem);
 }
 
-void LogControl::createNewItem(LogItem *parent, LogItem *prev)
+void ClientDocument::createNewItem(LogItem *parent, LogItem *prev)
 {
     CreateAction *action = new CreateAction(this, parent, prev);
     doAction(action);
 }
 
-void LogControl::moveItem(LogItem *item, int direction)
+void ClientDocument::moveItem(LogItem *item, int direction)
 {
     LogItem *newParent;
     LogItem *newPrev = nullptr;
@@ -480,14 +480,14 @@ void LogControl::moveItem(LogItem *item, int direction)
     doAction(action);
 }
 
-void LogControl::save()
+void ClientDocument::save()
 {
     if (docType != DT_REMOTE)
         db->saveDocument(this);
     setModified(false);
 }
 
-void LogControl::printItemTree()
+void ClientDocument::printItemTree()
 {
     std::function<void (LogItem *, QString)> f = [&f](LogItem *item, QString intents) {
         qDebug()  << intents << item->getId() << " : " << item->getText() << " " << ((item->getParent())?(item->getParent()->getId()):-1);
@@ -500,7 +500,7 @@ void LogControl::printItemTree()
     f(rootItem, QString(""));
 }
 
-void LogControl::setModified(bool modified)
+void ClientDocument::setModified(bool modified)
 {
     if (modified != this->modified) {
         this->modified = modified;
@@ -508,7 +508,7 @@ void LogControl::setModified(bool modified)
     }
 }
 
-void LogControl::setItemDone(LogItem *item, bool state)
+void ClientDocument::setItemDone(LogItem *item, bool state)
 {
     if (item->isDone() == state)
         return;
@@ -524,7 +524,7 @@ void LogControl::setItemDone(LogItem *item, bool state)
     }
 }
 
-void LogControl::setItemFold(LogItem *item, bool state)
+void ClientDocument::setItemFold(LogItem *item, bool state)
 {
     if (item->isFolded() == state)
         return;
@@ -532,13 +532,13 @@ void LogControl::setItemFold(LogItem *item, bool state)
     emit itemFoldChanged(item);
 }
 
-void LogControl::setItemText(LogItem *item, QString text)
+void ClientDocument::setItemText(LogItem *item, QString text)
 {
     EditAction *action = new EditAction(this, item, text);
     doAction(action);
 }
 
-void LogControl::undoLastAction()
+void ClientDocument::undoLastAction()
 {
     if (actionList.size() == 0)
         return;
@@ -550,7 +550,7 @@ void LogControl::undoLastAction()
     setModified(true);
 }
 
-void LogControl::redoAction()
+void ClientDocument::redoAction()
 {
     if (redoActionList.empty())
         return;
