@@ -8,8 +8,8 @@
 
 #include <map>
 
-#include "storage.h"
 #include "network_def.h"
+#include "core.h"
 
 class LogItem;
 struct NetworkHeader;

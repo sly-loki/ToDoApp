@@ -5,7 +5,8 @@
 #include <map>
 #include <vector>
 
-#include "storage.h"
+#include <QString>
+#include <QObject>
 
 class ClientDocument;
 

@@ -18,7 +18,6 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     logtextedit.cpp \
     guicontrol.cpp \
-    storage.cpp \
     core.cpp \
     logappserver.cpp \
     itemwidget.cpp \
@@ -28,7 +27,6 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     logtextedit.h \
     guicontrol.h \
-    storage.h \
     core.h \
     logappserver.h \
     ../include/network_def.h \

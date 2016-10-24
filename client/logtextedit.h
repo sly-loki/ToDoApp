@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "guicontrol.h"
-#include "storage.h"
 #include "logappserver.h"
 #include "core.h"
 
