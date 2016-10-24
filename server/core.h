@@ -7,7 +7,7 @@
 
 #include "storage.h"
 
-class LogControl;
+class ServerDocument;
 
 enum MoveEvent {
     ME_UP,
@@ -15,11 +15,18 @@ enum MoveEvent {
     ME_LEFT
 };
 
+enum class ItemType
+{
+    TODO = 0,
+    LOG
+};
+
 class LogItem
 {
     uint64_t id;
+    ItemType type;
 
-    LogControl *control;
+    ServerDocument *control;
     bool modified;
     bool syncedWithServer;
 
@@ -34,14 +41,14 @@ class LogItem
 
     static uint64_t nextId; //for debug
 
-    friend class LogControl;
+    friend class ServerDocument;
     friend class DB;
 
 public:
 
     static void setNextId(uint64_t id) {if (id > nextId) nextId = id;}
 
-    LogItem(LogControl *control, LogItem *parent, uint64_t id = 0);
+    LogItem(ServerDocument *control, LogItem *parent, uint64_t id = 0);
     void addNewChild();
     void addNewSibling();
     void shiftRight();
@@ -85,23 +92,36 @@ public:
 
     uint64_t getId() const;
     void setId(const uint64_t &value);
+
+    void setType(ItemType type) {this->type = type;}
+    ItemType getType() const {return type;}
 };
 
-class LogControl: public QObject
+
+enum DocumentType
+{
+    DT_LOCAL = 0,
+    DT_REMOTE,
+    DT_CACHED
+};
+
+class ServerDocument: public QObject
 {
     Q_OBJECT
 
     LogItem *rootItem;
     DB *db;
-    QString docName;
     uint64_t id;
+
+    QString name;
+    DocumentType docType;
 
     static uint64_t maxId;
 
 //    void fillGui(LogItem *item);
     LogItem *findItem(LogItem *parent, uint64_t id);
 public:
-    LogControl(DB* db, QString name, uint64_t id);
+    ServerDocument(DB* db, QString name, uint64_t id);
 
     static uint64_t getNextDocId() {return ++maxId;}
 
@@ -123,9 +143,12 @@ public:
 
     void printItemTree();
 
-    QString getName() {return docName;}
+    QString getName() {return name;}
+    void setName(QString name);
 
     uint64_t getId() {return id;}
+
+    DocumentType getType() const {return docType;}
 
 public slots:
     void setItemDone(LogItem *item, bool state);

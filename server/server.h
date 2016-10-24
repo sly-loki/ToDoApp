@@ -33,7 +33,7 @@ class TodoServer: public QTcpServer
 {
     Q_OBJECT
     QSslSocket *clientConnection;
-    std::map<uint64_t, LogControl *>docs;
+    std::map<uint64_t, ServerDocument *>docs;
 
     QDir storageDir;
 

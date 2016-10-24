@@ -38,7 +38,7 @@ void TodoServer::sendDocumentList(NetworkHeader *header, QTcpSocket *connection)
     for (auto it: docs) {
 
         DocumentDescriptor desc;
-        LogControl *doc = it.second;
+        ServerDocument *doc = it.second;
 
         QString name = doc->getName();
         desc.id = doc->getId();
@@ -64,20 +64,20 @@ TodoServer::TodoServer(QString storageFolderName)
     QStringList fileList = storageDir.entryList(filters);
     qDebug() << fileList;
 
-    std::vector<LogControl *> docs;
+    std::vector<ServerDocument *> docs;
     uint64_t id = 1000;
     for (auto s: fileList) {
         QString fileName = storageDir.path() + QDir::separator() + s;
 
         DB *db = new XmlDB(fileName);
-        LogControl *control = new LogControl(db, s, id++);
+        ServerDocument *control = new ServerDocument(db, s, id++);
         control->loadData();
         docs.push_back(control);
     }
 
 
     for (int i = 0; i < docs.size(); i++) {
-        LogControl *doc = docs[i];
+        ServerDocument *doc = docs[i];
         this->docs[doc->getId()] = doc;
         qDebug() << "loaded doc: " << doc->getId();
     }
@@ -112,7 +112,7 @@ void TodoServer::readPacket()
 
 uint16_t TodoServer::createItem(ItemDescriptor item)
 {
-    LogControl *doc = docs[item.docId];
+    ServerDocument *doc = docs[item.docId];
     if (!doc) {
         qDebug() << "doc not exists";
         return ER_ITEM_ALREADY_EXIST;
@@ -130,7 +130,7 @@ uint16_t TodoServer::createItem(ItemDescriptor item)
 
 uint16_t TodoServer::removeItem(ItemDescriptor item)
 {
-    LogControl *doc = docs[item.docId];
+    ServerDocument *doc = docs[item.docId];
     if (!doc) {
         qDebug() << "doc not exists";
         return ER_ITEM_ALREADY_EXIST;
@@ -148,7 +148,7 @@ uint16_t TodoServer::removeItem(ItemDescriptor item)
 
 uint16_t TodoServer::setItemText(NetworkHeader *header, QString text)
 {
-    LogControl *doc = docs[header->docId];
+    ServerDocument *doc = docs[header->docId];
     if (!doc)
         return ER_DOC_NOT_EXIST;
 
@@ -162,7 +162,7 @@ uint16_t TodoServer::setItemText(NetworkHeader *header, QString text)
 
 uint16_t TodoServer::moveItem(ItemDescriptor id)
 {
-    LogControl *doc = docs[id.docId];
+    ServerDocument *doc = docs[id.docId];
     if (!doc)
         return ER_DOC_NOT_EXIST;
 
@@ -186,7 +186,7 @@ uint16_t TodoServer::moveItem(ItemDescriptor id)
 
 uint16_t TodoServer::setItemDone(ItemDescriptor id)
 {
-    LogControl *doc = docs[id.docId];
+    ServerDocument *doc = docs[id.docId];
     if (!doc)
         return ER_DOC_NOT_EXIST;
 
@@ -200,7 +200,7 @@ uint16_t TodoServer::setItemDone(ItemDescriptor id)
 
 uint16_t TodoServer::setItemFold(ItemDescriptor id)
 {
-    LogControl *doc = docs[id.docId];
+    ServerDocument *doc = docs[id.docId];
     if (!doc)
         return ER_DOC_NOT_EXIST;
 
@@ -213,7 +213,7 @@ uint16_t TodoServer::setItemFold(ItemDescriptor id)
 
 uint16_t TodoServer::createDocument(DocumentDescriptor desc)
 {
-    LogControl *newDoc = nullptr;
+    ServerDocument *newDoc = nullptr;
 
     QString noteName = QString((const char *)desc.name);
     QString fileName = storageDir.path() + QDir::separator() + noteName + ".xml";
@@ -229,7 +229,7 @@ uint16_t TodoServer::createDocument(DocumentDescriptor desc)
     file.close();
 
     DB *db = new XmlDB(fileName);
-    newDoc = new LogControl(db, noteName, LogControl::getNextDocId());
+    newDoc = new ServerDocument(db, noteName, ServerDocument::getNextDocId());
 
     if (newDoc) {
         newDoc->loadData();
@@ -247,7 +247,7 @@ uint16_t TodoServer::removeDocument(DocumentDescriptor desc)
 void TodoServer::sendItem(NetworkHeader *header)
 {
     NetworkHeader packet;
-    LogControl *doc = docs[header->docId];
+    ServerDocument *doc = docs[header->docId];
     if (!doc) {
         qDebug() << "doc not exists";
         return;
@@ -272,7 +272,7 @@ void TodoServer::sendChildrenIds(NetworkHeader *header)
 {
     qDebug() << "get children with request id: " << header->requestID;
     std::vector<ItemDescriptor> ids;
-    LogControl *doc = docs[header->docId];
+    ServerDocument *doc = docs[header->docId];
     if (!doc) {
         qDebug() << "error: wrong document id!!!";
         return;

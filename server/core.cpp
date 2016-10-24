@@ -4,11 +4,11 @@
 #include <QDebug>
 
 uint64_t LogItem::nextId = 1;
-uint64_t LogControl::maxId = 0;
+uint64_t ServerDocument::maxId = 0;
 
-LogItem::LogItem(LogControl *control, LogItem *parent, uint64_t id)
-    : control(control)
-    , id(id)
+LogItem::LogItem(ServerDocument *control, LogItem *parent, uint64_t id)
+    : id(id)
+    , control(control)
     , modified(false)
     , syncedWithServer(false)
     , parent(parent)
@@ -139,7 +139,7 @@ void LogItem::setId(const uint64_t &value)
 //    }
 //}
 
-LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
+LogItem *ServerDocument::findItem(LogItem *parent, uint64_t id)
 {
     if (parent->getId() == id)
         return parent;
@@ -153,10 +153,10 @@ LogItem *LogControl::findItem(LogItem *parent, uint64_t id)
     return nullptr;
 }
 
-LogControl::LogControl(DB* db, QString name, uint64_t id)
+ServerDocument::ServerDocument(DB* db, QString name, uint64_t id)
     : rootItem(new LogItem(this, nullptr))
     , db(db)
-    , docName(name)
+    , name(name)
     , id(id)
 {
     rootItem->setId(0);
@@ -165,7 +165,7 @@ LogControl::LogControl(DB* db, QString name, uint64_t id)
         maxId = id;
 }
 
-void LogControl::loadData()
+void ServerDocument::loadData()
 {
     db->loadTree(this, rootItem);
     if (!rootItem->getChild()) {
@@ -177,7 +177,7 @@ void LogControl::loadData()
     printItemTree();
 }
 
-void LogControl::setRootItem(LogItem *root)
+void ServerDocument::setRootItem(LogItem *root)
 {
     delete rootItem;
     rootItem = root;
@@ -189,17 +189,17 @@ void LogControl::setRootItem(LogItem *root)
     }
 }
 
-LogItem *LogControl::findItemById(uint64_t id)
+LogItem *ServerDocument::findItemById(uint64_t id)
 {
     return findItem(rootItem, id);
 }
 
-LogItem *LogControl::getRootItem()
+LogItem *ServerDocument::getRootItem()
 {
     return rootItem;
 }
 
-LogItem *LogControl::createNewChild(LogItem *parent)
+LogItem *ServerDocument::createNewChild(LogItem *parent)
 {
     if (!parent)
         parent = rootItem;
@@ -209,7 +209,7 @@ LogItem *LogControl::createNewChild(LogItem *parent)
     return item;
 }
 
-LogItem *LogControl::createNewSibling(LogItem *item)
+LogItem *ServerDocument::createNewSibling(LogItem *item)
 {
     LogItem *parent = item->getParent();
     LogItem *newItem = new LogItem(this, parent);
@@ -218,7 +218,7 @@ LogItem *LogControl::createNewSibling(LogItem *item)
     return newItem;
 }
 
-void LogControl::shiftRight(LogItem *item)
+void ServerDocument::shiftRight(LogItem *item)
 {
     if (!item->prev)
         return;
@@ -232,7 +232,7 @@ void LogControl::shiftRight(LogItem *item)
     emit itemModified(item);
 }
 
-void LogControl::shiftLeft(LogItem *item)
+void ServerDocument::shiftLeft(LogItem *item)
 {
     if (item->getParent() == rootItem)
         return;
@@ -247,7 +247,7 @@ void LogControl::shiftLeft(LogItem *item)
     emit itemModified(item);
 }
 
-void LogControl::shiftUp(LogItem *item)
+void ServerDocument::shiftUp(LogItem *item)
 {
     if (!item->prev)
         return;
@@ -274,7 +274,7 @@ void LogControl::shiftUp(LogItem *item)
 
 }
 
-void LogControl::shiftDown(LogItem *item)
+void ServerDocument::shiftDown(LogItem *item)
 {
     if (item->next) {
         item->next->shiftUp();
@@ -283,7 +283,7 @@ void LogControl::shiftDown(LogItem *item)
     }
 }
 
-void LogControl::removeItem(LogItem *item)
+void ServerDocument::removeItem(LogItem *item)
 {
     if (item->getChild()) {
 
@@ -294,7 +294,7 @@ void LogControl::removeItem(LogItem *item)
     emit itemFocused(newFocusedItem);
 }
 
-void LogControl::switchTo(LogItem *item, MoveEvent to)
+void ServerDocument::switchTo(LogItem *item, MoveEvent to)
 {
     LogItem *targetItem = nullptr;
 
@@ -340,12 +340,12 @@ void LogControl::switchTo(LogItem *item, MoveEvent to)
     }
 }
 
-void LogControl::save()
+void ServerDocument::save()
 {
-    db->saveTree(rootItem);
+    db->saveDocument(this);
 }
 
-void LogControl::printItemTree()
+void ServerDocument::printItemTree()
 {
     std::function<void (LogItem *, QString)> f = [&f](LogItem *item, QString intents) {
         qDebug()  << intents << item->getId() << " : " << item->getText() << " " << ((item->getParent())?(item->getParent()->getId()):-1);
@@ -358,7 +358,12 @@ void LogControl::printItemTree()
     f(rootItem, QString(""));
 }
 
-void LogControl::setItemDone(LogItem *item, bool state)
+void ServerDocument::setName(QString name)
+{
+    this->name = name;
+}
+
+void ServerDocument::setItemDone(LogItem *item, bool state)
 {
     if (item->isDone() == state)
         return;

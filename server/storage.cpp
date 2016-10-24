@@ -10,27 +10,30 @@ DB::DB()
 
 void DB::saveItem(LogItem *item, const QString &text)
 {
-
+    Q_UNUSED(item);
+    Q_UNUSED(text);
 }
 
-void DB::saveTree(LogItem *rootItem)
+void DB::saveDocument(ServerDocument *doc)
 {
-
+    Q_UNUSED(doc);
 }
 
 ItemVector DB::getFirstLevelItems()
 {
-
+    return ItemVector();
 }
 
 ItemVector DB::getChildsOf(LogItem *item)
 {
-
+    Q_UNUSED(item);
+    return ItemVector();
 }
 
 QString DB::getText(LogItem *item)
 {
-
+    Q_UNUSED(item);
+    return "";
 }
 
 
@@ -38,11 +41,12 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
 {
     stream.writeStartElement("item");
     stream.writeTextElement("id", QString("%1").arg(node->getId()));
+    stream.writeTextElement("type", QString("%1").arg((node->getType() == ItemType::LOG)?1:0));
     stream.writeTextElement("parent", QString("%1").arg(node->getParent()->getId()));
     stream.writeTextElement("text", node->getText());
     stream.writeTextElement("done", QString("%1").arg((node->isDone())?1:0));
     stream.writeTextElement("sync", QString("%1").arg((node->isDone())?1:0));
-    stream.writeTextElement("folded", /*QString("%1").arg((node->isChildrenHided())?1:0)*/"0");
+    stream.writeTextElement("folded", QString("%1").arg((node->isFolded())?1:0));
     stream.writeEndElement();
     LogItem *child = node->getChild();
     while(child) {
@@ -53,7 +57,30 @@ void XmlDB::saveNode(QXmlStreamWriter &stream, LogItem *node)
 
 void XmlDB::loadNode(QXmlStreamReader &stream, LogItem *node)
 {
+    Q_UNUSED(stream);
+    Q_UNUSED(node);
+}
 
+void XmlDB::loadMetadata(QXmlStreamReader &stream, ServerDocument *doc)
+{
+    while (!stream.hasError())
+    {
+        QXmlStreamReader::TokenType token = stream.readNext();
+        if (token == QXmlStreamReader::EndElement && stream.name() == "meta")
+            break;
+        if (token != QXmlStreamReader::StartElement)
+            continue;
+
+        QString type = stream.name().toString();
+        stream.readNext();
+        if (type == "name") {
+            doc->setName(stream.text().toString());
+            qDebug() << "read doc name: " << stream.text();
+        } else if (type == "id") {
+//            doc->set
+            qDebug() << "read doc id: " << stream.text();
+        }
+    }
 }
 
 XmlDB::XmlDB(const QString fileName)
@@ -70,10 +97,11 @@ XmlDB::XmlDB(const QString fileName)
 
 void XmlDB::saveItem(LogItem *item, const QString &text)
 {
-//    item->getId();
+    Q_UNUSED(item);
+    Q_UNUSED(text);
 }
 
-void XmlDB::saveTree(LogItem *rootItem)
+void XmlDB::saveDocument(ServerDocument *doc)
 {
 //    if (fileIsOk)
 //        return;
@@ -83,6 +111,13 @@ void XmlDB::saveTree(LogItem *rootItem)
     xmlWriter.setAutoFormatting(true);
     xmlWriter.writeStartDocument();
     xmlWriter.writeStartElement("document");
+
+    xmlWriter.writeStartElement("meta");
+    xmlWriter.writeTextElement("name", QString("%1").arg(doc->getName()));
+    xmlWriter.writeTextElement("id", QString("%1").arg(doc->getId()));
+    xmlWriter.writeEndElement();
+
+    LogItem *rootItem = doc->getRootItem();
     LogItem *item = rootItem->getChild();
     while(item) {
         saveNode(xmlWriter, item);
@@ -93,7 +128,7 @@ void XmlDB::saveTree(LogItem *rootItem)
     output.close();
 }
 
-void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
+void XmlDB::loadTree(ServerDocument *control, LogItem *rootItem)
 {
     QFile input(fileName);
     input.open(QIODevice::ReadOnly);
@@ -113,6 +148,11 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
         if (token == QXmlStreamReader::StartElement)
         {
 //            qDebug() << "token readed: " << xmlStream.name() << xmlStream.text();
+            if (xmlStream.name() == "meta") {
+                loadMetadata(xmlStream, control);
+                continue;
+            }
+
             if (xmlStream.name() == "item") {
 
                 if (currentItem) {
@@ -158,7 +198,15 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
                 } else if (type == "sync") {
                     currentItem->setSynced(xmlStream.text() == "1");
                 } else if (type == "folded") {
-                    //currentItem->setChildrenHided(xmlStream.text() == "1");
+                    currentItem->setFolded(xmlStream.text() == "1");
+                } else if (type == "type") {
+                    ItemType itemType = ItemType::TODO;
+                    if (xmlStream.text() == "0") {
+                        itemType = ItemType::TODO;
+                    } else if (xmlStream.text() == "1") {
+                        itemType = ItemType::LOG;
+                    }
+                    currentItem->setType(itemType);
                 }
             }
         }
@@ -171,6 +219,7 @@ void XmlDB::loadTree(LogControl *control, LogItem *rootItem)
     LogItem::setNextId(maxId+1);
 
     input.close();
+    emit loadingDone();
 }
 
 ItemVector XmlDB::getFirstLevelItems()
@@ -181,12 +230,14 @@ ItemVector XmlDB::getFirstLevelItems()
 
 ItemVector XmlDB::getChildsOf(LogItem *item)
 {
+    Q_UNUSED(item);
     ItemVector result;
     return result;
 }
 
 QString XmlDB::getText(LogItem *item)
 {
+    Q_UNUSED(item);
     return "";
 }
 
@@ -194,4 +245,3 @@ XmlDB::~XmlDB()
 {
 
 }
-
