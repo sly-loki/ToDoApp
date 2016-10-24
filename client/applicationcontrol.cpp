@@ -57,25 +57,27 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
 {
     QString fullFileName = appDir.path() + QDir::separator() + getRandomFileName(12) + ".xml";
     ClientDocument *newDoc = nullptr;
+
+    //TODO: creation should accept list of servers on which document will exists or smth like this
     if (type == DT_LOCAL || type == DT_CACHED) {
-        QFile file(fullFileName);
-        if (file.exists()) {
-            qDebug() << "error: file exists";
-            return false;
-        }
+//        QFile file(fullFileName);
+//        if (file.exists()) {
+//            qDebug() << "error: file exists";
+//            return false;
+//        }
 
-        file.open(QIODevice::ReadWrite);
-        if (!file.isOpen())
-            return false;
-        file.close();
+//        file.open(QIODevice::ReadWrite);
+//        if (!file.isOpen())
+//            return false;
+//        file.close();
 
-        DB *db = new XmlDB(fullFileName);
-        newDoc = new ClientDocument(db, name, ClientDocument::getNextDocId());
-        localDocs.push_back(newDoc);
+////        DB *db = new XmlDB(fullFileName);
+//        newDoc = new ClientDocument(name, ClientDocument::getNextDocId());
+//        localDocs.push_back(newDoc);
     }
     if (type == DT_REMOTE || type == DT_CACHED) {
         if (!newDoc)
-            newDoc = new ClientDocument(nullptr, name, ClientDocument::getNextDocId());
+            newDoc = new ClientDocument(name, ClientDocument::getNextDocId());
 //        server->createDocument();
         RemoteDB *rdb = new RemoteDB(server, newDoc);
         newDoc->setServerDB(rdb, type);
@@ -92,29 +94,7 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
 
 void ApplicationControl::start()
 {
-    QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_APP_FOLDER_NAME;
-    qDebug() << appDirectoryName;
-    appDir = QDir(appDirectoryName);
-    if (!appDir.exists()) {
-        appDir.mkpath(appDirectoryName);
-    }
-
-    QStringList filters;
-    filters.append("*.xml");
-    QStringList fileList = appDir.entryList(filters);
-    qDebug() << fileList;
-
-    for (int i = 0; i < fileList.size(); i++) {
-        auto s = fileList[i];
-        QString fileName = appDir.path() + QDir::separator() + s;
-
-        DB *db = new XmlDB(fileName);
-        ClientDocument *doc = new ClientDocument(db, s, i);
-        doc->loadData();
-        localDocs.push_back(doc);
-
-        emit documentAdded(doc);
-    }
+    //TODO: local server start should be here
 }
 
 bool ApplicationControl::canExit()
@@ -151,7 +131,7 @@ void ApplicationControl::onServerDisconnected(QString reason)
 void ApplicationControl::onDocListReceived(std::vector<std::pair<uint64_t, QString> > docs)
 {
     for (auto s: docs) {
-        ClientDocument *doc = new ClientDocument(nullptr, s.second, s.first);
+        ClientDocument *doc = new ClientDocument(s.second, s.first);
         remoteDocs.push_back(doc);
         qDebug() << "created remote doc with id: " << s.first;
         RemoteDB *rdb = new RemoteDB(server, doc);

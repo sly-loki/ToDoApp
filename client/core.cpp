@@ -277,9 +277,8 @@ void ClientDocument::onLoadingDone()
     docStatus = DS_OPEN;
 }
 
-ClientDocument::ClientDocument(DB* db, QString name, uint64_t id)
+ClientDocument::ClientDocument(QString name, uint64_t id)
     : rootItem(new LogItem(this, nullptr))
-    , db(db)
     , serverDB(nullptr)
     , id(id)
     , name(name)
@@ -289,7 +288,6 @@ ClientDocument::ClientDocument(DB* db, QString name, uint64_t id)
 {
     rootItem->setId(0);
     //rootItem = std::unique_ptr<LogItem>(new LogItem(this));
-    connect(db, SIGNAL(loadingDone()), this, SLOT(onLoadingDone()));
     if (id > maxDocId)
         maxDocId = id;
 }
@@ -307,10 +305,7 @@ void ClientDocument::setName(QString name)
 void ClientDocument::loadData()
 {
     docStatus = DS_LOADING;
-//    if (docType == DT_LOCAL || docType == DT_CACHED)
-//        db->loadTree(this, rootItem);
-//    else
-        serverDB->start();
+    serverDB->start();
 }
 
 void ClientDocument::setRootItem(LogItem *root)
@@ -482,8 +477,6 @@ void ClientDocument::moveItem(LogItem *item, int direction)
 
 void ClientDocument::save()
 {
-    if (docType != DT_REMOTE)
-        db->saveDocument(this);
     setModified(false);
 }
 

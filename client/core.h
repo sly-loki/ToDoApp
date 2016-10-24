@@ -196,7 +196,6 @@ class ClientDocument: public QObject
     Q_OBJECT
 
     LogItem *rootItem;
-    DB *db;
     RemoteDB *serverDB;
     uint64_t id;
 
@@ -225,7 +224,7 @@ public:
 
     static uint64_t getNextDocId() {return ++maxDocId;}
 
-    ClientDocument(DB* db, QString name, uint64_t id);
+    ClientDocument(QString name, uint64_t id);
 
     QString getName() const;
     void setName(QString name);
