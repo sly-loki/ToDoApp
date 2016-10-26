@@ -26,6 +26,9 @@ LogItem::LogItem(ClientDocument *control, LogItem *parent, uint64_t id)
     if (id == 0) {
         this->id = nextId;
         nextId++;
+    } else {
+        if (id >= nextId)
+            nextId = id+1;
     }
 //    if (parent)
 //        parent->addAsChild(this);
