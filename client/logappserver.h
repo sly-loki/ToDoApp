@@ -106,6 +106,8 @@ public slots:
     void setItemFolded(ItemDescriptor id);
 
     void createDocument(DocumentDescriptor docDesc);
+    void removeDocument(DocumentDescriptor docDesc);
+    void saveDocument(DocumentDescriptor docDesc);
 
 signals:
 
@@ -147,7 +149,6 @@ public:
     void onRequestAnsverReceived(uint64_t requestId, void *data);
     void start();
 
-    //    virtual void saveTree(LogItem *rootItem) override;
     //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
 
 public slots:
@@ -159,6 +160,8 @@ public slots:
 //    void onItemFocused(LogItem *item);
     void onItemDoneChanged(LogItem *item);
     void onItemFoldChanged(LogItem *item);
+
+    void onDocumentSaved();
 
 signals:
 //    void

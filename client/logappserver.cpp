@@ -324,6 +324,21 @@ void LogAppServer::createDocument(DocumentDescriptor docDesc)
 
 }
 
+void LogAppServer::removeDocument(DocumentDescriptor docDesc)
+{
+    qDebug() << "not implemented";
+}
+
+void LogAppServer::saveDocument(DocumentDescriptor docDesc)
+{
+    NetworkHeader header;
+
+    header.dataSize = sizeof(DocumentDescriptor);
+    header.type = PT_DOC_SAVE;
+
+    sendPacket(&header, &docDesc);
+}
+
 void LogAppServer::onConnectionEstablished()
 {
     qDebug() << "connection established";
@@ -388,7 +403,7 @@ RemoteDB::RemoteDB(LogAppServer *server, ClientDocument *doc)
     connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(onItemTextChanged(LogItem*)));
     connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(onItemModified(LogItem*)));
     connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(onItemDoneChanged(LogItem*)));
-//    connect(doc, SIGNAL(item))
+    connect(doc, SIGNAL(docSaved()), this, SLOT(onDocumentSaved()));
 }
 
 void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint count)
@@ -496,6 +511,13 @@ void RemoteDB::onItemFoldChanged(LogItem *item)
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->setItemFolded(id);
+}
+
+void RemoteDB::onDocumentSaved()
+{
+    DocumentDescriptor dd;
+    dd.id = doc->getId();
+    server->saveDocument(dd);
 }
 
 //void RemoteDB::saveTree(LogItem *rootItem)

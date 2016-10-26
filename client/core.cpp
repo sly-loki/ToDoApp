@@ -480,6 +480,7 @@ void ClientDocument::moveItem(LogItem *item, int direction)
 
 void ClientDocument::save()
 {
+    emit docSaved();
     setModified(false);
 }
 

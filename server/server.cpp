@@ -211,6 +211,15 @@ uint16_t TodoServer::setItemFold(ItemDescriptor id)
     item->setFolded(id.folded);
 }
 
+uint16_t TodoServer::saveDocument(DocumentDescriptor desc)
+{
+    ServerDocument *doc = docs[desc.id];
+    if (!doc)
+        return ER_DOC_NOT_EXIST;
+    doc->save();
+    return ER_OK;
+}
+
 uint16_t TodoServer::createDocument(DocumentDescriptor desc)
 {
     ServerDocument *newDoc = nullptr;
@@ -448,6 +457,12 @@ void TodoServer::incomingMessage()
         case PT_DOC_CREATE:
         {
             qDebug() << "create document request: ";
+        }
+            break;
+        case PT_DOC_SAVE:
+        {
+            qDebug() << "save doc request: ";
+            saveDocument(*(DocumentDescriptor *)text);
         }
             break;
         default:

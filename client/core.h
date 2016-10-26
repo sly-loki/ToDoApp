@@ -264,6 +264,7 @@ public slots:
 
 signals:
     void docModifiedChanged(bool modified);
+    void docSaved();
     void itemAdded(LogItem *);
     void itemCreated(LogItem *);
     void itemStateChanged(LogItem *);

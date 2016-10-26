@@ -55,6 +55,7 @@ protected:
     uint16_t setItemDone(ItemDescriptor id);
     uint16_t setItemFold(ItemDescriptor id);
 
+    uint16_t saveDocument(DocumentDescriptor desc);
     uint16_t createDocument(DocumentDescriptor desc);
     uint16_t removeDocument(DocumentDescriptor desc);
 
