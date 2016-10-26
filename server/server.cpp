@@ -110,6 +110,15 @@ void TodoServer::readPacket()
 
 }
 
+void TodoServer::sendResponse(uint64_t requestID, uint16_t *response)
+{
+    NetworkHeader header;
+    header.requestID = requestID;
+    header.type = PT_RESPONSE;
+    header.dataSize = sizeof(uint16_t);
+    sendPacket(&header, response);
+}
+
 uint16_t TodoServer::createItem(ItemDescriptor item)
 {
     ServerDocument *doc = docs[item.docId];
@@ -363,11 +372,7 @@ void TodoServer::incomingMessage()
 
             uint16_t result = createItem(*(ItemDescriptor *)text);
 
-            NetworkHeader header;
-            header.requestID = packet.requestID;
-            header.type = PT_RESPONSE;
-            header.dataSize = sizeof(uint16_t);
-            sendPacket(&header, &result);
+            sendResponse(packet.requestID, &result);
         }
             break;
         case PT_ITEM_DELETED:
@@ -377,11 +382,7 @@ void TodoServer::incomingMessage()
 
             uint16_t result = removeItem(*(ItemDescriptor *)text);
 
-            NetworkHeader header;
-            header.requestID = packet.requestID;
-            header.type = PT_RESPONSE;
-            header.dataSize = sizeof(uint16_t);
-            sendPacket(&header, &result);
+            sendResponse(packet.requestID, &result);
         }
             break;
         case PT_ITEM_CHANGED:
@@ -392,11 +393,7 @@ void TodoServer::incomingMessage()
 
             uint16_t result = setItemText(&packet, QString(text));
 
-            NetworkHeader header;
-            header.requestID = packet.requestID;
-            header.type = PT_RESPONSE;
-            header.dataSize = sizeof(uint16_t);
-            sendPacket(&header, &result);
+            sendResponse(packet.requestID, &result);
         }
             break;
         case PT_ITEM_MOVED:
@@ -406,11 +403,7 @@ void TodoServer::incomingMessage()
 
             uint16_t result = moveItem(*(ItemDescriptor *)text);
 
-            NetworkHeader header;
-            header.requestID = packet.requestID;
-            header.type = PT_RESPONSE;
-            header.dataSize = sizeof(uint16_t);
-            sendPacket(&header, &result);
+            sendResponse(packet.requestID, &result);
         }
             break;
         case PT_ITEM_DONE_CHANGED:
@@ -419,11 +412,7 @@ void TodoServer::incomingMessage()
 
             uint16_t result = moveItem(*(ItemDescriptor *)text);
 
-            NetworkHeader header;
-            header.requestID = packet.requestID;
-            header.type = PT_RESPONSE;
-            header.dataSize = sizeof(uint16_t);
-            sendPacket(&header, &result);
+            sendResponse(packet.requestID, &result);
         }
             break;
         case PT_ITEM_FOLD_CHANGED:

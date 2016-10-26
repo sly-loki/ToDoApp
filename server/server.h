@@ -48,6 +48,8 @@ protected:
     void sendPacket(NetworkHeader *header, const void *data);
     void readPacket();
 
+    void sendResponse(uint64_t requestID, uint16_t *response);
+
     uint16_t createItem(ItemDescriptor item);
     uint16_t removeItem(ItemDescriptor item);
     uint16_t setItemText(NetworkHeader *header, QString text);
