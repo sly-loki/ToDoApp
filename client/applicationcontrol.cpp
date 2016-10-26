@@ -114,9 +114,10 @@ void ApplicationControl::onServerConnected()
     case ApplicationConnectionState::JUST_STARTED:
     case ApplicationConnectionState::CONNECTION_ERROR:
         server->getDocList();
+        connectionState = ApplicationConnectionState::CONNECTED;
         break;
     case ApplicationConnectionState::CONNECTION_LOST:
-
+        connectionState = ApplicationConnectionState::CONNECTED;
         break;
     default:
         break;
@@ -125,6 +126,7 @@ void ApplicationControl::onServerConnected()
 
 void ApplicationControl::onServerDisconnected(QString reason)
 {
+    connectionState = ApplicationConnectionState::CONNECTION_LOST;
     emit setConnectionStatus(reason);
 }
 
