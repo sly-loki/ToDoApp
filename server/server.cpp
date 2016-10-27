@@ -410,7 +410,7 @@ void TodoServer::incomingMessage()
         {
             qDebug() << "item done message";
 
-            uint16_t result = moveItem(*(ItemDescriptor *)text);
+            uint16_t result = setItemDone(*(ItemDescriptor *)text);
 
             sendResponse(packet.requestID, &result);
         }
