@@ -126,7 +126,8 @@ void ApplicationControl::onServerConnected()
 
 void ApplicationControl::onServerDisconnected(QString reason)
 {
-    connectionState = ApplicationConnectionState::CONNECTION_LOST;
+    if (connectionState == ApplicationConnectionState::CONNECTED)
+        connectionState = ApplicationConnectionState::CONNECTION_LOST;
     emit setConnectionStatus(reason);
 }
 
