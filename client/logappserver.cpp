@@ -132,6 +132,16 @@ void LogAppServer::readData()
             emit docListReceived(docs);
         }
             break;
+        case PT_DOC_CREATE: {
+            DocumentDescriptor docDesc;
+            size_t readed = socket.read((char *)&docDesc, header.dataSize);
+            if (readed != header.dataSize) {
+                qDebug() << "ERROR: ";
+                return;
+            }
+            emit docCreatedOnServer(docDesc.id, QString((char*)docDesc.name));
+        }
+            break;
         case PT_RESPONSE: {
 
         }

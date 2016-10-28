@@ -56,6 +56,7 @@ public slots:
     void onServerConnected();
     void onServerDisconnected(QString reason);
     void onDocListReceived(std::vector<std::pair<uint64_t, QString>> docs);
+    void onNewDocumentOnServer(uint64_t id, QString name);
 
 signals:
     void createdNewDocument(ClientDocument *doc);

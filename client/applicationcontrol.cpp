@@ -12,6 +12,7 @@ ApplicationControl::ApplicationControl()
     connect(server, SIGNAL(connected()), this, SLOT(onServerConnected()));
     connect(server, SIGNAL(disconnected(QString)), this, SLOT(onServerDisconnected(QString)));
     connect(server, SIGNAL(docListReceived(std::vector<std::pair<uint64_t,QString> >)), this, SLOT(onDocListReceived(std::vector<std::pair<uint64_t,QString> >)));
+    connect(server, SIGNAL(docCreatedOnServer(uint64_t,QString)), this, SLOT(onNewDocumentOnServer(uint64_t,QString)));
 
     connectionTimer.setInterval(5000);
     connectionTimer.setSingleShot(true);
@@ -55,41 +56,13 @@ QString getRandomFileName(size_t length)
 
 bool ApplicationControl::createNewDocument(QString name, DocumentType type)
 {
-    QString fullFileName = appDir.path() + QDir::separator() + getRandomFileName(12) + ".xml";
-    ClientDocument *newDoc = nullptr;
-
     //TODO: creation should accept list of servers on which document will exists or smth like this
-    if (type == DT_LOCAL || type == DT_CACHED) {
-//        QFile file(fullFileName);
-//        if (file.exists()) {
-//            qDebug() << "error: file exists";
-//            return false;
-//        }
 
-//        file.open(QIODevice::ReadWrite);
-//        if (!file.isOpen())
-//            return false;
-//        file.close();
-
-////        DB *db = new XmlDB(fullFileName);
-//        newDoc = new ClientDocument(name, ClientDocument::getNextDocId());
-//        localDocs.push_back(newDoc);
-    }
-    if (type == DT_REMOTE || type == DT_CACHED) {
-        if (!newDoc)
-            newDoc = new ClientDocument(name, ClientDocument::getNextDocId());
-//        server->createDocument();
-        RemoteDB *rdb = new RemoteDB(server, newDoc);
-        newDoc->setServerDB(rdb, type);
-    }
-    if (newDoc) {
-        newDoc->loadData();
-        newDoc->save();
-        emit createdNewDocument(newDoc);
-        return true;
-    }
-    return false;
-
+    DocumentDescriptor desc;
+    memcpy(desc.name, name.toStdString().c_str(), name.toStdString().size());
+    desc.name[name.toStdString().size()] = 0;
+    server->createDocument(desc);
+    return true;
 }
 
 void ApplicationControl::start()
@@ -140,7 +113,17 @@ void ApplicationControl::onDocListReceived(std::vector<std::pair<uint64_t, QStri
         RemoteDB *rdb = new RemoteDB(server, doc);
         doc->setServerDB(rdb, DT_REMOTE);
         doc->loadData();
-        remoteDocs.push_back(doc);
         emit documentAdded(doc);
     }
+}
+
+void ApplicationControl::onNewDocumentOnServer(uint64_t id, QString name)
+{
+    ClientDocument *doc = new ClientDocument(name, id);
+    remoteDocs.push_back(doc);
+    qDebug() << "created remote doc with id: " << id;
+    RemoteDB *rdb = new RemoteDB(server, doc);
+    doc->setServerDB(rdb, DT_REMOTE);
+    doc->loadData();
+    emit documentAdded(doc);
 }

@@ -116,6 +116,7 @@ signals:
 
     void receivedRequest();
     void docListReceived(std::vector<std::pair< uint64_t, QString>>);
+    void docCreatedOnServer(uint64_t, QString);
 //    void itemListReceived(uint64_t *ids, uint count);
 //    void itemReceived(ServerItemData data);
 //    void itemChildrenReceived(uint64_t parentId, uint64_t *ids, uint count);

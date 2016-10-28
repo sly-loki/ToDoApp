@@ -8,6 +8,22 @@
 
 #include "core.h"
 
+QString getRandomFileName(size_t length)
+{
+    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+
+    QTime currentTime = QTime::currentTime();
+    qsrand(currentTime.hour() + currentTime.second() + currentTime.minute() + currentTime.msec());
+    QString randomString;
+    for(size_t i=0; i<length; ++i)
+    {
+        int index = qrand() % possibleCharacters.length();
+        QChar nextChar = possibleCharacters.at(index);
+        randomString.append(nextChar);
+    }
+    return randomString;
+}
+
 void TodoServer::incomingConnection(qintptr handle)
 {
     if (clientConnection)
@@ -229,13 +245,14 @@ uint16_t TodoServer::saveDocument(DocumentDescriptor desc)
     return ER_OK;
 }
 
-uint16_t TodoServer::createDocument(DocumentDescriptor desc)
+uint16_t TodoServer::createDocument(DocumentDescriptor &desc)
 {
     ServerDocument *newDoc = nullptr;
 
     QString noteName = QString((const char *)desc.name);
-    QString fileName = storageDir.path() + QDir::separator() + noteName + ".xml";
+    QString fileName = storageDir.path() + QDir::separator() + getRandomFileName(12) + ".xml";
     QFile file(fileName);
+
     if (file.exists()) {
         qDebug() << "error: file exists";
         return ER_ITEM_ALREADY_EXIST;
@@ -251,6 +268,10 @@ uint16_t TodoServer::createDocument(DocumentDescriptor desc)
 
     if (newDoc) {
         newDoc->loadData();
+        newDoc->save();
+
+        docs[newDoc->getId()] = newDoc;
+        desc.id = newDoc->getId();
     }
 
     return ER_OK;
@@ -445,7 +466,16 @@ void TodoServer::incomingMessage()
             break;
         case PT_DOC_CREATE:
         {
-            qDebug() << "create document request: ";
+            DocumentDescriptor *desc = (DocumentDescriptor *)text;
+            qDebug() << "create document request: " << desc->name;
+            uint16_t result = createDocument(*desc);
+
+            if (result != ER_OK) {
+                sendResponse(packet.requestID, &result);
+            } else {
+                packet.dataSize = sizeof(DocumentDescriptor);
+                sendPacket(&packet, desc);
+            }
         }
             break;
         case PT_DOC_SAVE:
