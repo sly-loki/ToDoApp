@@ -5,7 +5,7 @@
 #include <algorithm>
 
 
-ItemWidget::ItemWidget(LogItem *item)
+ItemWidget::ItemWidget(ClientItem *item)
     : item(item)
     , doneBox(new QCheckBox)
     , textField(new LogTextEdit(item))

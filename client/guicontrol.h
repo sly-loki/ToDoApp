@@ -6,7 +6,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 
-class LogItem;
+class ClientItem;
 class LogTextEdit;
 class LogDocument;
 class ClientDocument;
@@ -19,7 +19,7 @@ class GuiControl: public QObject
 
     QWidget *rootWidget;
     QScrollArea *mainScroll;
-    std::map<LogItem*, ItemWidget*> guiItemsMap;
+    std::map<ClientItem*, ItemWidget*> guiItemsMap;
     ClientDocument *currentDocument;
 
     static LogTextEdit *getTextEdit(QLayout *itemLayout);
@@ -28,8 +28,8 @@ class GuiControl: public QObject
 
     void setDoneState(QBoxLayout *itemLayout, bool done);
     void initRootWidget();
-    void addChildern(LogItem *item);
-    ItemWidget *createItemWidget(LogItem *item);
+    void addChildern(ClientItem *item);
+    ItemWidget *createItemWidget(ClientItem *item);
 
 protected slots:
     void onNewChildPressed();
@@ -44,8 +44,8 @@ protected slots:
 
 public:
     GuiControl(QScrollArea *scroll);
-    void shiftItemToLevel(LogItem *item, LogItem *target);
-    void unplagItem(LogItem *item);
+    void shiftItemToLevel(ClientItem *item, ClientItem *target);
+    void unplagItem(ClientItem *item);
 
 public slots:
 
@@ -53,22 +53,22 @@ public slots:
     void onDocumentClose(ClientDocument *doc);
     void setCurrentDocument(ClientDocument *doc);
 
-    void addItem(LogItem *item);
-    void removeItem(LogItem *item);
-    void updateItemPosition(LogItem *item);
-    void focusItem(LogItem *item);
-    void setItemDone(LogItem *item);
-    void setItemText(LogItem *item);
+    void addItem(ClientItem *item);
+    void removeItem(ClientItem *item);
+    void updateItemPosition(ClientItem *item);
+    void focusItem(ClientItem *item);
+    void setItemDone(ClientItem *item);
+    void setItemText(ClientItem *item);
 
 signals:
-    void itemDoneChanged(LogItem *item, bool state);
-    void itemFoldChanged(LogItem *item, bool state);
-    void newItemRequest(LogItem *parent, LogItem *prev);
-    void removeItemRequest(LogItem *item);
-    void itemTextChanged(LogItem *item, QString newText);
-    void itemPositionChanged(LogItem *item, LogItem *newParent, LogItem *newPrev);
-    void itemMoveRequested(LogItem *item, int direction);
-    void itemFocusChanged(LogItem *item, int direction);
+    void itemDoneChanged(ClientItem *item, bool state);
+    void itemFoldChanged(ClientItem *item, bool state);
+    void newItemRequest(ClientItem *parent, ClientItem *prev);
+    void removeItemRequest(ClientItem *item);
+    void itemTextChanged(ClientItem *item, QString newText);
+    void itemPositionChanged(ClientItem *item, ClientItem *newParent, ClientItem *newPrev);
+    void itemMoveRequested(ClientItem *item, int direction);
+    void itemFocusChanged(ClientItem *item, int direction);
     void undoPressed();
     void redoPressed();
     void savePressed();

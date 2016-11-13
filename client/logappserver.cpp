@@ -190,12 +190,12 @@ bool LogAppServer::ping()
 
 }
 
-bool LogAppServer::saveItem(LogItem *item)
+bool LogAppServer::saveItem(ClientItem *item)
 {
 
 }
 
-bool LogAppServer::saveTree(LogItem *root)
+bool LogAppServer::saveTree(ClientItem *root)
 {
 
 }
@@ -393,7 +393,7 @@ void LogAppServer::onSocketStateChanged(QAbstractSocket::SocketState state)
     }
 }
 
-void RemoteDB::fillItemDescriptor(ItemDescriptor &id, const LogItem *item)
+void RemoteDB::fillItemDescriptor(ItemDescriptor &id, const ClientItem *item)
 {
     id.id = item->getId();
     id.docId = doc->getId();
@@ -408,11 +408,11 @@ RemoteDB::RemoteDB(LogAppServer *server, ClientDocument *doc)
     , doc(doc)
     , pendingRequests(0)
 {
-    connect(doc, SIGNAL(itemCreated(LogItem*)), this, SLOT(onItemAdded(LogItem*)));
-    connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(onItemDeleted(LogItem*)));
-    connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(onItemTextChanged(LogItem*)));
-    connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(onItemModified(LogItem*)));
-    connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(onItemDoneChanged(LogItem*)));
+    connect(doc, SIGNAL(itemCreated(ClientItem*)), this, SLOT(onItemAdded(ClientItem*)));
+    connect(doc, SIGNAL(itemDeleted(ClientItem*)), this, SLOT(onItemDeleted(ClientItem*)));
+    connect(doc, SIGNAL(itemTextChanged(ClientItem*)), this, SLOT(onItemTextChanged(ClientItem*)));
+    connect(doc, SIGNAL(itemModified(ClientItem*)), this, SLOT(onItemModified(ClientItem*)));
+    connect(doc, SIGNAL(itemDoneChanged(ClientItem*)), this, SLOT(onItemDoneChanged(ClientItem*)));
     connect(doc, SIGNAL(docSaved()), this, SLOT(onDocumentSaved()));
 }
 
@@ -421,22 +421,22 @@ void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint c
     pendingRequests--;
     for (size_t i = 0; i < count; i++) {
         ItemDescriptor &itemd = ids[i];
-        LogItem *item = doc->findItemById(itemd.id);
+        ClientItem *item = doc->findItemById(itemd.id);
         if (item) {
             qDebug() << "ERROR: item already exists";
 //            return;
         }
-        LogItem *parent = doc->findItemById(parentId);
+        ClientItem *parent = doc->findItemById(parentId);
         if (!parent) {
             qDebug() << "ERROR: parent not exists";
             return;
         }
-        item = new LogItem(doc, parent, itemd.id);
+        item = new ClientItem(doc, parent, itemd.id);
         item->setState(ItemState::NOT_PRESENT);
         item->setDone(itemd.done);
         item->setFolded(itemd.folded);
 
-        LogItem *prev = (itemd.prevId != 0)?doc->findItemById(itemd.prevId):nullptr;
+        ClientItem *prev = (itemd.prevId != 0)?doc->findItemById(itemd.prevId):nullptr;
         doc->addItem(item, parent, prev);
 
         server->getItemChildren(doc->getId(), itemd.id, this);
@@ -456,7 +456,7 @@ void RemoteDB::onItemListReceived(uint64_t parentId, ItemDescriptor *ids, uint c
 void RemoteDB::onItemReceived(ServerItemData data)
 {
     pendingRequests--;
-    LogItem *item = doc->findItemById(data.itemId);
+    ClientItem *item = doc->findItemById(data.itemId);
     if (!item) {
         qDebug() << "ERROR: item not exists";
         return;
@@ -481,42 +481,42 @@ void RemoteDB::start()
     server->getItemChildren(doc->getId(), ClientDocument::ROOT_ITEM_ID, this);
 }
 
-void RemoteDB::onItemAdded(LogItem *item)
+void RemoteDB::onItemAdded(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->addItem(id);
 }
 
-void RemoteDB::onItemTextChanged(LogItem *item)
+void RemoteDB::onItemTextChanged(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->changeItem(id, item->getText());
 }
 
-void RemoteDB::onItemModified(LogItem *item)
+void RemoteDB::onItemModified(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->moveItem(id);
 }
 
-void RemoteDB::onItemDeleted(LogItem *item)
+void RemoteDB::onItemDeleted(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->removeItem(id);
 }
 
-void RemoteDB::onItemDoneChanged(LogItem *item)
+void RemoteDB::onItemDoneChanged(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);
     server->setItemDone(id);
 }
 
-void RemoteDB::onItemFoldChanged(LogItem *item)
+void RemoteDB::onItemFoldChanged(ClientItem *item)
 {
     ItemDescriptor id;
     fillItemDescriptor(id, item);

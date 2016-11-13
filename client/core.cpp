@@ -5,10 +5,10 @@
 
 #include "logappserver.h"
 
-uint64_t LogItem::nextId = 1;
+uint64_t ClientItem::nextId = 1;
 uint64_t ClientDocument::maxDocId = 0;
 
-LogItem::LogItem(ClientDocument *control, LogItem *parent, uint64_t id)
+ClientItem::ClientItem(ClientDocument *control, ClientItem *parent, uint64_t id)
     : id(id)
     , type(ItemType::TODO)
     , state(ItemState::NOT_PRESENT)
@@ -34,17 +34,17 @@ LogItem::LogItem(ClientDocument *control, LogItem *parent, uint64_t id)
 //        parent->addAsChild(this);
 }
 
-void LogItem::switchTo(MoveEvent to)
+void ClientItem::switchTo(MoveEvent to)
 {
     control->switchFocusTo(this, to);
 }
 
-void LogItem::remove()
+void ClientItem::remove()
 {
     control->removeItem(this);
 }
 
-void LogItem::detachFromTree()
+void ClientItem::detachFromTree()
 {
     if (parent && parent->firstChild == this)
         parent->firstChild = this->next;
@@ -55,7 +55,7 @@ void LogItem::detachFromTree()
     prev = next = nullptr;
 }
 
-void LogItem::addAsChild(LogItem *item, LogItem *after)
+void ClientItem::addAsChild(ClientItem *item, ClientItem *after)
 {
     if (after && after->parent != this) {
         qDebug() << "Error: after->parent != this";
@@ -78,46 +78,46 @@ void LogItem::addAsChild(LogItem *item, LogItem *after)
     item->parent = this;
 }
 
-void LogItem::addAsLastChild(LogItem *item)
+void ClientItem::addAsLastChild(ClientItem *item)
 {
     if (!firstChild) {
         addAsChild(item);
         return;
     }
-    LogItem *temp = getLastChild();
+    ClientItem *temp = getLastChild();
     temp->next = item;
     item->prev = temp;
     item->parent = this;
 }
 
-void LogItem::save()
+void ClientItem::save()
 {
     control->save();
 }
 
-void LogItem::cleanModified()
+void ClientItem::cleanModified()
 {
     modified = false;
-    LogItem *temp = getChild();
+    ClientItem *temp = getChild();
     while (temp) {
         temp->cleanModified();
         temp = temp->getNext();
     }
 }
 
-uint64_t LogItem::getId() const
+uint64_t ClientItem::getId() const
 {
     return id;
 }
 
-void LogItem::setId(const uint64_t &value)
+void ClientItem::setId(const uint64_t &value)
 {
     id = value;
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++
 
-DeleteAction::DeleteAction(ClientDocument *doc, LogItem *item)
+DeleteAction::DeleteAction(ClientDocument *doc, ClientItem *item)
     : ClientAction(doc)
     , item(item)
     , parent(item->getParent())
@@ -127,7 +127,7 @@ DeleteAction::DeleteAction(ClientDocument *doc, LogItem *item)
 
 void DeleteAction::make()
 {
-    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
+    ClientItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
 
     item->detachFromTree();
 
@@ -146,7 +146,7 @@ ClientAction::ClientAction(ClientDocument *doc)
 
 }
 
-CreateAction::CreateAction(ClientDocument *doc, LogItem *parent, LogItem *prev)
+CreateAction::CreateAction(ClientDocument *doc, ClientItem *parent, ClientItem *prev)
     : ClientAction(doc)
     , parent(parent)
     , prev(prev)
@@ -158,7 +158,7 @@ void CreateAction::make()
 {
     if (!parent)
         parent = doc->getRootItem();
-    LogItem *item = new LogItem(doc, parent);
+    ClientItem *item = new ClientItem(doc, parent);
     parent->addAsChild(item, prev);
     emit doc->itemAdded(item);
     this->item = item;
@@ -168,7 +168,7 @@ void CreateAction::make()
 
 void CreateAction::revert()
 {
-    LogItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
+    ClientItem *newFocusedItem = item->getPrev()?item->getPrev():item->getParent();
 
     item->detachFromTree();
 
@@ -176,7 +176,7 @@ void CreateAction::revert()
     emit doc->itemFocused(newFocusedItem);
 }
 
-EditAction::EditAction(ClientDocument *doc, LogItem *item, QString newText)
+EditAction::EditAction(ClientDocument *doc, ClientItem *item, QString newText)
     : ClientAction(doc)
     , item(item)
     , textBeforeEdit(item->getText())
@@ -198,7 +198,7 @@ void EditAction::revert()
     emit doc->itemFocused(item);
 }
 
-MoveAction::MoveAction(ClientDocument *doc, LogItem *item, LogItem *newParent, LogItem *newPrev)
+MoveAction::MoveAction(ClientDocument *doc, ClientItem *item, ClientItem *newParent, ClientItem *newPrev)
     : ClientAction(doc)
     , item(item)
     , oldParent(item->getParent())
@@ -228,11 +228,11 @@ void MoveAction::revert()
 
 //######################################
 
-void ClientDocument::fillGui(LogItem *item)
+void ClientDocument::fillGui(ClientItem *item)
 {
     if (item->getParent() != nullptr)
         emit itemAdded(item);
-        LogItem *child = item->getChild();
+        ClientItem *child = item->getChild();
     while (child) {
         child->control = this;
         fillGui(child);
@@ -240,13 +240,13 @@ void ClientDocument::fillGui(LogItem *item)
     }
 }
 
-LogItem *ClientDocument::findItem(LogItem *parent, uint64_t id)
+ClientItem *ClientDocument::findItem(ClientItem *parent, uint64_t id)
 {
     if (parent->getId() == id)
         return parent;
-    LogItem *child = parent->getChild();
+    ClientItem *child = parent->getChild();
     while(child) {
-        LogItem *temp = findItem(child, id);
+        ClientItem *temp = findItem(child, id);
         if (temp)
             return temp;
         child = child->getNext();
@@ -281,7 +281,7 @@ void ClientDocument::onLoadingDone()
 }
 
 ClientDocument::ClientDocument(QString name, uint64_t id)
-    : rootItem(new LogItem(this, nullptr))
+    : rootItem(new ClientItem(this, nullptr))
     , serverDB(nullptr)
     , id(id)
     , name(name)
@@ -311,7 +311,7 @@ void ClientDocument::loadData()
     serverDB->start();
 }
 
-void ClientDocument::setRootItem(LogItem *root)
+void ClientDocument::setRootItem(ClientItem *root)
 {
     delete rootItem;
     rootItem = root;
@@ -333,19 +333,19 @@ void ClientDocument::setServerDB(RemoteDB *db, DocumentType type)
     docType = type;
 }
 
-LogItem *ClientDocument::findItemById(uint64_t id)
+ClientItem *ClientDocument::findItemById(uint64_t id)
 {
     return findItem(rootItem, id);
 }
 
-LogItem *ClientDocument::getNextItemInTree(LogItem *item)
+ClientItem *ClientDocument::getNextItemInTree(ClientItem *item)
 {
     if (item->getChild() && !item->isFolded())
         return item->getChild();
     else if (item->getNext())
         return item->getNext();
     else {
-        LogItem *temp = item->getParent();
+        ClientItem *temp = item->getParent();
         while (temp) {
             if (temp->getNext()) {
                 return temp->getNext();
@@ -356,12 +356,12 @@ LogItem *ClientDocument::getNextItemInTree(LogItem *item)
     return item;
 }
 
-LogItem *ClientDocument::getPrevItemInTree(LogItem *item)
+ClientItem *ClientDocument::getPrevItemInTree(ClientItem *item)
 {
     if (item == rootItem)
         return rootItem;
     if (item->prev) {
-        LogItem *temp = item->prev->getLastChild();
+        ClientItem *temp = item->prev->getLastChild();
         if (temp && !item->prev->isFolded()) {
             while (temp->getChild())
                 temp = temp->getLastChild();
@@ -372,23 +372,23 @@ LogItem *ClientDocument::getPrevItemInTree(LogItem *item)
         }
     }
     else {
-        LogItem *parent = item->getParent();
+        ClientItem *parent = item->getParent();
         return (parent != rootItem)?parent:item;
     }
 }
 
-LogItem *ClientDocument::getRootItem()
+ClientItem *ClientDocument::getRootItem()
 {
     return rootItem;
 }
 
-void ClientDocument::addItem(LogItem *item, LogItem *parent, LogItem *prev)
+void ClientDocument::addItem(ClientItem *item, ClientItem *parent, ClientItem *prev)
 {
     parent->addAsChild(item, prev);
     emit itemAdded(item);
 }
 
-void ClientDocument::removeItem(LogItem *item)
+void ClientDocument::removeItem(ClientItem *item)
 {
     if (item->getChild()) {
         return;
@@ -397,10 +397,10 @@ void ClientDocument::removeItem(LogItem *item)
     doAction(action);
 }
 
-void ClientDocument::switchFocusTo(LogItem *item, int to)
+void ClientDocument::switchFocusTo(ClientItem *item, int to)
 {
     static const int PAGESTEP = 5;
-    LogItem *nextItem = item;
+    ClientItem *nextItem = item;
     switch (to) {
     case UP:
         nextItem = getPrevItemInTree(item);
@@ -434,16 +434,16 @@ void ClientDocument::switchFocusTo(LogItem *item, int to)
     emit itemFocused(nextItem);
 }
 
-void ClientDocument::createNewItem(LogItem *parent, LogItem *prev)
+void ClientDocument::createNewItem(ClientItem *parent, ClientItem *prev)
 {
     CreateAction *action = new CreateAction(this, parent, prev);
     doAction(action);
 }
 
-void ClientDocument::moveItem(LogItem *item, int direction)
+void ClientDocument::moveItem(ClientItem *item, int direction)
 {
-    LogItem *newParent;
-    LogItem *newPrev = nullptr;
+    ClientItem *newParent;
+    ClientItem *newPrev = nullptr;
 
     switch(direction) {
     case UP:
@@ -486,9 +486,9 @@ void ClientDocument::save()
 
 void ClientDocument::printItemTree()
 {
-    std::function<void (LogItem *, QString)> f = [&f](LogItem *item, QString intents) {
+    std::function<void (ClientItem *, QString)> f = [&f](ClientItem *item, QString intents) {
         qDebug()  << intents << item->getId() << " : " << item->getText() << " " << ((item->getParent())?(item->getParent()->getId()):-1);
-        LogItem *child = item->getChild();
+        ClientItem *child = item->getChild();
         while (child) {
             f(child, intents + "    ");
             child = child->getNext();
@@ -505,7 +505,7 @@ void ClientDocument::setModified(bool modified)
     }
 }
 
-void ClientDocument::setItemDone(LogItem *item, bool state)
+void ClientDocument::setItemDone(ClientItem *item, bool state)
 {
     if (item->isDone() == state)
         return;
@@ -513,7 +513,7 @@ void ClientDocument::setItemDone(LogItem *item, bool state)
     item->setDone(state);
     emit itemDoneChanged(item);
     if (state == true) {
-        LogItem *child = item->getChild();
+        ClientItem *child = item->getChild();
         while (child) {
             setItemDone(child, state);
             child = child->getNext();
@@ -521,7 +521,7 @@ void ClientDocument::setItemDone(LogItem *item, bool state)
     }
 }
 
-void ClientDocument::setItemFold(LogItem *item, bool state)
+void ClientDocument::setItemFold(ClientItem *item, bool state)
 {
     if (item->isFolded() == state)
         return;
@@ -529,7 +529,7 @@ void ClientDocument::setItemFold(LogItem *item, bool state)
     emit itemFoldChanged(item);
 }
 
-void ClientDocument::setItemText(LogItem *item, QString text)
+void ClientDocument::setItemText(ClientItem *item, QString text)
 {
     EditAction *action = new EditAction(this, item, text);
     doAction(action);

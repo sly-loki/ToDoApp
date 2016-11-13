@@ -27,7 +27,7 @@ void LogTextEdit::resizeEvent(QResizeEvent *e)
     QPlainTextEdit::resizeEvent(e);
 }
 
-LogTextEdit::LogTextEdit(LogItem *item, QWidget *parent)
+LogTextEdit::LogTextEdit(ClientItem *item, QWidget *parent)
     : QPlainTextEdit(parent)
     , item(item)
     , lineCount(0)

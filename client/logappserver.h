@@ -11,7 +11,7 @@
 #include "network_def.h"
 #include "core.h"
 
-class LogItem;
+class ClientItem;
 struct NetworkHeader;
 
 enum ServerStatus
@@ -86,8 +86,8 @@ public:
     void connectToServer();
 
     bool ping();
-    bool saveItem(LogItem *item);
-    bool saveTree(LogItem *root);
+    bool saveItem(ClientItem *item);
+    bool saveTree(ClientItem *root);
 
     void getItemList();
     void getItemData(uint64_t docId, uint64_t id, RemoteDB *db);
@@ -140,7 +140,7 @@ class RemoteDB : public QObject
     RemoteDbState state;
     size_t pendingRequests;
 
-    void fillItemDescriptor(ItemDescriptor &id, const LogItem *item);
+    void fillItemDescriptor(ItemDescriptor &id, const ClientItem *item);
 
 public:
     RemoteDB(LogAppServer *server, ClientDocument *doc);
@@ -153,14 +153,14 @@ public:
     //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
 
 public slots:
-    void onItemAdded(LogItem *item);
+    void onItemAdded(ClientItem *item);
 //    void onItemStateChanged(LogItem *item);
-    void onItemTextChanged(LogItem *item);
-    void onItemModified(LogItem *item);
-    void onItemDeleted(LogItem *item);
+    void onItemTextChanged(ClientItem *item);
+    void onItemModified(ClientItem *item);
+    void onItemDeleted(ClientItem *item);
 //    void onItemFocused(LogItem *item);
-    void onItemDoneChanged(LogItem *item);
-    void onItemFoldChanged(LogItem *item);
+    void onItemDoneChanged(ClientItem *item);
+    void onItemFoldChanged(ClientItem *item);
 
     void onDocumentSaved();
 

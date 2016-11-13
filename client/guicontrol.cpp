@@ -57,17 +57,17 @@ void GuiControl::initRootWidget()
     mainScroll->setWidget(this->rootWidget);
 }
 
-void GuiControl::addChildern(LogItem *item)
+void GuiControl::addChildern(ClientItem *item)
 {
     addItem(item);
-    LogItem *child = item->getChild();
+    ClientItem *child = item->getChild();
     while (child) {
         addChildern(child);
         child = child->getNext();
     }
 }
 
-ItemWidget *GuiControl::createItemWidget(LogItem *item)
+ItemWidget *GuiControl::createItemWidget(ClientItem *item)
 {
     ItemWidget *itemWidget = new ItemWidget(item);
 
@@ -95,7 +95,7 @@ GuiControl::GuiControl(QScrollArea *scroll)
 //    initRootWidget();
 }
 
-void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
+void GuiControl::shiftItemToLevel(ClientItem *item, ClientItem *target)
 {
     ItemWidget *itemWidget = guiItemsMap[item];
 
@@ -123,7 +123,7 @@ void GuiControl::shiftItemToLevel(LogItem *item, LogItem *target)
     itemWidget->setFocus();
 }
 
-void GuiControl::unplagItem(LogItem *item)
+void GuiControl::unplagItem(ClientItem *item)
 {
     auto it = guiItemsMap.find(item->getParent());
     ItemWidget *itemWidget = guiItemsMap[item];
@@ -148,7 +148,7 @@ void GuiControl::onNewChildPressed()
 void GuiControl::onNewSiblingPressed()
 {
     LogTextEdit *textEdit = (LogTextEdit *)sender();
-    LogItem *item = textEdit->getItem();
+    ClientItem *item = textEdit->getItem();
     emit newItemRequest(item->getParent(), item);
 }
 
@@ -156,7 +156,7 @@ void GuiControl::onItemTextChanged()
 {
 
     ItemWidget *itemWidget = (ItemWidget *)sender();
-    LogItem *item = itemWidget->getLogItem();
+    ClientItem *item = itemWidget->getLogItem();
     QString text = itemWidget->getText();
 
     emit itemTextChanged(item, text);
@@ -165,7 +165,7 @@ void GuiControl::onItemTextChanged()
 void GuiControl::onItemFocusChanged(int direction)
 {
     ItemWidget *itemWidget = (ItemWidget *)sender();
-    LogItem *item = itemWidget->getLogItem();
+    ClientItem *item = itemWidget->getLogItem();
     emit itemFocusChanged(item, direction);
 }
 
@@ -185,53 +185,53 @@ void GuiControl::setCurrentDocument(ClientDocument *doc)
         return;
 
     if (currentDocument) {
-        disconnect(currentDocument, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
-        disconnect(currentDocument, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));
-        disconnect(currentDocument, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
-        disconnect(currentDocument, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)));
-        disconnect(currentDocument, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
-        disconnect(currentDocument, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
-        disconnect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), currentDocument, SLOT(setItemDone(LogItem*,bool)));
-        disconnect(this, SIGNAL(itemFoldChanged(LogItem*,bool)), currentDocument, SLOT(setItemFold(LogItem*,bool)));
-        disconnect(this, SIGNAL(itemFocusChanged(LogItem*,int)), currentDocument, SLOT(switchFocusTo(LogItem*,int)));
-        disconnect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), currentDocument, SLOT(createNewItem(LogItem*,LogItem*)));
-        disconnect(this, SIGNAL(itemMoveRequested(LogItem*,int)), currentDocument, SLOT(moveItem(LogItem*,int)));
+        disconnect(currentDocument, SIGNAL(itemAdded(ClientItem*)), this, SLOT(addItem(ClientItem*)));
+        disconnect(currentDocument, SIGNAL(itemDeleted(ClientItem*)), this, SLOT(removeItem(ClientItem*)));
+        disconnect(currentDocument, SIGNAL(itemModified(ClientItem*)), this, SLOT(updateItemPosition(ClientItem*)));
+        disconnect(currentDocument, SIGNAL(itemFocused(ClientItem*)), this, SLOT(focusItem(ClientItem*)));
+        disconnect(currentDocument, SIGNAL(itemDoneChanged(ClientItem*)), this, SLOT(setItemDone(ClientItem*)));
+        disconnect(currentDocument, SIGNAL(itemTextChanged(ClientItem*)), this, SLOT(setItemText(ClientItem*)));
+        disconnect(this, SIGNAL(itemDoneChanged(ClientItem*,bool)), currentDocument, SLOT(setItemDone(ClientItem*,bool)));
+        disconnect(this, SIGNAL(itemFoldChanged(ClientItem*,bool)), currentDocument, SLOT(setItemFold(ClientItem*,bool)));
+        disconnect(this, SIGNAL(itemFocusChanged(ClientItem*,int)), currentDocument, SLOT(switchFocusTo(ClientItem*,int)));
+        disconnect(this, SIGNAL(newItemRequest(ClientItem*,ClientItem*)), currentDocument, SLOT(createNewItem(ClientItem*,ClientItem*)));
+        disconnect(this, SIGNAL(itemMoveRequested(ClientItem*,int)), currentDocument, SLOT(moveItem(ClientItem*,int)));
         disconnect(this, SIGNAL(undoPressed()), currentDocument, SLOT(undoLastAction()));
         disconnect(this, SIGNAL(redoPressed()), currentDocument, SLOT(redoAction()));
-        disconnect(this, SIGNAL(removeItemRequest(LogItem*)), currentDocument, SLOT(removeItem(LogItem*)));
+        disconnect(this, SIGNAL(removeItemRequest(ClientItem*)), currentDocument, SLOT(removeItem(ClientItem*)));
         disconnect(this, SIGNAL(savePressed()), currentDocument, SLOT(save()));
-        disconnect(this, SIGNAL(itemTextChanged(LogItem*,QString)), currentDocument, SLOT(setItemText(LogItem*,QString)));
+        disconnect(this, SIGNAL(itemTextChanged(ClientItem*,QString)), currentDocument, SLOT(setItemText(ClientItem*,QString)));
     }
 
     initRootWidget();
 //    if (doc->getStatus() != DS_OPEN)
 //        return;
 
-    LogItem *root = doc->getRootItem();
+    ClientItem *root = doc->getRootItem();
 
-    LogItem *item = root->getChild();
+    ClientItem *item = root->getChild();
     while(item) {
         addChildern(item);
         item = item->getNext();
     }
 
-    connect(doc, SIGNAL(itemAdded(LogItem*)), this, SLOT(addItem(LogItem*)));
-    connect(doc, SIGNAL(itemDeleted(LogItem*)), this, SLOT(removeItem(LogItem*)));
-    connect(doc, SIGNAL(itemModified(LogItem*)), this, SLOT(updateItemPosition(LogItem*)));
-    connect(doc, SIGNAL(itemFocused(LogItem*)), this, SLOT(focusItem(LogItem*)), Qt::QueuedConnection);
-    connect(doc, SIGNAL(itemDoneChanged(LogItem*)), this, SLOT(setItemDone(LogItem*)));
+    connect(doc, SIGNAL(itemAdded(ClientItem*)), this, SLOT(addItem(ClientItem*)));
+    connect(doc, SIGNAL(itemDeleted(ClientItem*)), this, SLOT(removeItem(ClientItem*)));
+    connect(doc, SIGNAL(itemModified(ClientItem*)), this, SLOT(updateItemPosition(ClientItem*)));
+    connect(doc, SIGNAL(itemFocused(ClientItem*)), this, SLOT(focusItem(ClientItem*)), Qt::QueuedConnection);
+    connect(doc, SIGNAL(itemDoneChanged(ClientItem*)), this, SLOT(setItemDone(ClientItem*)));
 //    connect(doc, SIGNAL(itemFoldChanged(LogItem*)), this, SLOT(set)
-    connect(doc, SIGNAL(itemTextChanged(LogItem*)), this, SLOT(setItemText(LogItem*)));
-    connect(this, SIGNAL(itemDoneChanged(LogItem*,bool)), doc, SLOT(setItemDone(LogItem*,bool)));
-    connect(this, SIGNAL(itemFoldChanged(LogItem*,bool)), doc, SLOT(setItemFold(LogItem*,bool)));
-    connect(this, SIGNAL(itemFocusChanged(LogItem*,int)), doc, SLOT(switchFocusTo(LogItem*,int)));
-    connect(this, SIGNAL(newItemRequest(LogItem*,LogItem*)), doc, SLOT(createNewItem(LogItem*,LogItem*)));
-    connect(this, SIGNAL(itemMoveRequested(LogItem*,int)), doc, SLOT(moveItem(LogItem*,int)));
+    connect(doc, SIGNAL(itemTextChanged(ClientItem*)), this, SLOT(setItemText(ClientItem*)));
+    connect(this, SIGNAL(itemDoneChanged(ClientItem*,bool)), doc, SLOT(setItemDone(ClientItem*,bool)));
+    connect(this, SIGNAL(itemFoldChanged(ClientItem*,bool)), doc, SLOT(setItemFold(ClientItem*,bool)));
+    connect(this, SIGNAL(itemFocusChanged(ClientItem*,int)), doc, SLOT(switchFocusTo(ClientItem*,int)));
+    connect(this, SIGNAL(newItemRequest(ClientItem*,ClientItem*)), doc, SLOT(createNewItem(ClientItem*,ClientItem*)));
+    connect(this, SIGNAL(itemMoveRequested(ClientItem*,int)), doc, SLOT(moveItem(ClientItem*,int)));
     connect(this, SIGNAL(undoPressed()), doc, SLOT(undoLastAction()));
     connect(this, SIGNAL(redoPressed()), doc, SLOT(redoAction()));
-    connect(this, SIGNAL(removeItemRequest(LogItem*)), doc, SLOT(removeItem(LogItem*)));
+    connect(this, SIGNAL(removeItemRequest(ClientItem*)), doc, SLOT(removeItem(ClientItem*)));
     connect(this, SIGNAL(savePressed()), doc, SLOT(save()));
-    connect(this, SIGNAL(itemTextChanged(LogItem*,QString)), doc, SLOT(setItemText(LogItem*,QString)));
+    connect(this, SIGNAL(itemTextChanged(ClientItem*,QString)), doc, SLOT(setItemText(ClientItem*,QString)));
     currentDocument = doc;
 }
 
@@ -241,7 +241,7 @@ void GuiControl::oneOfItemsDoneChanged(int state)
 
     LogTextEdit *edit = (LogTextEdit*)parent->findChild<LogTextEdit*>("itemTextField");
     if (edit) {
-        LogItem *item = edit->getItem();
+        ClientItem *item = edit->getItem();
         emit itemDoneChanged(item, state);
 
     }
@@ -251,38 +251,38 @@ void GuiControl::oneOfItemsFoldChanged(bool folded)
 {
     ItemWidget *itemWidget = (ItemWidget*)(sender());
     itemWidget->setFold(folded);
-    LogItem *item = itemWidget->getLogItem();
+    ClientItem *item = itemWidget->getLogItem();
     emit itemFoldChanged(item, folded);
 }
 
 void GuiControl::onItemMovePressed(int direction)
 {
     ItemWidget *itemWidget = (ItemWidget *)sender();
-    LogItem *item = itemWidget->getLogItem();
+    ClientItem *item = itemWidget->getLogItem();
     emit itemMoveRequested(item, direction);
 }
 
 void GuiControl::onItemRemovePressed()
 {
     LogTextEdit *textEdit = (LogTextEdit *)sender();
-    LogItem *item = textEdit->getItem();
+    ClientItem *item = textEdit->getItem();
     emit removeItemRequest(item);
 }
 
 void GuiControl::onItemDoneChanged(bool done)
 {
     ItemWidget *itemWidget = (ItemWidget *)sender();
-    LogItem *item = itemWidget->getLogItem();
+    ClientItem *item = itemWidget->getLogItem();
     emit itemDoneChanged(item, done);
 }
 
-void GuiControl::addItem(LogItem *item)
+void GuiControl::addItem(ClientItem *item)
 {
     ItemWidget *parentItem = nullptr;
     if (!item)
         return;
 
-    LogItem *parent = item->getParent();
+    ClientItem *parent = item->getParent();
 
     auto it = guiItemsMap.find(parent);
     if (it != guiItemsMap.end())
@@ -320,18 +320,18 @@ void GuiControl::addItem(LogItem *item)
         itemWidget->setFold(true);
 }
 
-void GuiControl::removeItem(LogItem *item)
+void GuiControl::removeItem(ClientItem *item)
 {
     unplagItem(item);
 }
 
-void GuiControl::updateItemPosition(LogItem *item)
+void GuiControl::updateItemPosition(ClientItem *item)
 {
     unplagItem(item);
     shiftItemToLevel(item, item->getParent());
 }
 
-void GuiControl::focusItem(LogItem *item)
+void GuiControl::focusItem(ClientItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
@@ -341,7 +341,7 @@ void GuiControl::focusItem(LogItem *item)
     }
 }
 
-void GuiControl::setItemDone(LogItem *item)
+void GuiControl::setItemDone(ClientItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {
@@ -349,7 +349,7 @@ void GuiControl::setItemDone(LogItem *item)
     }
 }
 
-void GuiControl::setItemText(LogItem *item)
+void GuiControl::setItemText(ClientItem *item)
 {
     auto it = guiItemsMap.find(item);
     if (it != guiItemsMap.end()) {

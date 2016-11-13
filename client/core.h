@@ -37,7 +37,7 @@ enum class ItemState
     PRESENT
 };
 
-class LogItem
+class ClientItem
 {
     uint64_t id;
     ItemType type;
@@ -47,10 +47,10 @@ class LogItem
     bool modified;
     bool syncedWithServer;
 
-    LogItem *parent;
-    LogItem *next;
-    LogItem *prev;
-    LogItem *firstChild;
+    ClientItem *parent;
+    ClientItem *next;
+    ClientItem *prev;
+    ClientItem *firstChild;
 
     QString text;
     bool done;
@@ -66,27 +66,27 @@ public:
 
     static void setNextId(uint64_t id) {if (id > nextId) nextId = id;}
 
-    LogItem(ClientDocument *control, LogItem *parent, uint64_t id = 0);
+    ClientItem(ClientDocument *control, ClientItem *parent, uint64_t id = 0);
     void switchTo(MoveEvent to);
     void remove();
     void detachFromTree();
-    void addAsChild(LogItem *item, LogItem *after = nullptr);
-    void addAsLastChild(LogItem *item);
+    void addAsChild(ClientItem *item, ClientItem *after = nullptr);
+    void addAsLastChild(ClientItem *item);
 
     const QString &getText() {return text;}
     void setText(const QString newText) {text = newText;}
-    LogItem *getParent() const {return parent;}
-    LogItem *getChild() const {return firstChild;}
-    LogItem *getLastChild() const {
+    ClientItem *getParent() const {return parent;}
+    ClientItem *getChild() const {return firstChild;}
+    ClientItem *getLastChild() const {
         if (!firstChild)
             return nullptr;
-        LogItem *temp = firstChild;
+        ClientItem *temp = firstChild;
         while(temp->next)
             temp = temp->next;
         return temp;
     }
-    LogItem *getNext() const {return next;}
-    LogItem *getPrev() const {return prev;}
+    ClientItem *getNext() const {return next;}
+    ClientItem *getPrev() const {return prev;}
 
     void save();
 
@@ -128,11 +128,11 @@ public:
 
 class DeleteAction : public ClientAction
 {
-    LogItem *item;
-    LogItem *parent;
-    LogItem *prev;
+    ClientItem *item;
+    ClientItem *parent;
+    ClientItem *prev;
 public:
-    DeleteAction(ClientDocument *doc, LogItem *item);
+    DeleteAction(ClientDocument *doc, ClientItem *item);
 
     void make();
     void revert();
@@ -140,11 +140,11 @@ public:
 
 class CreateAction: public ClientAction
 {
-    LogItem *item;
-    LogItem *parent;
-    LogItem *prev;
+    ClientItem *item;
+    ClientItem *parent;
+    ClientItem *prev;
 public:
-    CreateAction(ClientDocument *doc, LogItem *parent, LogItem *prev);
+    CreateAction(ClientDocument *doc, ClientItem *parent, ClientItem *prev);
 
     void make();
     void revert();
@@ -152,11 +152,11 @@ public:
 
 class EditAction: public ClientAction
 {
-    LogItem *item;
+    ClientItem *item;
     QString textBeforeEdit;
     QString textAfterEdit;
 public:
-    EditAction(ClientDocument *doc, LogItem *item, QString newText);
+    EditAction(ClientDocument *doc, ClientItem *item, QString newText);
 
     void make();
     void revert();
@@ -164,13 +164,13 @@ public:
 
 class MoveAction: public ClientAction
 {
-    LogItem *item;
-    LogItem *oldParent;
-    LogItem *oldPrev;
-    LogItem *newParent;
-    LogItem *newPrev;
+    ClientItem *item;
+    ClientItem *oldParent;
+    ClientItem *oldPrev;
+    ClientItem *newParent;
+    ClientItem *newPrev;
 public:
-    MoveAction(ClientDocument *doc, LogItem *item, LogItem *newParent, LogItem *newPrev);
+    MoveAction(ClientDocument *doc, ClientItem *item, ClientItem *newParent, ClientItem *newPrev);
 
     void make();
     void revert();
@@ -196,7 +196,7 @@ class ClientDocument: public QObject
 {
     Q_OBJECT
 
-    LogItem *rootItem;
+    ClientItem *rootItem;
     RemoteDB *serverDB;
     uint64_t id;
 
@@ -211,8 +211,8 @@ class ClientDocument: public QObject
 
     static uint64_t maxDocId;
 
-    void fillGui(LogItem *item);
-    LogItem *findItem(LogItem *parent, uint64_t id);
+    void fillGui(ClientItem *item);
+    ClientItem *findItem(ClientItem *parent, uint64_t id);
 
     void doAction(ClientAction *action);
     void setStatus(DocumentStatus status);
@@ -230,17 +230,17 @@ public:
     QString getName() const;
     void setName(QString name);
     void loadData();
-    void setRootItem(LogItem *root);
+    void setRootItem(ClientItem *root);
     void setServerDB(RemoteDB *db, DocumentType type);
     uint64_t getId() const {return id;}
 
-    LogItem *findItemById(uint64_t id);
-    LogItem *getNextItemInTree(LogItem *item);
-    LogItem *getPrevItemInTree(LogItem *item);
+    ClientItem *findItemById(uint64_t id);
+    ClientItem *getNextItemInTree(ClientItem *item);
+    ClientItem *getPrevItemInTree(ClientItem *item);
 
-    LogItem *getRootItem();
+    ClientItem *getRootItem();
 
-    void addItem(LogItem *item, LogItem *parent, LogItem *prev = nullptr);
+    void addItem(ClientItem *item, ClientItem *parent, ClientItem *prev = nullptr);
 
     void printItemTree();
 
@@ -251,29 +251,29 @@ public:
     bool getModified() const {return modified;}
 
 public slots:
-    void setItemDone(LogItem *item, bool state);
-    void setItemFold(LogItem *item, bool state);
-    void setItemText(LogItem *item, QString text);
+    void setItemDone(ClientItem *item, bool state);
+    void setItemFold(ClientItem *item, bool state);
+    void setItemText(ClientItem *item, QString text);
     void undoLastAction();
     void redoAction();
-    void switchFocusTo(LogItem *item, int to);
-    void createNewItem(LogItem *parent, LogItem *prev);
-    void moveItem(LogItem *item, int direction);
-    void removeItem(LogItem *item);
+    void switchFocusTo(ClientItem *item, int to);
+    void createNewItem(ClientItem *parent, ClientItem *prev);
+    void moveItem(ClientItem *item, int direction);
+    void removeItem(ClientItem *item);
     void save();
 
 signals:
     void docModifiedChanged(bool modified);
     void docSaved();
-    void itemAdded(LogItem *);
-    void itemCreated(LogItem *);
-    void itemStateChanged(LogItem *);
-    void itemTextChanged(LogItem *);
-    void itemModified(LogItem *);
-    void itemDeleted(LogItem *);
-    void itemFocused(LogItem *);
-    void itemDoneChanged(LogItem *);
-    void itemFoldChanged(LogItem *);
+    void itemAdded(ClientItem *);
+    void itemCreated(ClientItem *);
+    void itemStateChanged(ClientItem *);
+    void itemTextChanged(ClientItem *);
+    void itemModified(ClientItem *);
+    void itemDeleted(ClientItem *);
+    void itemFocused(ClientItem *);
+    void itemDoneChanged(ClientItem *);
+    void itemFoldChanged(ClientItem *);
 };
 
 #endif // CORE_H

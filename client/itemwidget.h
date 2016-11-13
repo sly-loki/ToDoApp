@@ -9,12 +9,12 @@
 #include <vector>
 
 class LogTextEdit;
-class LogItem;
+class ClientItem;
 
 class ItemWidget: public QWidget
 {
     Q_OBJECT
-    LogItem *item;
+    ClientItem *item;
     QCheckBox *doneBox;
     QPushButton *foldWidget;
     LogTextEdit * textField;
@@ -27,11 +27,11 @@ class ItemWidget: public QWidget
     std::vector<ItemWidget *> children;
 
 public:
-    ItemWidget(LogItem *item);
+    ItemWidget(ClientItem *item);
     QString getText();
     bool isFolded() {return folded;}
     bool isDone() {return doneBox->isChecked();}
-    LogItem *getLogItem() {return item;}
+    ClientItem *getLogItem() {return item;}
 
 public slots:
     void addChild(ItemWidget *child, ItemWidget *after);

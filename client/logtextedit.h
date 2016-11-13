@@ -15,7 +15,7 @@
 class LogTextEdit : public QPlainTextEdit
 {
     Q_OBJECT
-    LogItem *item;
+    ClientItem *item;
     unsigned int lineCount;
 
     static unsigned int fontHeight;
@@ -32,8 +32,8 @@ protected:
     void keyPressEvent(QKeyEvent *e);
 
 public:
-    LogTextEdit(LogItem *item, QWidget *parent = nullptr);
-    LogItem *getItem() {return item;}
+    LogTextEdit(ClientItem *item, QWidget *parent = nullptr);
+    ClientItem *getItem() {return item;}
 
 protected slots:
     void onTextChanged();
