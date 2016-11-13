@@ -1,4 +1,4 @@
-#include "core.h"
+#include "servercore.h"
 #include <functional>
 
 #include <QDebug>
@@ -299,7 +299,7 @@ void ServerDocument::switchTo(LogItem *item, MoveEvent to)
     LogItem *targetItem = nullptr;
 
     switch (to) {
-    case ME_UP:
+    case UP:
         if (item == rootItem)
             return;
         if (item->prev) {
@@ -317,7 +317,7 @@ void ServerDocument::switchTo(LogItem *item, MoveEvent to)
             emit itemFocused(item->parent);
         }
         break;
-    case ME_DOWN:
+    case DOWN:
         if (item->getChild())
             emit itemFocused(item->getChild());
         else if (item->getNext())
@@ -333,7 +333,7 @@ void ServerDocument::switchTo(LogItem *item, MoveEvent to)
             }
         }
         break;
-    case ME_LEFT:
+    case LEFT:
         if (item->getParent() && item->getParent() != rootItem)
             emit itemFocused(item->getParent());
         break;

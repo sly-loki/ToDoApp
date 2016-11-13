@@ -11,12 +11,13 @@ TEMPLATE = app
 INCLUDEPATH += ../include
 
 SOURCES += main.cpp \
-    core.cpp \
+    servercore.cpp \
     storage.cpp \
     server.cpp
 
-HEADERS += ../network_def.h \
-    core.h \
+HEADERS += ../include/network_def.h \
+    servercore.h \
     storage.h \
-    server.h
+    server.h \
+    ../include/types.h
 

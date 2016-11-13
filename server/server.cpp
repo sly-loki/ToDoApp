@@ -6,9 +6,9 @@
 
 #include <QDir>
 
-#include "core.h"
+#include "servercore.h"
 
-QString getRandomFileName(size_t length)
+static QString getRandomFileName(size_t length)
 {
     const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
 

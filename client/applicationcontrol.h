@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QDir>
 #include <QTimer>
+#include <QThread>
 
 #include "core.h"
 
@@ -40,6 +41,7 @@ class ApplicationControl : public QObject
 
     QDir appDir;
     QTimer connectionTimer;
+    QThread serverThread;
 
 protected slots:
     void serverPooling();

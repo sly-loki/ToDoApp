@@ -1,6 +1,7 @@
 #include "applicationcontrol.h"
 
 #include "logappserver.h"
+#include "../server/server.h"
 
 #define DEFAULT_APP_FOLDER_NAME ".todo/test"
 
@@ -38,7 +39,7 @@ void ApplicationControl::serverPooling()
     }
 }
 
-QString getRandomFileName(size_t length)
+static QString getRandomFileName(size_t length)
 {
     const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
 
@@ -65,9 +66,17 @@ bool ApplicationControl::createNewDocument(QString name, DocumentType type)
     return true;
 }
 
+#define DEFAULT_LOCAL_SERVER_FOLDER_NAME ".todo/server_test"
+
 void ApplicationControl::start()
 {
-    //TODO: local server start should be here
+    //running local server
+    TodoServer *server;
+    QString appDirectoryName = QDir::homePath() + QDir::separator() + DEFAULT_LOCAL_SERVER_FOLDER_NAME;
+    server = new TodoServer(appDirectoryName);
+    server->moveToThread(&serverThread);
+    connect(&serverThread, SIGNAL(started()), server, SLOT(start()));
+    serverThread.start();
 }
 
 bool ApplicationControl::canExit()

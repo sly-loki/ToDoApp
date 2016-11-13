@@ -1,25 +1,14 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef SERVER_CORE_H
+#define SERVER_CORE_H
 
 #include <memory>
 #include <map>
 #include <vector>
 
 #include "storage.h"
+#include "types.h"
 
 class ServerDocument;
-
-enum MoveEvent {
-    ME_UP,
-    ME_DOWN,
-    ME_LEFT
-};
-
-enum class ItemType
-{
-    TODO = 0,
-    LOG
-};
 
 class LogItem
 {
@@ -97,13 +86,6 @@ public:
     ItemType getType() const {return type;}
 };
 
-
-enum DocumentType
-{
-    DT_LOCAL = 0,
-    DT_REMOTE,
-    DT_CACHED
-};
 
 class ServerDocument: public QObject
 {

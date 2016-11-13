@@ -12,7 +12,8 @@ TARGET = logApp
 TEMPLATE = app
 CONFIG += c++11
 
-INCLUDEPATH += ../include
+INCLUDEPATH += ../include \
+../server
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -22,7 +23,10 @@ SOURCES += main.cpp\
     logappserver.cpp \
     itemwidget.cpp \
     applicationcontrol.cpp \
-    settings.cpp
+    settings.cpp \
+    ../server/server.cpp \
+    ../server/storage.cpp \
+    ../server/servercore.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
@@ -32,6 +36,10 @@ HEADERS  += mainwindow.h \
     ../include/network_def.h \
     itemwidget.h \
     applicationcontrol.h \
-    settings.h
+    settings.h \
+    ../server/server.h \
+    ../server/storage.h \
+    ../include/types.h \
+    ../server/servercore.h
 
 FORMS    += mainwindow.ui

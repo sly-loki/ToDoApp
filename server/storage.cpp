@@ -1,5 +1,5 @@
 #include "storage.h"
-#include "core.h"
+#include "servercore.h"
 
 #include <QDebug>
 

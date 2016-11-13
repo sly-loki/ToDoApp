@@ -8,7 +8,7 @@
 
 #include "server.h"
 #include "storage.h"
-#include "core.h"
+#include "servercore.h"
 
 #define DEFAULT_APP_FOLDER_NAME ".todo/server_test"
 

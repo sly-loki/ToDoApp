@@ -8,7 +8,7 @@
 #include <QDir>
 
 #include "network_def.h"
-#include "core.h"
+#include "../server/servercore.h"
 #include <map>
 #include <vector>
 
@@ -70,6 +70,7 @@ protected slots:
 
 public:
     TodoServer(QString storageFolderName);
+public slots:
     void start();
 
 signals:
