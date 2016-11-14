@@ -9,6 +9,8 @@
 
 #include <map>
 
+#include "settingswindow.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -26,6 +28,8 @@ class MainWindow : public QMainWindow
     GuiControl *guiControl;
     ApplicationControl *appControl;
     QLabel *serverStatusLabel;
+
+    SettingsWindow settingsWindow;
 
     void addDocumentToList(ClientDocument *doc);
     QString getNameForDoc(const ClientDocument *doc);
@@ -45,6 +49,8 @@ protected slots:
     void onNewDocument(ClientDocument *doc);
     void onConnectionStatusChanged(QString status);
     void onDocModifiedChanged(bool modified);
+
+    void showSettingsWindow();
 
 private:
     Ui::MainWindow *ui;

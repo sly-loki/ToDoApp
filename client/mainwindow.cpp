@@ -39,11 +39,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QAction *newAct = new QAction(tr("&New"), this);
     ui->mainToolBar->addAction(newAct);
+    QAction *settingsAct = new QAction(tr("&Settings"), this);
+    ui->mainToolBar->addAction(settingsAct);
+
     ui->newDocWidget->setVisible(false);
 
     connect(ui->docOkButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
     connect(ui->docCancelButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
     connect(newAct, SIGNAL(triggered(bool)), this, SLOT(createDocument()));
+    connect(settingsAct, SIGNAL(triggered(bool)), this, SLOT(showSettingsWindow()));
     connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
 
     guiControl = new GuiControl(ui->scrollArea);
@@ -125,4 +129,9 @@ void MainWindow::onDocModifiedChanged(bool modified)
             }
         }
     }
+}
+
+void MainWindow::showSettingsWindow()
+{
+    settingsWindow.show();
 }

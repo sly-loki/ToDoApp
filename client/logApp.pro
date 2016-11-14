@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     settings.cpp \
     ../server/server.cpp \
     ../server/storage.cpp \
-    ../server/servercore.cpp
+    ../server/servercore.cpp \
+    settingswindow.cpp
 
 HEADERS  += mainwindow.h \
     logtextedit.h \
@@ -40,6 +41,8 @@ HEADERS  += mainwindow.h \
     ../server/server.h \
     ../server/storage.h \
     ../include/types.h \
-    ../server/servercore.h
+    ../server/servercore.h \
+    settingswindow.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    settingswindow.ui
