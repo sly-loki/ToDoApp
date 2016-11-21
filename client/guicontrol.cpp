@@ -356,3 +356,19 @@ void GuiControl::setItemText(ClientItem *item)
         (*it).second->setText(item->getText());
     }
 }
+
+void GuiControl::hideItem(ClientItem *item)
+{
+    auto it = guiItemsMap.find(item);
+    if (it != guiItemsMap.end()) {
+        (*it).second->hide();
+    }
+}
+
+void GuiControl::showItem(ClientItem *item)
+{
+    auto it = guiItemsMap.find(item);
+    if (it != guiItemsMap.end()) {
+        (*it).second->show();
+    }
+}

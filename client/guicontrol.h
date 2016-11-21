@@ -59,6 +59,8 @@ public slots:
     void focusItem(ClientItem *item);
     void setItemDone(ClientItem *item);
     void setItemText(ClientItem *item);
+    void hideItem(ClientItem *item);
+    void showItem(ClientItem *item);
 
 signals:
     void itemDoneChanged(ClientItem *item, bool state);

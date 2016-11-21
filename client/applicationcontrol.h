@@ -18,7 +18,8 @@ enum class ApplicationState
 {
     START = 0,
     RECEIVING_ITEMS,
-    NORMAL
+    NORMAL,
+    SEARCH
 };
 
 enum class ApplicationConnectionState
@@ -35,6 +36,8 @@ class ApplicationControl : public QObject
     LogAppServer *server;
     ApplicationState state;
     ApplicationConnectionState connectionState;
+    ClientDocument *currentDocument;
+    GuiControl *guiControl;
 
     std::vector<ClientDocument *> localDocs;
     std::vector<ClientDocument *> remoteDocs;
@@ -43,11 +46,14 @@ class ApplicationControl : public QObject
     QTimer connectionTimer;
     QThread serverThread;
 
+    void leaveSearch();
+    void doSearch(QString request);
+
 protected slots:
     void serverPooling();
 
 public:
-    ApplicationControl();
+    ApplicationControl(GuiControl *guiControl);
     ~ApplicationControl();
 
     bool createNewDocument(QString name, DocumentType type);
@@ -59,6 +65,8 @@ public slots:
     void onServerDisconnected(QString reason);
     void onDocListReceived(std::vector<std::pair<uint64_t, QString>> docs);
     void onNewDocumentOnServer(uint64_t id, QString name);
+    void search(QString request);
+    void setCurrentDocument(ClientDocument *doc);
 
 signals:
     void createdNewDocument(ClientDocument *doc);

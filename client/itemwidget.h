@@ -23,6 +23,7 @@ class ItemWidget: public QWidget
 //    bool done;
 
     QBoxLayout *layout;
+    QBoxLayout *textLayout;
     QBoxLayout *childrenLayout;
     std::vector<ItemWidget *> children;
 
@@ -32,6 +33,9 @@ public:
     bool isFolded() {return folded;}
     bool isDone() {return doneBox->isChecked();}
     ClientItem *getLogItem() {return item;}
+
+    void hide();
+    void show();
 
 public slots:
     void addChild(ItemWidget *child, ItemWidget *after);

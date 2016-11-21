@@ -353,7 +353,7 @@ ClientItem *ClientDocument::getNextItemInTree(ClientItem *item)
             temp = temp->getParent();
         }
     }
-    return item;
+    return nullptr;
 }
 
 ClientItem *ClientDocument::getPrevItemInTree(ClientItem *item)

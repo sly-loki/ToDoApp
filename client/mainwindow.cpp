@@ -51,8 +51,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
 
     guiControl = new GuiControl(ui->scrollArea);
-    appControl = new ApplicationControl();
+    appControl = new ApplicationControl(guiControl);
 
+    connect(ui->searchEdit, SIGNAL(textChanged(QString)), appControl, SLOT(search(QString)));
     connect(appControl, SIGNAL(createdNewDocument(ClientDocument*)), this, SLOT(onNewDocument(ClientDocument*)));
     connect(appControl, SIGNAL(setConnectionStatus(QString)), this, SLOT(onConnectionStatusChanged(QString)));
     connect(appControl, SIGNAL(documentAdded(ClientDocument*)), this, SLOT(onNewDocument(ClientDocument*)));
@@ -81,6 +82,7 @@ void MainWindow::onDocumentSelected(QListWidgetItem* item)
     auto it = idsToDocs.find(id);
     if (it != idsToDocs.end()) {
         guiControl->setCurrentDocument((*it).second);
+        appControl->setCurrentDocument((*it).second);
     } else {
         qDebug() << "document with id: " << id << " not found";
     }

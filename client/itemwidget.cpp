@@ -12,7 +12,7 @@ ItemWidget::ItemWidget(ClientItem *item)
     , folded(false)
     , layout(new QVBoxLayout())
 {
-    QBoxLayout *hLayout = new QHBoxLayout();
+    textLayout = new QHBoxLayout();
 
     textField->setObjectName("itemTextField");
 
@@ -34,7 +34,7 @@ ItemWidget::ItemWidget(ClientItem *item)
     foldWidget->setStyleSheet("background:red");
     foldWidget->setCheckable(true);
     foldWidget->setChecked(item->isFolded());
-    hLayout->addWidget(foldWidget);
+    textLayout->addWidget(foldWidget);
 
     connect(foldWidget, SIGNAL(clicked(bool)), this, SLOT(onFoldChanged()));
 
@@ -45,15 +45,15 @@ ItemWidget::ItemWidget(ClientItem *item)
 
     connect(doneBox, SIGNAL(stateChanged(int)), this, SLOT(onDoneClicked(int)));
 
-    hLayout->setContentsMargins(0,0,0,0);
+    textLayout->setContentsMargins(0,0,0,0);
     if (item->getType() == ItemType::TODO) {
-        hLayout->addWidget(doneBox);
+        textLayout->addWidget(doneBox);
     }
-    hLayout->addWidget(textField);
+    textLayout->addWidget(textField);
 
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
 
-    layout->addLayout(hLayout);
+    layout->addLayout(textLayout);
     layout->setContentsMargins(50,0,0,0);
     setLayout(layout);
 
@@ -137,6 +137,20 @@ void ItemWidget::onTextChanged()
 QString ItemWidget::getText()
 {
     return textField->toPlainText();
+}
+
+void ItemWidget::hide()
+{
+    textField->setVisible(false);
+    doneBox->setVisible(false);
+    foldWidget->setVisible(false);
+}
+
+void ItemWidget::show()
+{
+    textField->setVisible(true);
+    doneBox->setVisible(true);
+    foldWidget->setVisible(true);
 }
 
 void ItemWidget::addChild(ItemWidget *child, ItemWidget *after)

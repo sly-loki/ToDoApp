@@ -1,14 +1,19 @@
 #include "applicationcontrol.h"
 
+#include <QRegularExpression>
+
 #include "logappserver.h"
+#include "guicontrol.h"
 #include "../server/server.h"
 
 #define DEFAULT_APP_FOLDER_NAME ".todo/test"
 
-ApplicationControl::ApplicationControl()
+ApplicationControl::ApplicationControl(GuiControl *guiControl)
     : server(new LogAppServer())
-    , state(ApplicationState::START)
+    , state(ApplicationState::NORMAL)
     , connectionState(ApplicationConnectionState::JUST_STARTED)
+    , currentDocument(nullptr)
+    , guiControl(guiControl)
 {
     connect(server, SIGNAL(connected()), this, SLOT(onServerConnected()));
     connect(server, SIGNAL(disconnected(QString)), this, SLOT(onServerDisconnected(QString)));
@@ -26,6 +31,38 @@ ApplicationControl::ApplicationControl()
 ApplicationControl::~ApplicationControl()
 {
     delete server;
+}
+
+void ApplicationControl::leaveSearch()
+{
+    ClientDocument *doc = currentDocument;
+    ClientItem *item = doc->getNextItemInTree(doc->getRootItem());
+
+    while(item) {
+        guiControl->showItem(item);
+        item = doc->getNextItemInTree(item);
+    }
+}
+
+void ApplicationControl::doSearch(QString request)
+{
+    qDebug() << "search: " << request;
+    ClientDocument *doc = currentDocument;
+    ClientItem *item = doc->getNextItemInTree(doc->getRootItem());
+
+    QRegularExpression re(request);
+
+    while(item) {
+
+        QRegularExpressionMatch match = re.match(item->getText());
+        if (match.hasMatch()) {
+            qDebug() << "found: " << item->getText();
+            guiControl->showItem(item);
+        } else {
+            guiControl->hideItem(item);
+        }
+        item = doc->getNextItemInTree(item);
+    }
 }
 
 void ApplicationControl::serverPooling()
@@ -135,4 +172,30 @@ void ApplicationControl::onNewDocumentOnServer(uint64_t id, QString name)
     doc->setServerDB(rdb, DT_REMOTE);
     doc->loadData();
     emit documentAdded(doc);
+}
+
+void ApplicationControl::search(QString request)
+{
+    switch (state)
+    {
+    case ApplicationState::NORMAL:
+        if (request != "") {
+            state = ApplicationState::SEARCH;
+            doSearch(request);
+        }
+        break;
+    case ApplicationState::SEARCH:
+        if (request == "") {
+            state = ApplicationState::NORMAL;
+            leaveSearch();
+        } else {
+            doSearch(request);
+        }
+        break;
+    }
+}
+
+void ApplicationControl::setCurrentDocument(ClientDocument *doc)
+{
+    currentDocument = doc;
 }
