@@ -9,7 +9,7 @@
 #define DEFAULT_APP_FOLDER_NAME ".todo/test"
 
 ApplicationControl::ApplicationControl(GuiControl *guiControl)
-    : server(new LogAppServer())
+    : server(new LogAppServer("local", "localhost", DEBUG_PORT))
     , state(ApplicationState::NORMAL)
     , connectionState(ApplicationConnectionState::JUST_STARTED)
     , currentDocument(nullptr)

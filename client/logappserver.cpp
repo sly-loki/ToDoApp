@@ -152,9 +152,11 @@ void LogAppServer::readData()
     }
 }
 
-LogAppServer::LogAppServer(QObject *parent)
+LogAppServer::LogAppServer(QString name, QString address, int port, QObject *parent)
     : QObject(parent)
     , request_id(0)
+    , name(name)
+    , address(address)
 {
 //    socket.setProtocol(QSsl::P);
     connect(&socket, SIGNAL(readyRead()), this, SLOT(readData()));
@@ -174,7 +176,7 @@ void LogAppServer::connectToServer()
     switch (state) {
     case QAbstractSocket::UnconnectedState:
         qDebug() << "connecting to server";
-        socket.connectToHostEncrypted("localhost", DEBUG_PORT);
+        socket.connectToHostEncrypted(address, DEBUG_PORT);
         status = SS_CONNECTING;
         break;
     case QAbstractSocket::ConnectedState:

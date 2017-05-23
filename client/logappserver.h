@@ -70,6 +70,9 @@ class LogAppServer : public QObject
     ServerStatus status;
     std::map<uint64_t, RemoteDB *> requests;
 
+    QString name;
+    QString address;
+
     void sendPacket(NetworkHeader *header, const void *data);
     void sendPacketSync(NetworkHeader *header, const void *data);
 
@@ -82,7 +85,7 @@ protected slots:
     void onSocketStateChanged(QAbstractSocket::SocketState state);
 
 public:
-    explicit LogAppServer(QObject *parent = 0);
+    explicit LogAppServer(QString name, QString address, int port, QObject *parent = 0);
     void connectToServer();
 
     bool ping();
@@ -95,6 +98,7 @@ public:
 
     void getDocList();
     ServerStatus getStatus() const {return status;}
+    QString getName() const { return name; }
 
 public slots:
     void addItem(ItemDescriptor item);
@@ -149,6 +153,7 @@ public:
     void onItemReceived(ServerItemData data);
     void onRequestAnsverReceived(uint64_t requestId, void *data);
     void start();
+    LogAppServer *getServer() { return server; }
 
     //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
 
