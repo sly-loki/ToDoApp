@@ -43,18 +43,25 @@ QPushButton *GuiControl::getFoldButton(QLayout *itemLayout)
     return (QPushButton *)itemLayout->itemAt(0)->layout()->itemAt(0)->widget();
 }
 
-void GuiControl::initRootWidget()
+int GuiControl::initRootWidget()
 {
     rootWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout();
 //    layout->setContentsMargins(0,0,0,0);
     QSpacerItem *spacer = new QSpacerItem(1,1000, QSizePolicy::Expanding, QSizePolicy::Expanding);
-    //spacer->
+
     layout->addSpacerItem(spacer);
     this->rootWidget->setLayout(layout);
 //    rootWidget->setStyleSheet("background-color:red;");
+    rootWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    mainScroll->setWidget(this->rootWidget);
+//    mainScroll->setWidget(rootWidget);
+
+    QScrollArea *scroll = new QScrollArea();
+    scroll->setWidgetResizable(true);
+
+    scroll->setWidget(rootWidget);
+    return tab->addTab(scroll, "doc");
 }
 
 void GuiControl::addChildern(ClientItem *item)
@@ -87,12 +94,14 @@ ItemWidget *GuiControl::createItemWidget(ClientItem *item)
 
 }
 
-GuiControl::GuiControl(QScrollArea *scroll)
+GuiControl::GuiControl(QTabWidget *tab)
     : rootWidget(nullptr)
-    , mainScroll(scroll)
+    , tab(tab)
     , currentDocument(nullptr)
 {
 //    initRootWidget();
+    connect(tab, SIGNAL(tabCloseRequested(int)), this, SLOT(onDocumentTabClosePressed(int)));
+    connect(tab, SIGNAL(currentChanged(int)), this, SLOT(onDocumentTabChanged(int)));
 }
 
 void GuiControl::shiftItemToLevel(ClientItem *item, ClientItem *target)
@@ -136,6 +145,36 @@ void GuiControl::unplagItem(ClientItem *item)
         QBoxLayout *parentLayout = (QBoxLayout*)(rootWidget->layout());
         parentLayout->removeWidget(itemWidget);
         itemWidget->setParent(nullptr);
+    }
+}
+
+void GuiControl::onDocumentTabClosePressed(int index)
+{
+    ClientDocument *doc = nullptr;
+    for (auto it = docToTab.begin(); it != docToTab.end(); it++) {
+        if ((*it).second == index) {
+            doc = (*it).first;
+            break;
+        }
+    }
+    if (doc) {
+        auto it = docToTab.find(doc);
+        docToTab.erase(it);
+    }
+    tab->removeTab(index);
+}
+
+void GuiControl::onDocumentTabChanged(int index)
+{
+    ClientDocument *doc = nullptr;
+    for (auto it = docToTab.begin(); it != docToTab.end(); it++) {
+        if ((*it).second == index) {
+            doc = (*it).first;
+            break;
+        }
+    }
+    if (doc) {
+        setCurrentDocument(doc);
     }
 }
 
@@ -203,17 +242,24 @@ void GuiControl::setCurrentDocument(ClientDocument *doc)
         disconnect(this, SIGNAL(itemTextChanged(ClientItem*,QString)), currentDocument, SLOT(setItemText(ClientItem*,QString)));
     }
 
-    initRootWidget();
-//    if (doc->getStatus() != DS_OPEN)
-//        return;
+    if (docToTab.find(doc) != docToTab.end()) {
+        tab->setCurrentIndex(docToTab[doc]);
+        rootWidget = ((QScrollArea *)tab->currentWidget())->widget();
+    } else {
+        int index = initRootWidget();
+        docToTab[doc] = index;
+        tab->setCurrentIndex(index);
+        tab->setTabText(index, doc->getName());
 
-    ClientItem *root = doc->getRootItem();
+        ClientItem *root = doc->getRootItem();
 
-    ClientItem *item = root->getChild();
-    while(item) {
-        addChildern(item);
-        item = item->getNext();
+        ClientItem *item = root->getChild();
+        while(item) {
+            addChildern(item);
+            item = item->getNext();
+        }
     }
+
 
     connect(doc, SIGNAL(itemAdded(ClientItem*)), this, SLOT(addItem(ClientItem*)));
     connect(doc, SIGNAL(itemDeleted(ClientItem*)), this, SLOT(removeItem(ClientItem*)));
@@ -337,7 +383,7 @@ void GuiControl::focusItem(ClientItem *item)
     if (it != guiItemsMap.end()) {
         ItemWidget *itemWidget = (*it).second;
         itemWidget->setFocus();
-        mainScroll->ensureWidgetVisible(itemWidget);
+        ((QScrollArea*)tab->currentWidget())->ensureWidgetVisible(itemWidget);
     }
 }
 

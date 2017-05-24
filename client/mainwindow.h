@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QListWidget>
+#include <QTreeWidget>
 #include <QDir>
 #include <QTimer>
 #include <QLabel>
@@ -25,6 +26,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
     std::map<uint64_t, ClientDocument *> idsToDocs;
+    std::map<QString, QTreeWidgetItem *> serverItems;
     GuiControl *guiControl;
     ApplicationControl *appControl;
     QLabel *serverStatusLabel;
@@ -43,6 +45,7 @@ protected:
 
 protected slots:
     void onDocumentSelected(QListWidgetItem *item);
+    void onDocumentTreeItemChanged(QTreeWidgetItem *item);
     void createDocument();
     void newDocButtonClicked();
 

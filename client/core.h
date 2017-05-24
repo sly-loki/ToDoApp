@@ -208,6 +208,7 @@ public:
     void loadData();
     void setRootItem(ClientItem *root);
     void setServerDB(RemoteDB *db, DocumentType type);
+    const RemoteDB *getRemoteDB() const { return serverDB; }
     uint64_t getId() const {return id;}
 
     ClientItem *findItemById(uint64_t id);

@@ -153,7 +153,7 @@ public:
     void onItemReceived(ServerItemData data);
     void onRequestAnsverReceived(uint64_t requestId, void *data);
     void start();
-    LogAppServer *getServer() { return server; }
+    LogAppServer *getServer() const { return server; }
 
     //    virtual void loadTree(LogControl *control, LogItem *rootItem) override;
 

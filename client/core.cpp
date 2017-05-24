@@ -417,8 +417,14 @@ void ClientDocument::switchFocusTo(ClientItem *item, int to)
             nextItem = getPrevItemInTree(nextItem);
         break;
     case PAGE_DOWN:
-        for (int i = 0; i < PAGESTEP; i++)
-            nextItem = getNextItemInTree(nextItem);
+        for (int i = 0; i < PAGESTEP; i++) {
+            ClientItem *temp;
+            temp = getNextItemInTree(nextItem);
+            if (temp)
+                nextItem = temp;
+            else
+                break;
+        }
         break;
     case TO_BEGIN:
         nextItem = rootItem->getChild();

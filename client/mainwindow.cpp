@@ -11,10 +11,22 @@
 void MainWindow::addDocumentToList(ClientDocument *doc)
 {
 
-    QListWidgetItem *item = new QListWidgetItem(getNameForDoc(doc));
+    LogAppServer *server = doc->getRemoteDB()->getServer();
 
-    item->setData(Qt::UserRole, QVariant(qulonglong(doc->getId())));
-    ui->listWidget->addItem(item);
+    QTreeWidgetItem *parentItem = serverItems[server->getName()];
+    if (parentItem == nullptr) {
+        QTreeWidgetItem *treeItem = new QTreeWidgetItem(0);
+        treeItem->setText(0, server->getName());
+        ui->treeWidget->addTopLevelItem(treeItem);
+        serverItems[server->getName()] = treeItem;
+        parentItem = treeItem;
+        parentItem->setExpanded(true);
+    }
+
+    QTreeWidgetItem *treeItem = new QTreeWidgetItem(0);
+    treeItem->setText(0, getNameForDoc(doc));
+    treeItem->setData(0, Qt::UserRole, QVariant(qulonglong(doc->getId())));
+    parentItem->addChild(treeItem);
 
     idsToDocs[doc->getId()] = doc;
     connect(doc, SIGNAL(docModifiedChanged(bool)), this, SLOT(onDocModifiedChanged(bool)));
@@ -24,7 +36,7 @@ QString MainWindow::getNameForDoc(const ClientDocument *doc)
 {
     static std::map<DocumentType, QString> DT_TO_STRING = {{DT_CACHED, "shared"}, {DT_LOCAL, "local"}, {DT_REMOTE, "remote"}};
     QString docType = DT_TO_STRING[doc->getType()];
-    QString name = doc->getName() + " (" + docType + ")" + (doc->getModified()?"*":"");
+    QString name = doc->getName() + (doc->getModified()?"*":"");
     return name;
 }
 
@@ -48,9 +60,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->docCancelButton, SIGNAL(clicked(bool)), this, SLOT(newDocButtonClicked()));
     connect(newAct, SIGNAL(triggered(bool)), this, SLOT(createDocument()));
     connect(settingsAct, SIGNAL(triggered(bool)), this, SLOT(showSettingsWindow()));
-    connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
+//    connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onDocumentSelected(QListWidgetItem*)));
+    connect(ui->treeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(onDocumentTreeItemChanged(QTreeWidgetItem*)));
 
-    guiControl = new GuiControl(ui->scrollArea);
+    guiControl = new GuiControl(ui->documentsTab);
     appControl = new ApplicationControl(guiControl);
 
     connect(ui->searchEdit, SIGNAL(textChanged(QString)), appControl, SLOT(search(QString)));
@@ -60,6 +73,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     serverStatusLabel = new QLabel();
     ui->statusBar->addWidget(serverStatusLabel);
+
+    ui->documentsTab->setTabsClosable(true);
 
     appControl->start();
 }
@@ -79,6 +94,18 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::onDocumentSelected(QListWidgetItem* item)
 {
     uint64_t id = item->data(Qt::UserRole).toUInt();
+    auto it = idsToDocs.find(id);
+    if (it != idsToDocs.end()) {
+        guiControl->setCurrentDocument((*it).second);
+        appControl->setCurrentDocument((*it).second);
+    } else {
+        qDebug() << "document with id: " << id << " not found";
+    }
+}
+
+void MainWindow::onDocumentTreeItemChanged(QTreeWidgetItem *item)
+{
+    uint64_t id = item->data(0, Qt::UserRole).toUInt();
     auto it = idsToDocs.find(id);
     if (it != idsToDocs.end()) {
         guiControl->setCurrentDocument((*it).second);
@@ -124,12 +151,12 @@ void MainWindow::onDocModifiedChanged(bool modified)
     Q_UNUSED(modified);
     ClientDocument *doc = static_cast<ClientDocument *>(sender());
     if (doc) {
-        for (int i = 0; i <  ui->listWidget->count(); i++) {
-            QListWidgetItem *item = ui->listWidget->item(i);
-            if (item->data(Qt::UserRole).toULongLong() == doc->getId()) {
-                item->setText(getNameForDoc(doc));
-            }
-        }
+//        for (int i = 0; i <  ui->listWidget->count(); i++) {
+//            QListWidgetItem *item = ui->listWidget->item(i);
+//            if (item->data(Qt::UserRole).toULongLong() == doc->getId()) {
+//                item->setText(getNameForDoc(doc));
+//            }
+//        }
     }
 }
 
