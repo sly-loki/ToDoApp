@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QDebug>
+#include <QShortcut>
 
 
 void GuiControl::setDoneState(QBoxLayout *itemLayout, bool done)
@@ -102,6 +103,14 @@ GuiControl::GuiControl(QTabWidget *tab)
 //    initRootWidget();
     connect(tab, SIGNAL(tabCloseRequested(int)), this, SLOT(onDocumentTabClosePressed(int)));
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(onDocumentTabChanged(int)));
+
+    QShortcut *pager_up = new QShortcut(tab);
+    pager_up->setKey(Qt::CTRL + Qt::Key_PageDown);
+    connect(pager_up, SIGNAL(activated()), this, SLOT(showNextDocument()));
+
+    QShortcut *pager_down = new QShortcut(tab);
+    pager_down->setKey(Qt::CTRL + Qt::Key_PageUp);
+    connect(pager_down, SIGNAL(activated()), this, SLOT(showPrevDocument()));
 }
 
 void GuiControl::shiftItemToLevel(ClientItem *item, ClientItem *target)
@@ -241,6 +250,7 @@ void GuiControl::setCurrentDocument(ClientDocument *doc)
         disconnect(this, SIGNAL(savePressed()), currentDocument, SLOT(save()));
         disconnect(this, SIGNAL(itemTextChanged(ClientItem*,QString)), currentDocument, SLOT(setItemText(ClientItem*,QString)));
     }
+    currentDocument = doc;
 
     if (docToTab.find(doc) != docToTab.end()) {
         tab->setCurrentIndex(docToTab[doc]);
@@ -278,7 +288,29 @@ void GuiControl::setCurrentDocument(ClientDocument *doc)
     connect(this, SIGNAL(removeItemRequest(ClientItem*)), doc, SLOT(removeItem(ClientItem*)));
     connect(this, SIGNAL(savePressed()), doc, SLOT(save()));
     connect(this, SIGNAL(itemTextChanged(ClientItem*,QString)), doc, SLOT(setItemText(ClientItem*,QString)));
-    currentDocument = doc;
+
+}
+
+void GuiControl::showNextDocument()
+{
+    if (tab->count() == 0)
+        return;
+    int index = tab->currentIndex();
+    if (index < tab->count() - 1)
+        tab->setCurrentIndex(index + 1);
+    else
+        tab->setCurrentIndex(0);
+}
+
+void GuiControl::showPrevDocument()
+{
+    if (tab->count() == 0)
+        return;
+    int index = tab->currentIndex();
+    if (index > 0)
+        tab->setCurrentIndex(index - 1);
+    else
+        tab->setCurrentIndex(tab->count() - 1);
 }
 
 void GuiControl::oneOfItemsDoneChanged(int state)

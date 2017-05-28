@@ -68,6 +68,9 @@ public slots:
     void onDocumentClose(ClientDocument *doc);
     void setCurrentDocument(ClientDocument *doc);
 
+    void showNextDocument();
+    void showPrevDocument();
+
     void addItem(ClientItem *item);
     void removeItem(ClientItem *item);
     void updateItemPosition(ClientItem *item);

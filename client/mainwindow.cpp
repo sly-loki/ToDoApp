@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <QSplitter>
+#include <QShortcut>
 
 #include "logtextedit.h"
 #include "applicationcontrol.h"
