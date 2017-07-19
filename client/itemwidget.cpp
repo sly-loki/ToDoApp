@@ -9,6 +9,7 @@ ItemWidget::ItemWidget(ClientItem *item)
     : item(item)
     , doneBox(new QCheckBox)
     , textField(new LogTextEdit(item))
+    , isDragging(false)
     , folded(false)
     , layout(new QVBoxLayout())
 {
@@ -99,19 +100,50 @@ void ItemWidget::setFocus()
     textField->setFocus();
 }
 
+void ItemWidget::addPlaceHolder(QLabel *placeHolder, ItemWidget *after)
+{
+    int index = 0;
+    if (after) {
+        index = layout->indexOf(after) + 1;
+    }
+    else {
+        index = 1;
+    }
+
+    layout->insertWidget(index, placeHolder);
+}
+
 void ItemWidget::mousePressEvent(QMouseEvent *event)
 {
-    QWidget::mousePressEvent(event);
+    if (true) {
+        qDebug() << "pressed " << event->pos();
+        dragStartPoint = event->pos();
+        event->accept();
+    }
+
+//    QWidget::mousePressEvent(event);
 }
 
 void ItemWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    QWidget::mouseReleaseEvent(event);
+    if (isDragging) {
+        emit drop();
+    }
+    isDragging = false;
+//    QWidget::mouseReleaseEvent(event);
 }
 
 void ItemWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    QWidget::mouseMoveEvent(event);
+    if ((abs(event->x() - dragStartPoint.x()) > 5 || abs(event->y() - dragStartPoint.y()) > 5) && !isDragging) {
+        isDragging = true;
+        event->accept();
+        emit grab();
+    } else if (isDragging) {
+        emit drag(event->pos());
+    }
+
+//    QWidget::mouseMoveEvent(event);
 }
 
 void ItemWidget::onFoldChanged()

@@ -5,6 +5,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLayout>
+#include <QLabel>
 
 #include <vector>
 
@@ -18,6 +19,9 @@ class ItemWidget: public QWidget
     QCheckBox *doneBox;
     QPushButton *foldWidget;
     LogTextEdit * textField;
+
+    QPoint dragStartPoint;
+    bool isDragging;
 
     bool folded;
 //    bool done;
@@ -46,6 +50,8 @@ public slots:
     void setDone(bool done);
     void setFocus();
 
+    void addPlaceHolder(QLabel *placeHolder, ItemWidget* after);
+
 signals:
     void foldChanged(bool folded);
     void doneChanged(bool done);
@@ -58,6 +64,10 @@ signals:
     void savePressed();
     void undoPressed();
     void redoPressed();
+
+    void grab();
+    void drag(QPoint);
+    void drop();
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event) override;

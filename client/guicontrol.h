@@ -6,6 +6,8 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QTabWidget>
+#include <QLabel>
+#include "itemwidget.h"
 
 class ClientItem;
 class LogTextEdit;
@@ -21,6 +23,36 @@ public:
     QWidget *rootWidget;
     std::map<ClientItem*, ItemWidget*> guiItemsMap;
     ClientDocument *currentDocument;
+};
+
+class ItemDragEvent: public QObject
+{
+    Q_OBJECT
+public:
+    QPoint startPoint;
+    QLabel *dummy;
+    QLabel *placeHolder;
+    ItemWidget *item;
+    ItemWidget *currentSibling;
+    ItemWidget *currentParent;
+    void grab(ItemWidget *itemWidget);
+
+    ItemDragEvent(ItemWidget *item)
+        : dummy(nullptr)
+        , placeHolder(new QLabel())
+        , item(item)
+        , currentSibling(nullptr)
+        , currentParent(nullptr)
+    {
+        placeHolder->resize(item->geometry().size());
+        placeHolder->setMinimumSize(item->geometry().size());
+        placeHolder->setStyleSheet("background-color: darkgrey");
+    }
+
+    ~ItemDragEvent() {
+        delete dummy;
+        delete placeHolder;
+    }
 };
 
 class GuiControl: public QObject
@@ -43,6 +75,8 @@ class GuiControl: public QObject
     void addChildern(ClientItem *item);
     ItemWidget *createItemWidget(ClientItem *item);
 
+    ItemDragEvent *currentDragEvent;
+
 protected slots:
     void onNewChildPressed();
     void onNewSiblingPressed();
@@ -53,6 +87,10 @@ protected slots:
     void onItemMovePressed(int direction);
     void onItemRemovePressed();
     void onItemDoneChanged(bool done);
+
+    void onItemStartDragging();
+    void onItemDragging(QPoint p);
+    void onItemDrop();
 
 public:
     GuiControl(QTabWidget *tab);

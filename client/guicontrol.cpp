@@ -9,7 +9,9 @@
 #include <QPushButton>
 #include <QDebug>
 #include <QShortcut>
+#include <QLabel>
 
+QWidget *holdingWidget;
 
 void GuiControl::setDoneState(QBoxLayout *itemLayout, bool done)
 {
@@ -91,6 +93,10 @@ ItemWidget *GuiControl::createItemWidget(ClientItem *item)
     connect(itemWidget, SIGNAL(savePressed()), this, SIGNAL(savePressed()));
     connect(itemWidget, SIGNAL(doneChanged(bool)), this, SLOT(onItemDoneChanged(bool)));
 
+    connect(itemWidget, SIGNAL(grab()), this, SLOT(onItemStartDragging()));
+    connect(itemWidget, SIGNAL(drag(QPoint)), this, SLOT(onItemDragging(QPoint)));
+    connect(itemWidget, SIGNAL(drop()), this, SLOT(onItemDrop()));
+
     return itemWidget;
 
 }
@@ -99,6 +105,7 @@ GuiControl::GuiControl(QTabWidget *tab)
     : rootWidget(nullptr)
     , tab(tab)
     , currentDocument(nullptr)
+    , currentDragEvent(nullptr)
 {
 //    initRootWidget();
     connect(tab, SIGNAL(tabCloseRequested(int)), this, SLOT(onDocumentTabClosePressed(int)));
@@ -352,6 +359,84 @@ void GuiControl::onItemDoneChanged(bool done)
     ItemWidget *itemWidget = (ItemWidget *)sender();
     ClientItem *item = itemWidget->getLogItem();
     emit itemDoneChanged(item, done);
+}
+
+void GuiControl::onItemStartDragging()
+{
+    delete currentDragEvent;
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    currentDragEvent = new ItemDragEvent(itemWidget);
+    QLabel *dummy = new QLabel(rootWidget);
+    currentDragEvent->dummy = dummy;
+    currentDragEvent->currentParent = (ItemWidget *)itemWidget->parentWidget();
+
+    QPoint globalPos = itemWidget->mapTo(rootWidget, QPoint(0,0));
+    QSize size = itemWidget->geometry().size();
+    dummy->resize(size);
+    dummy->setStyleSheet("background-color: red");
+    dummy->move(globalPos);
+    dummy->show();
+    dummy->raise();
+}
+
+void GuiControl::onItemDragging(QPoint p)
+{
+    ItemWidget *itemWidget = (ItemWidget *)sender();
+    QWidget *parent = itemWidget->parentWidget();
+    qDebug() << "drag d: " << p;
+
+    if (currentDragEvent) {
+        QPoint newPos = itemWidget->mapTo(rootWidget, p);
+        currentDragEvent->dummy->move(newPos);
+        QWidget *widget = rootWidget->childAt(newPos - QPoint(2,2));
+        if (widget) {
+            while (widget) {
+                if (QString(widget->metaObject()->className()) == "ItemWidget") {
+                    qDebug() << "class name match";
+                    ItemWidget *newSibling = qobject_cast<ItemWidget*>(widget);
+                    qDebug() << "ns: " << newSibling;
+                    if(newSibling && currentDragEvent->currentSibling != newSibling) {
+                        ItemWidget *newParent = (ItemWidget *)newSibling->parentWidget();
+                        qDebug() << "np: " << newParent;
+                        if (newParent && QString(newParent->metaObject()->className()) == "ItemWidget") {
+                            qDebug() << "insert placeholder";
+                            newParent->addPlaceHolder(currentDragEvent->placeHolder, newSibling);
+                            currentDragEvent->currentParent = newParent;
+                            currentDragEvent->currentSibling = newSibling;
+                            currentDragEvent->placeHolder->resize(currentDragEvent->item->geometry().size());
+                        }
+                    }
+                    break;
+                } else {
+                    widget = widget->parentWidget();
+                }
+//                qDebug() << "widget under: " << widget->metaObject()->className() << ":" << widget;
+            }
+        }
+    }
+//    itemWidget->
+//    unplagItem(itemWidget->getLogItem());
+//    qDebug() << "showing";
+//    itemWidget->setParent(((QScrollArea *)tab->currentWidget())->widget());
+    //itemWidget->setParent(((QScrollArea *)tab)->widget());
+//    ((QScrollArea *)tab->currentWidget())->
+//    itemWidget->move(0, 0);
+//    qDebug() << "rootwidget: " << rootWidget << ":" << ((QScrollArea *)tab->currentWidget())->widget();
+//    qDebug() << "item size: " << itemWidget->geometry() << " : " << itemWidget->parent();
+
+//    itemWidget->showMaximized();
+//    itemWidget->raise();
+////    itemWidget->setGeometry(geometry);
+//    itemWidget->resize(500,400);
+//    holdingWidget->show();
+
+}
+
+void GuiControl::onItemDrop()
+{
+    qDebug() << "drop";
+    delete currentDragEvent;
+    currentDragEvent = nullptr;
 }
 
 void GuiControl::addItem(ClientItem *item)
