@@ -12,7 +12,8 @@ class Settings
 
 public:
 
-    bool loadSettings(QString fileName);
+    bool loadFromFile(QString fileName);
+    bool saveToFile(QString fileName);
 
     QString getIp() const {return serverIp;}
     void setIp(QString newIp);
